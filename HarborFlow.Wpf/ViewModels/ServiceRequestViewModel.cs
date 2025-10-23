@@ -20,16 +20,16 @@ namespace HarborFlow.Wpf.ViewModels
 
         public ObservableCollection<ServiceRequest> ServiceRequests { get; } = new ObservableCollection<ServiceRequest>();
 
-        private ServiceRequest _selectedServiceRequest;
-        public ServiceRequest SelectedServiceRequest
+        private ServiceRequest? _selectedServiceRequest;
+        public ServiceRequest? SelectedServiceRequest
         {
             get => _selectedServiceRequest;
             set
             {
                 _selectedServiceRequest = value;
                 OnPropertyChanged();
-                (EditServiceRequestCommand as RelayCommand)?.RaiseCanExecuteChanged();
-                (DeleteServiceRequestCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                (EditServiceRequestCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+                (DeleteServiceRequestCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
             }
         }
 
@@ -43,10 +43,10 @@ namespace HarborFlow.Wpf.ViewModels
             _portServiceManager = portServiceManager;
             _windowManager = windowManager;
             _sessionContext = sessionContext;
-            RefreshServiceRequestsCommand = new RelayCommand(async _ => await LoadServiceRequestsAsync());
-            AddServiceRequestCommand = new RelayCommand(async _ => await AddServiceRequest());
-            EditServiceRequestCommand = new RelayCommand(async _ => await EditServiceRequest(), _ => SelectedServiceRequest != null);
-            DeleteServiceRequestCommand = new RelayCommand(async _ => await DeleteServiceRequest(), _ => SelectedServiceRequest != null);
+            RefreshServiceRequestsCommand = new AsyncRelayCommand(_ => LoadServiceRequestsAsync());
+            AddServiceRequestCommand = new AsyncRelayCommand(_ => AddServiceRequest());
+            EditServiceRequestCommand = new AsyncRelayCommand(_ => EditServiceRequest(), _ => SelectedServiceRequest != null);
+            DeleteServiceRequestCommand = new AsyncRelayCommand(_ => DeleteServiceRequest(), _ => SelectedServiceRequest != null);
         }
 
         public async Task LoadServiceRequestsAsync()
@@ -63,6 +63,7 @@ namespace HarborFlow.Wpf.ViewModels
 
         private async Task AddServiceRequest()
         {
+            if (_sessionContext.CurrentUser == null) return;
             var newRequest = new ServiceRequest { RequestedBy = _sessionContext.CurrentUser.UserId };
             var dialogResult = _windowManager.ShowServiceRequestEditorDialog(newRequest);
             if (dialogResult == true)
@@ -85,18 +86,19 @@ namespace HarborFlow.Wpf.ViewModels
             }
         }
 
-        private async Task DeleteServiceRequest()
+        private Task DeleteServiceRequest()
         {
             if (SelectedServiceRequest != null)
             {
                 // In a real app, you would have a Delete method in the service
                 // For now, we can't delete.
             }
+            return Task.CompletedTask;
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

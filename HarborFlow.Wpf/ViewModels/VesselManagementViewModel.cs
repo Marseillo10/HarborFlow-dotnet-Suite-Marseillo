@@ -17,16 +17,16 @@ namespace HarborFlow.Wpf.ViewModels
 
         public ObservableCollection<Vessel> Vessels { get; } = new ObservableCollection<Vessel>();
 
-        private Vessel _selectedVessel;
-        public Vessel SelectedVessel
+        private Vessel? _selectedVessel;
+        public Vessel? SelectedVessel
         {
             get => _selectedVessel;
             set
             {
                 _selectedVessel = value;
                 OnPropertyChanged();
-                (DeleteVesselCommand as RelayCommand)?.RaiseCanExecuteChanged();
-                (EditVesselCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                (DeleteVesselCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+                (EditVesselCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
             }
         }
 
@@ -39,10 +39,10 @@ namespace HarborFlow.Wpf.ViewModels
         {
             _vesselTrackingService = vesselTrackingService;
             _windowManager = windowManager;
-            RefreshVesselsCommand = new RelayCommand(async _ => await LoadVesselsAsync());
-            AddVesselCommand = new RelayCommand(async _ => await AddVessel());
-            EditVesselCommand = new RelayCommand(async _ => await EditVessel(), _ => SelectedVessel != null);
-            DeleteVesselCommand = new RelayCommand(async _ => await DeleteVessel(), _ => SelectedVessel != null);
+            RefreshVesselsCommand = new AsyncRelayCommand(_ => LoadVesselsAsync());
+            AddVesselCommand = new AsyncRelayCommand(_ => AddVessel());
+            EditVesselCommand = new AsyncRelayCommand(_ => EditVessel(), _ => SelectedVessel != null);
+            DeleteVesselCommand = new AsyncRelayCommand(_ => DeleteVessel(), _ => SelectedVessel != null);
         }
 
         public async Task LoadVesselsAsync()

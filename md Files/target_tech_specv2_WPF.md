@@ -1,6 +1,18 @@
 # Technical Specifications
 
-##### 1. PENDAHULUAN
+##### 1. PENDAHULUAN 
+
+/blueprint:refine Lihat lah dari file berikut sebagai referensi @/Users/marseillosatrian/Downloads/HarborFflow_WPF/md Files/target_tech_specv2_WPF.md dan progres proyek sekarang, buatlah lagi perencaan pengembangan proyek sekarang!
+
+   1. Implementasi ViewModel dan Logika Bisnis: Membuat semua ViewModels yang diperlukan untuk setiap View dalam aplikasi WPF, dan mengimplementasikan logika bisnis yang
+      sesuai di dalamnya.
+   2. Pengembangan View: Membuat atau menyelesaikan Views (file XAML) untuk setiap fitur, seperti Login, Dashboard, Manajemen Kapal, dll., dan mengikatnya ke ViewModels
+      yang sesuai.
+   3. Integrasi Layanan: Mengintegrasikan layanan dari proyek HarborFlow.Application dan HarborFlow.Infrastructure ke dalam ViewModels untuk mengelola data dan
+      otentikasi.
+   4. Pengujian Unit: Menulis pengujian unit untuk ViewModels dan layanan untuk memastikan fungsionalitas yang benar.
+   5. Pengujian Integrasi dan Pengguna: Melakukan pengujian menyeluruh pada aplikasi untuk memastikan semua komponen bekerja sama dengan baik dan antarmuka pengguna
+      berfungsi seperti yang diharapkan.
 
 ## 1.1 Ringkasan Eksekutif
 

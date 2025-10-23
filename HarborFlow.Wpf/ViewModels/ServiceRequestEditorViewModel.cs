@@ -23,10 +23,11 @@ namespace HarborFlow.Wpf.ViewModels
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
 
-        public event Action<bool> CloseRequested;
+        public event Action<bool>? CloseRequested;
 
         public ServiceRequestEditorViewModel(ServiceRequest serviceRequest)
         {
+            _serviceRequest = serviceRequest; // Initialize the non-nullable field
             ServiceRequest = serviceRequest;
             SaveCommand = new RelayCommand(_ => Save());
             CancelCommand = new RelayCommand(_ => Cancel());
@@ -42,9 +43,9 @@ namespace HarborFlow.Wpf.ViewModels
             CloseRequested?.Invoke(false);
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

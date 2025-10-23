@@ -14,8 +14,8 @@ namespace HarborFlow.Wpf.ViewModels
 {
     public class NavigationItem
     {
-        public string DisplayName { get; set; }
-        public ICommand Command { get; set; }
+        public string? DisplayName { get; set; }
+        public ICommand? Command { get; set; }
     }
 
     public class MainWindowViewModel : INotifyPropertyChanged
@@ -126,6 +126,7 @@ namespace HarborFlow.Wpf.ViewModels
             _mapViewModel = mapViewModel;
             _serviceRequestViewModel = serviceRequestViewModel;
             _vesselManagementViewModel = vesselManagementViewModel;
+            _currentViewModel = _dashboardViewModel; // Initialize non-nullable field
 
             _notificationService.NotificationRequested += OnNotificationRequested;
 

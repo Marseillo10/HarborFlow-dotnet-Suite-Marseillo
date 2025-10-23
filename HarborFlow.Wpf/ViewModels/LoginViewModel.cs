@@ -14,7 +14,7 @@ namespace HarborFlow.Wpf.ViewModels
         private readonly IAuthService _authService;
         private readonly IWindowManager _windowManager;
 
-        private string _username;
+        private string _username = string.Empty;
         public string Username
         {
             get => _username;
@@ -26,7 +26,7 @@ namespace HarborFlow.Wpf.ViewModels
             }
         }
 
-        private string _password;
+        private string _password = string.Empty;
         public string Password
         {
             get => _password;
@@ -49,7 +49,7 @@ namespace HarborFlow.Wpf.ViewModels
             }
         }
 
-        private string _errorMessage;
+        private string _errorMessage = string.Empty;
         public string ErrorMessage
         {
             get => _errorMessage;
@@ -69,12 +69,12 @@ namespace HarborFlow.Wpf.ViewModels
             LoginCommand = new AsyncRelayCommand(LoginAsync, CanLogin);
         }
 
-        private bool CanLogin(object parameter)
+        private bool CanLogin(object? parameter)
         {
             return !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(Password);
         }
 
-        private async Task LoginAsync(object parameter)
+        private async Task LoginAsync(object? parameter)
         {
             IsLoading = true;
             ErrorMessage = string.Empty;
@@ -94,7 +94,7 @@ namespace HarborFlow.Wpf.ViewModels
             catch (Exception ex)
             {
                 // In a real app, log this exception
-                ErrorMessage = "An error occurred during login.";
+                ErrorMessage = $"An error occurred during login: {ex.Message}";
             }
             finally
             {
@@ -102,9 +102,9 @@ namespace HarborFlow.Wpf.ViewModels
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

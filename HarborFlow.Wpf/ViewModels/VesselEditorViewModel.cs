@@ -23,10 +23,11 @@ namespace HarborFlow.Wpf.ViewModels
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
 
-        public event Action<bool> CloseRequested;
+        public event Action<bool>? CloseRequested;
 
         public VesselEditorViewModel(Vessel vessel)
         {
+            _vessel = vessel; // Initialize the non-nullable field
             Vessel = vessel;
             // In a real app, you might want to work on a copy of the vessel
             // and only apply changes on save.
@@ -45,9 +46,9 @@ namespace HarborFlow.Wpf.ViewModels
             CloseRequested?.Invoke(false);
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
