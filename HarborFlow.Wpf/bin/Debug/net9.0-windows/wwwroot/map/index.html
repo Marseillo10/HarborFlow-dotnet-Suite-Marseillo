@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HarborFlow Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+            background-color: #f0f0f0; /* A light background color */
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let map;
+        let vesselLayer = L.layerGroup();
+
+        function initializeMap() {
+            map = L.map('map').setView([-2.548926, 118.015776], 5); // Center on Indonesia
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+
+            vesselLayer.addTo(map);
+        }
+
+        function getVesselColor(vessel) {
+            switch (vessel.VesselType) {
+                case 'Cargo': return 'blue';
+                case 'Tanker': return 'orange';
+                case 'Passenger': return 'purple';
+                case 'Tug': return 'green';
+                default: return 'gray';
+            }
+        }
+
+        // Called from C# to update vessel markers
+        function updateVessels(vesselDataJson) {
+            vesselLayer.clearLayers();
+            const vessels = JSON.parse(vesselDataJson);
+            
+            vessels.forEach(vessel => {
+                if (vessel.Latitude != null && vessel.Longitude != null) {
+                    const color = getVesselColor(vessel);
+                    const course = vessel.Course || 0;
+
+                    const icon = L.divIcon({
+                        className: 'vessel-icon',
+                        html: `<div style="font-size: 24px; color: ${color}; transform: rotate(${course}deg);">&#9650;</div>`,
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 12]
+                    });
+
+                    const marker = L.marker([vessel.Latitude, vessel.Longitude], { icon: icon });
+                    
+                    let popupContent = `<b>${vessel.Name}</b><br>IMO: ${vessel.IMO}`;
+                    if (vessel.Course) {
+                        popupContent += `<br>Course: ${vessel.Course}°`;
+                    }
+                    marker.bindPopup(popupContent);
+
+                    vesselLayer.addLayer(marker);
+                }
+            });
+        }
+
+        // Called from C# to center the map on a specific vessel
+        function centerOnVessel(lat, lon) {
+            if (map) {
+                map.setView([lat, lon], 12);
+            }
+        }
+
+        // Initialize the map when the page loads
+        document.addEventListener('DOMContentLoaded', initializeMap);
+    </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+
+@page "/map"
+@using ST.Blazor.Leaflet
+@using ST.Blazor.Leaflet.Models
+@using HarborFlow.Core.Services
+@inject IVesselTrackingService VesselTrackingService
+@inject Microsoft.JSInterop.IJSRuntime JSRuntime
+
+<h3>Vessel Map</h3>
+
+<div style="height: 600px; width: 100%;">
+    <LeafletMap Map="_map" />
+</div>
+
+@code {
+    private Map _map = null!;
+    private bool _mapInitialized;
+
+    protected override void OnInitialized()
+    {
+        _map = new Map(JSRuntime)
+        {
+            Center = new LatLng((float)-6.2088, (float)106.8456),
+            Zoom = 10
+        };
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_mapInitialized)
+        {
+            _mapInitialized = true;
+            await Task.Delay(500); // Delay to ensure JS interop is ready
+
+            _map.AddLayer(new TileLayer
+            {
+                UrlTemplate = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                Attribution = "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
+            });
+
+            var positions = await VesselTrackingService.GetVesselPositionsAsync();
+            foreach (var pos in positions)
+            {
+                _map.AddLayer(new Marker(new LatLng((float)pos.Latitude, (float)pos.Longitude))
+                {
+                    Tooltip = new Tooltip { Content = pos.VesselImo },
+                    Popup = new Popup { Content = $"IMO: {pos.VesselImo}<br/>Speed: {pos.SpeedOverGround} knots" }
+                });
+            }
+            StateHasChanged();
+        }
+    }
+}

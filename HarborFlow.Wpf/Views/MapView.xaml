@@ -1,0 +1,70 @@
+<UserControl x:Class="HarborFlow.Wpf.Views.MapView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:HarborFlow.Wpf.Views"
+             xmlns:converters="clr-namespace:HarborFlow.Wpf.Converters"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="1000"
+             Background="{DynamicResource WindowBackgroundColor}">
+    <UserControl.Resources>
+        <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top Filter Bar -->
+        <Border Grid.Row="0" Background="{DynamicResource PrimaryBackgroundColor}" Padding="10" BorderBrush="{DynamicResource TextBoxBorderColor}" BorderThickness="0,0,0,1">
+            <DockPanel>
+                <TextBlock Text="Vessel Search" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" DockPanel.Dock="Left"/>
+                
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Grid>
+                        <TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}" Width="200"/>
+                        <ListBox ItemsSource="{Binding Suggestions}" Visibility="{Binding Suggestions.Count, Converter={StaticResource CountToVisibilityConverter}}" Margin="0,25,0,0">
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="SelectionChanged">
+                                    <i:InvokeCommandAction Command="{Binding SelectSuggestionCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ListBox}, Path=SelectedItem}"/>
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                        </ListBox>
+                    </Grid>
+                    <Button Content="Search" Command="{Binding SearchVesselsCommand}" Margin="10,0,0,0"/>
+                    <TextBlock Text="Vessel Type:" Margin="20,0,0,0" VerticalAlignment="Center"/>
+                    <ComboBox ItemsSource="{Binding VesselTypes}" SelectedItem="{Binding SelectedVesselType}" Width="120" Margin="5,0,0,0"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1" Margin="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" MinWidth="250"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Search Results -->
+            <Border Grid.Column="0" Background="{DynamicResource PrimaryBackgroundColor}" CornerRadius="8" Padding="10" Margin="0,0,10,0">
+                <ListView ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedVessel, Mode=TwoWay}">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" Width="120"/>
+                            <GridViewColumn Header="IMO" DisplayMemberBinding="{Binding IMO}" Width="100"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </Border>
+
+            <!-- Map -->
+            <Border Grid.Column="1" CornerRadius="8" Background="Black">
+                 <wv2:WebView2 x:Name="WebView"/>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

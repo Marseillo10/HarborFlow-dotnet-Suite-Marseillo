@@ -1,0 +1,37 @@
+<UserControl x:Class="HarborFlow.Wpf.Views.ServiceRequestView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:HarborFlow.Wpf.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="Service Requests" FontSize="24" FontWeight="Bold" />
+            <Button Content="Refresh" Command="{Binding RefreshServiceRequestsCommand}" Margin="20,0,0,0" />
+            <Button Content="Add" Command="{Binding AddServiceRequestCommand}" Margin="10,0,0,0}" />
+            <Button Content="Edit" Command="{Binding EditServiceRequestCommand}" Margin="10,0,0,0}" />
+            <Button Content="Delete" Command="{Binding DeleteServiceRequestCommand}" Margin="10,0,0,0}" />
+        </StackPanel>
+
+        <DataGrid Grid.Row="1" 
+                  ItemsSource="{Binding ServiceRequests}" 
+                  SelectedItem="{Binding SelectedServiceRequest}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Request ID" Binding="{Binding RequestId}" />
+                <DataGridTextColumn Header="Vessel IMO" Binding="{Binding VesselIMO}" />
+                <DataGridTextColumn Header="Service Type" Binding="{Binding ServiceType.Name}" />
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" />
+                <DataGridTextColumn Header="Request Date" Binding="{Binding RequestDate, StringFormat='d'}" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>
