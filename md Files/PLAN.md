@@ -1,89 +1,61 @@
-# Rencana Pengembangan Proyek HarborFlow WPF
+# Rencana Pengembangan Proyek HarborFlow WPF - Fase 2
 
-Rencana ini menguraikan langkah-langkah untuk menyelesaikan pengembangan aplikasi desktop HarborFlow WPF berdasarkan spesifikasi teknis dan kemajuan saat ini.
+Rencana ini melanjutkan pengembangan aplikasi HarborFlow WPF, berfokus pada penyempurnaan fitur yang ada dan implementasi logika bisnis yang lebih dalam.
 
-## Fase 1: Implementasi ViewModel dan Logika Bisnis
+## Fase 1: Fungsionalitas Manajemen Permintaan Layanan (Fitur F-003)
 
-Tujuan dari fase ini adalah untuk membuat semua ViewModels yang diperlukan dan mengimplementasikan logika bisnis inti di dalamnya.
+Tujuan dari fase ini adalah untuk melengkapi alur kerja manajemen permintaan layanan.
 
-1.  **LoginViewModel:**
-    *   Properti untuk `Username`, `Password`.
-    *   `ICommand` untuk proses login (`LoginCommand`).
-    *   Logika untuk memanggil `IAuthService.LoginAsync`.
-    *   Manajemen status (misalnya, `IsLoading`).
-    *   Navigasi ke `MainViewModel` setelah login berhasil.
+1.  **Implementasi Alur Persetujuan:**
+    *   `[viewmodel]` Tambahkan `ApproveCommand` dan `RejectCommand` ke `ServiceRequestViewModel`.
+    *   `[viewmodel]` `CanExecute` untuk command ini harus memeriksa apakah sebuah permintaan dipilih dan apakah pengguna memiliki peran yang sesuai (Petugas Pelabuhan/Admin).
+    *   `[viewmodel]` Panggil metode `ApproveServiceRequestAsync` dan `RejectServiceRequestAsync` dari `IPortServiceManager`.
+    *   `[view]` Tambahkan tombol "Approve" dan "Reject" ke `ServiceRequestView.xaml`.
+    *   `[view]` Ikat visibilitas tombol-tombol ini ke peran pengguna.
 
-2.  **MainViewModel:**
-    *   Properti untuk menampung `ViewModel` aktif saat ini (misalnya, `CurrentViewModel`).
-    *   `ICommand` untuk navigasi antar-view (mis. `NavigateToVesselsCommand`, `NavigateToDashboardCommand`).
-    *   Logika untuk logout.
+2.  **Implementasi Fungsionalitas Hapus:**
+    *   `[backend]` Tambahkan metode `DeleteServiceRequestAsync(Guid requestId)` ke `IPortServiceManager.cs`.
+    *   `[backend]` Implementasikan `DeleteServiceRequestAsync` di `PortServiceManager.cs` untuk menghapus permintaan dari database.
+    *   `[viewmodel]` Implementasikan logika untuk `DeleteServiceRequestCommand` di `ServiceRequestViewModel` untuk memanggil metode layanan yang baru.
 
-3.  **DashboardViewModel:**
-    *   Properti untuk menampilkan data ringkasan (misalnya, jumlah kapal, permintaan layanan yang aktif).
-    *   Logika untuk memuat data dari layanan yang relevan.
+## Fase 2: Penyempurnaan Manajemen Kapal (Fitur F-002)
 
-4.  **VesselManagementViewModel:**
-    *   `ObservableCollection<Vessel>` untuk menampung daftar kapal.
-    *   `ICommand` untuk menambah, mengedit, dan menghapus kapal.
-    *   Logika untuk memanggil layanan terkait kapal dari `IPortServiceManager`.
-    *   Properti untuk kapal yang dipilih (`SelectedVessel`).
+Fase ini berfokus pada peningkatan pengalaman pengguna untuk manajemen kapal.
 
-5.  **ServiceRequestViewModel:**
-    *   `ObservableCollection<ServiceRequest>` untuk daftar permintaan layanan.
-    *   `ICommand` untuk membuat dan memperbarui permintaan layanan.
-    *   Logika untuk memuat data permintaan layanan.
+1.  **UI Dialog yang Disempurnakan:**
+    *   `[view]` Tinjau dan perbaiki layout `VesselEditorView.xaml` agar lebih intuitif.
+    *   `[viewmodel]` Tambahkan validasi input ke `VesselEditorViewModel` (misalnya, memastikan IMO unik dan memiliki format yang benar).
+    *   `[view]` Tampilkan pesan validasi di `VesselEditorView`.
 
-## Fase 2: Pengembangan View (XAML)
+2.  **Notifikasi Pengguna:**
+    *   `[viewmodel]` Gunakan `INotificationService` di `VesselManagementViewModel` untuk menampilkan notifikasi setelah operasi tambah, edit, atau hapus berhasil atau gagal.
 
-Fase ini berfokus pada pembuatan antarmuka pengguna dan mengikatnya ke ViewModels yang telah dibuat.
+## Fase 3: Peningkatan Tampilan Peta (Fitur F-001)
 
-1.  **LoginView.xaml:**
-    *   Input untuk `Username` dan `Password`, diikat ke `LoginViewModel`.
-    *   Tombol Login, diikat ke `LoginCommand`.
-    *   Indikator loading.
+Menambahkan fitur yang lebih kaya ke tampilan peta.
 
-2.  **MainWindow.xaml (setelah login):**
-    *   Struktur layout utama dengan area navigasi dan area konten.
-    *   `ContentControl` yang diikat ke `MainViewModel.CurrentViewModel` untuk menampilkan view aktif.
-    *   Menu navigasi yang diikat ke `ICommand` navigasi di `MainViewModel`.
+1.  **Filter Berdasarkan Tipe Kapal:**
+    *   `[viewmodel]` Tambahkan `ObservableCollection<VesselType>` dan properti `SelectedVesselType` ke `MapViewModel`.
+    *   `[viewmodel]` Modifikasi logika untuk memfilter koleksi `VesselsOnMap` berdasarkan `SelectedVesselType`.
+    *   `[view]` Tambahkan `ComboBox` atau `ListBox` ke `MapView.xaml` untuk menampilkan filter tipe kapal.
 
-3.  **DashboardView.xaml:**
-    *   Menampilkan data ringkasan dari `DashboardViewModel`.
-    *   Menggunakan bagan atau panel info.
+2.  **Pencarian Auto-complete:**
+    *   `[viewmodel]` Sempurnakan metode `UpdateSuggestionsAsync` di `MapViewModel` untuk memberikan saran yang lebih relevan saat pengguna mengetik.
+    *   `[view]` Pastikan UI pencarian menampilkan saran ini dengan benar.
 
-4.  **VesselManagementView.xaml:**
-    *   `DataGrid` atau `ListView` untuk menampilkan daftar kapal dari `VesselManagementViewModel`.
-    *   Formulir untuk menambah/mengedit kapal, diikat ke properti di `VesselManagementViewModel`.
-    *   Tombol untuk aksi (Tambah, Edit, Hapus).
+## Fase 4: Implementasi Kontrol Akses Berbasis Peran (RBAC)
 
-5.  **ServiceRequestView.xaml:**
-    *   `DataGrid` atau `ListView` untuk menampilkan permintaan layanan.
-    *   Formulir untuk membuat/mengelola permintaan.
+Memastikan pengguna hanya dapat melihat dan melakukan aksi yang sesuai dengan peran mereka.
 
-## Fase 3: Integrasi Layanan
+1.  **Visibilitas UI:**
+    *   `[viewmodel]` Tambahkan properti boolean ke ViewModel yang relevan (misalnya, `CanEditVessels`, `CanApproveRequests`) yang didasarkan pada `SessionContext.CurrentUser.Role`.
+    *   `[view]` Ikat properti `Visibility` atau `IsEnabled` dari kontrol UI (tombol, item menu) ke properti boolean ini di ViewModel.
 
-Menghubungkan ViewModels dengan layanan backend untuk fungsionalitas penuh.
+## Fase 5: Poles UI/UX
 
-1.  **Injeksi Dependensi:** Konfigurasikan `App.xaml.cs` untuk menginjeksi `IAuthService`, `IPortServiceManager`, dan layanan lain ke dalam ViewModels yang sesuai.
-2.  **Implementasi Panggilan Layanan:** Panggil metode layanan (misalnya, `LoginAsync`, `GetAllVesselsAsync`) dari dalam ViewModels dan kelola hasilnya (misalnya, memperbarui `ObservableCollection`, menangani kesalahan).
-3.  **Manajemen State:** Implementasikan manajemen state yang kuat, seperti menampilkan pesan kesalahan kepada pengguna atau menampilkan indikator loading selama operasi yang berjalan lama.
+Penyempurnaan akhir untuk meningkatkan pengalaman pengguna secara keseluruhan.
 
-## Fase 4: Pengujian Unit
-
-Memastikan setiap komponen bekerja secara terpisah seperti yang diharapkan.
-
-1.  **Test Proyek:** Buat proyek pengujian baru jika belum ada.
-2.  **ViewModel Tests:** Tulis pengujian unit untuk setiap `ViewModel`:
-    *   Verifikasi logika `ICommand`.
-    *   Verifikasi perubahan properti.
-    *   Gunakan `mock` untuk dependensi layanan untuk mengisolasi logika ViewModel.
-3.  **Service Tests:** Tulis pengujian unit untuk layanan di `HarborFlow.Application` jika belum ada.
-
-## Fase 5: Pengujian Integrasi dan Pengguna
-
-Memastikan seluruh aplikasi bekerja sebagai satu kesatuan yang kohesif.
-
-1.  **Pengujian Alur Kerja:** Uji alur kerja utama dari awal hingga akhir:
-    *   Login -> Lihat Dashboard -> Kelola Kapal -> Buat Permintaan Layanan -> Logout.
-2.  **Pengujian UI:** Verifikasi bahwa semua elemen UI ditampilkan dengan benar dan merespons interaksi pengguna seperti yang diharapkan.
-3.  **Penanganan Kesalahan:** Uji skenario kesalahan (misalnya, kredensial login yang salah, kegagalan koneksi jaringan) dan pastikan aplikasi menanganinya dengan baik.
+1.  **Desain Ulang Dashboard:**
+    *   `[view]` Tata ulang `DashboardView.xaml` menggunakan `Grid`, `Border`, dan `ItemsControl` untuk membuat tata letak berbasis kartu yang lebih modern.
+2.  **Indikator Loading:**
+    *   `[view]` Pastikan semua view yang melakukan operasi data yang berjalan lama menampilkan indikator loading (misalnya, `ProgressBar`) yang terikat pada properti `IsLoading` di ViewModel masing-masing.
