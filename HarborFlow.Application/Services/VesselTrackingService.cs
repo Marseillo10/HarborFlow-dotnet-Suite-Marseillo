@@ -1,6 +1,6 @@
-
-using HarborFlow.Application.Interfaces;
+using HarborFlow.Core.Interfaces;
 using HarborFlow.Core.Models;
+using HarborFlow.Infrastructure;
 using HarborFlow.Infrastructure.DTOs.AisStream;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -15,7 +15,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace HarborFlow.Infrastructure.Services
+namespace HarborFlow.Application.Services
 {
     public class VesselTrackingService : IVesselTrackingService, IDisposable
     {
@@ -172,7 +172,29 @@ namespace HarborFlow.Infrastructure.Services
 
         public async Task<Vessel?> GetVesselByImoAsync(string imo)
         {
-            return await _context.Vessels.FirstOrDefaultAsync(v => v.IMO == imo);
+            try
+            {
+                return await _context.Vessels.Include(v => v.Positions).FirstOrDefaultAsync(v => v.IMO == imo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while getting vessel by IMO {Imo}.", imo);
+                throw;
+            }
+        }
+
+        public async Task<IEnumerable<VesselPosition>> GetVesselHistoryAsync(string imo)
+        {
+            try
+            {
+                var vessel = await GetVesselByImoAsync(imo);
+                return vessel?.Positions.OrderBy(p => p.PositionTimestamp) ?? Enumerable.Empty<VesselPosition>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while getting vessel history for IMO {Imo}.", imo);
+                throw;
+            }
         }
 
         public async Task<IEnumerable<Vessel>> SearchVesselsAsync(string searchTerm)
@@ -180,14 +202,30 @@ namespace HarborFlow.Infrastructure.Services
             if (string.IsNullOrWhiteSpace(searchTerm))
                 return Enumerable.Empty<Vessel>();
 
-            // This now searches the in-memory collection for simplicity with streaming data
-            return await Task.FromResult(TrackedVessels
-                .Where(v => v.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) || v.IMO.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)));
+            try
+            {
+                // This now searches the in-memory collection for simplicity with streaming data
+                return await Task.FromResult(TrackedVessels
+                    .Where(v => v.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) || v.IMO.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while searching for vessels with term {SearchTerm}.", searchTerm);
+                throw;
+            }
         }
 
         public async Task<IEnumerable<Vessel>> GetAllVesselsAsync()
         {
-            return await _context.Vessels.ToListAsync();
+            try
+            {
+                return await _context.Vessels.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while getting all vessels.");
+                throw;
+            }
         }
 
         public async Task<Vessel> AddVesselAsync(Vessel vessel)
@@ -195,20 +233,29 @@ namespace HarborFlow.Infrastructure.Services
             if (vessel == null)
                 throw new ArgumentNullException(nameof(vessel));
 
-            // IMO is the primary key, so it must be provided.
-            if (string.IsNullOrWhiteSpace(vessel.IMO))
-                throw new ArgumentException("Vessel IMO cannot be empty.", nameof(vessel.IMO));
+            try
+            {
+                // IMO is the primary key, so it must be provided.
+                if (string.IsNullOrWhiteSpace(vessel.IMO))
+                    throw new ArgumentException("Vessel IMO cannot be empty.", nameof(vessel.IMO));
 
-            var existingVessel = await _context.Vessels.FindAsync(vessel.IMO);
-            if (existingVessel != null)
-                throw new InvalidOperationException("A vessel with this IMO already exists.");
+                var existingVessel = await _context.Vessels.FindAsync(vessel.IMO);
+                if (existingVessel != null)
+                    throw new InvalidOperationException("A vessel with this IMO already exists.");
 
-            vessel.CreatedAt = DateTime.UtcNow;
-            vessel.UpdatedAt = DateTime.UtcNow;
+                vessel.CreatedAt = DateTime.UtcNow;
+                vessel.UpdatedAt = DateTime.UtcNow;
 
-            await _context.Vessels.AddAsync(vessel);
-            await _context.SaveChangesAsync();
-            return vessel;
+                await _context.Vessels.AddAsync(vessel);
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Vessel {Imo} added successfully.", vessel.IMO);
+                return vessel;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while adding vessel {Imo}.", vessel.IMO);
+                throw;
+            }
         }
 
         public async Task<Vessel> UpdateVesselAsync(Vessel vessel)
@@ -216,31 +263,49 @@ namespace HarborFlow.Infrastructure.Services
             if (vessel == null)
                 throw new ArgumentNullException(nameof(vessel));
 
-            var existingVessel = await _context.Vessels.FindAsync(vessel.IMO);
-            if (existingVessel == null)
-                throw new KeyNotFoundException("Vessel not found.");
+            try
+            {
+                var existingVessel = await _context.Vessels.FindAsync(vessel.IMO);
+                if (existingVessel == null)
+                    throw new KeyNotFoundException("Vessel not found.");
 
-            existingVessel.Name = vessel.Name;
-            existingVessel.FlagState = vessel.FlagState;
-            existingVessel.VesselType = vessel.VesselType;
-            existingVessel.Mmsi = vessel.Mmsi;
-            existingVessel.LengthOverall = vessel.LengthOverall;
-            existingVessel.Beam = vessel.Beam;
-            existingVessel.GrossTonnage = vessel.GrossTonnage;
-            existingVessel.UpdatedAt = DateTime.UtcNow;
-            
-            // No need to call _context.Vessels.Update(existingVessel); EF Core tracks changes.
-            await _context.SaveChangesAsync();
-            return existingVessel;
+                existingVessel.Name = vessel.Name;
+                existingVessel.FlagState = vessel.FlagState;
+                existingVessel.VesselType = vessel.VesselType;
+                existingVessel.Mmsi = vessel.Mmsi;
+                existingVessel.LengthOverall = vessel.LengthOverall;
+                existingVessel.Beam = vessel.Beam;
+                existingVessel.GrossTonnage = vessel.GrossTonnage;
+                existingVessel.UpdatedAt = DateTime.UtcNow;
+                
+                // No need to call _context.Vessels.Update(existingVessel); EF Core tracks changes.
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Vessel {Imo} updated successfully.", vessel.IMO);
+                return existingVessel;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while updating vessel {Imo}.", vessel.IMO);
+                throw;
+            }
         }
 
         public async Task DeleteVesselAsync(string imo)
         {
-            var vessel = await _context.Vessels.FirstOrDefaultAsync(v => v.IMO == imo);
-            if (vessel != null)
+            try
             {
-                _context.Vessels.Remove(vessel);
-                await _context.SaveChangesAsync();
+                var vessel = await _context.Vessels.FirstOrDefaultAsync(v => v.IMO == imo);
+                if (vessel != null)
+                {
+                    _context.Vessels.Remove(vessel);
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("Vessel {Imo} deleted successfully.", imo);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while deleting vessel {Imo}.", imo);
+                throw;
             }
         }
 

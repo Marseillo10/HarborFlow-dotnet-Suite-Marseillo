@@ -1,10 +1,17 @@
 {
   "version": 2,
-  "dgSpecHash": "kT6aZb2But8=",
+  "dgSpecHash": "kdnIc4fpBjI=",
   "success": true,
   "projectFilePath": "/Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Application/HarborFlow.Application.csproj",
   "expectedPackageFiles": [
+    "/Users/marseillosatrian/.nuget/packages/bcrypt.net-next/4.0.3/bcrypt.net-next.4.0.3.nupkg.sha512",
     "/Users/marseillosatrian/.nuget/packages/fluentvalidation/11.9.0/fluentvalidation.11.9.0.nupkg.sha512",
+    "/Users/marseillosatrian/.nuget/packages/microsoft.entityframeworkcore/9.0.0/microsoft.entityframeworkcore.9.0.0.nupkg.sha512",
+    "/Users/marseillosatrian/.nuget/packages/microsoft.entityframeworkcore.abstractions/9.0.0/microsoft.entityframeworkcore.abstractions.9.0.0.nupkg.sha512",
+    "/Users/marseillosatrian/.nuget/packages/microsoft.entityframeworkcore.analyzers/9.0.0/microsoft.entityframeworkcore.analyzers.9.0.0.nupkg.sha512",
+    "/Users/marseillosatrian/.nuget/packages/microsoft.entityframeworkcore.relational/9.0.0/microsoft.entityframeworkcore.relational.9.0.0.nupkg.sha512",
+    "/Users/marseillosatrian/.nuget/packages/microsoft.extensions.caching.abstractions/9.0.0/microsoft.extensions.caching.abstractions.9.0.0.nupkg.sha512",
+    "/Users/marseillosatrian/.nuget/packages/microsoft.extensions.caching.memory/9.0.0/microsoft.extensions.caching.memory.9.0.0.nupkg.sha512",
     "/Users/marseillosatrian/.nuget/packages/microsoft.extensions.configuration/9.0.10/microsoft.extensions.configuration.9.0.10.nupkg.sha512",
     "/Users/marseillosatrian/.nuget/packages/microsoft.extensions.configuration.abstractions/9.0.10/microsoft.extensions.configuration.abstractions.9.0.10.nupkg.sha512",
     "/Users/marseillosatrian/.nuget/packages/microsoft.extensions.configuration.binder/9.0.10/microsoft.extensions.configuration.binder.9.0.10.nupkg.sha512",
@@ -33,6 +40,8 @@
     "/Users/marseillosatrian/.nuget/packages/microsoft.extensions.options/9.0.10/microsoft.extensions.options.9.0.10.nupkg.sha512",
     "/Users/marseillosatrian/.nuget/packages/microsoft.extensions.options.configurationextensions/9.0.10/microsoft.extensions.options.configurationextensions.9.0.10.nupkg.sha512",
     "/Users/marseillosatrian/.nuget/packages/microsoft.extensions.primitives/9.0.10/microsoft.extensions.primitives.9.0.10.nupkg.sha512",
+    "/Users/marseillosatrian/.nuget/packages/npgsql/9.0.0/npgsql.9.0.0.nupkg.sha512",
+    "/Users/marseillosatrian/.nuget/packages/npgsql.entityframeworkcore.postgresql/9.0.0/npgsql.entityframeworkcore.postgresql.9.0.0.nupkg.sha512",
     "/Users/marseillosatrian/.nuget/packages/system.diagnostics.eventlog/9.0.10/system.diagnostics.eventlog.9.0.10.nupkg.sha512",
     "/Users/marseillosatrian/.nuget/packages/system.text.json/9.0.10/system.text.json.9.0.10.nupkg.sha512"
   ],

@@ -1,6 +1,7 @@
 
 using HarborFlow.Wpf.Interfaces;
 using System;
+using System.Windows;
 
 namespace HarborFlow.Wpf.Services
 {
@@ -11,6 +12,12 @@ namespace HarborFlow.Wpf.Services
         public void ShowNotification(string message, NotificationType type = NotificationType.Error)
         {
             NotificationRequested?.Invoke(message, type);
+        }
+
+        public bool ShowConfirmation(string title, string message)
+        {
+            var result = MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            return result == MessageBoxResult.Yes;
         }
     }
 }

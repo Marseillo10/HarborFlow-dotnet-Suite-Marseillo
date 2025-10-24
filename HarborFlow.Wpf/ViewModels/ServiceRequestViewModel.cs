@@ -1,8 +1,9 @@
-using HarborFlow.Application.Interfaces;
+using HarborFlow.Core.Interfaces;
 using HarborFlow.Core.Models;
 using HarborFlow.Wpf.Commands;
 using HarborFlow.Wpf.Interfaces;
 using HarborFlow.Wpf.Services;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -17,6 +18,8 @@ namespace HarborFlow.Wpf.ViewModels
     {
         private readonly IPortServiceManager _portServiceManager;
         private readonly IWindowManager _windowManager;
+        private readonly INotificationService _notificationService;
+        private readonly ILogger<ServiceRequestViewModel> _logger;
         private readonly SessionContext _sessionContext;
         private readonly MainWindowViewModel _mainWindowViewModel;
 
@@ -45,27 +48,29 @@ namespace HarborFlow.Wpf.ViewModels
         public ICommand ApproveServiceRequestCommand { get; }
         public ICommand RejectServiceRequestCommand { get; }
 
-        public bool CanUserApproveOrReject => CanApproveOrReject();
+        public bool CanUserApproveOrReject => CanApproveOrReject(null);
         public bool CanAddServiceRequest => _sessionContext.CurrentUser?.Role == UserRole.MaritimeAgent;
         public bool CanEditServiceRequest => _sessionContext.CurrentUser?.Role == UserRole.MaritimeAgent && SelectedServiceRequest?.RequestedBy == _sessionContext.CurrentUser?.UserId;
         public bool CanDeleteServiceRequest => _sessionContext.CurrentUser?.Role == UserRole.Administrator;
 
 
-        public ServiceRequestViewModel(IPortServiceManager portServiceManager, IWindowManager windowManager, SessionContext sessionContext, MainWindowViewModel mainWindowViewModel)
+        public ServiceRequestViewModel(IPortServiceManager portServiceManager, IWindowManager windowManager, INotificationService notificationService, ILogger<ServiceRequestViewModel> logger, SessionContext sessionContext, MainWindowViewModel mainWindowViewModel)
         {
             _portServiceManager = portServiceManager;
             _windowManager = windowManager;
+            _notificationService = notificationService;
+            _logger = logger;
             _sessionContext = sessionContext;
             _mainWindowViewModel = mainWindowViewModel;
             RefreshServiceRequestsCommand = new AsyncRelayCommand(_ => LoadServiceRequestsAsync());
             AddServiceRequestCommand = new AsyncRelayCommand(_ => AddServiceRequest(), _ => CanAddServiceRequest);
             EditServiceRequestCommand = new AsyncRelayCommand(_ => EditServiceRequest(), _ => SelectedServiceRequest != null && CanEditServiceRequest);
             DeleteServiceRequestCommand = new AsyncRelayCommand(_ => DeleteServiceRequest(), _ => SelectedServiceRequest != null && CanDeleteServiceRequest);
-            ApproveServiceRequestCommand = new AsyncRelayCommand(_ => ApproveServiceRequest(), _ => CanApproveOrReject());
-            RejectServiceRequestCommand = new AsyncRelayCommand(_ => RejectServiceRequest(), _ => CanApproveOrReject());
+            ApproveServiceRequestCommand = new AsyncRelayCommand(_ => ApproveServiceRequest(), CanApproveOrReject);
+            RejectServiceRequestCommand = new AsyncRelayCommand(_ => RejectServiceRequest(), CanApproveOrReject);
         }
 
-        private bool CanApproveOrReject()
+        private bool CanApproveOrReject(object? parameter)
         {
             if (SelectedServiceRequest == null || _sessionContext.CurrentUser == null)
                 return false;
@@ -87,9 +92,10 @@ namespace HarborFlow.Wpf.ViewModels
                     ServiceRequests.Add(request);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // In a real app, log this exception
+                _logger.LogError(ex, "Failed to load service requests.");
+                _notificationService.ShowNotification($"Error loading service requests: {ex.Message}", NotificationType.Error);
             }
             finally
             {
@@ -109,10 +115,12 @@ namespace HarborFlow.Wpf.ViewModels
                 {
                     await _portServiceManager.SubmitServiceRequestAsync(newRequest);
                     await LoadServiceRequestsAsync();
+                    _notificationService.ShowNotification("Service request added successfully.", NotificationType.Success);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // In a real app, log this exception
+                    _logger.LogError(ex, "Failed to add service request.");
+                    _notificationService.ShowNotification($"Error adding service request: {ex.Message}", NotificationType.Error);
                 }
                 finally
                 {
@@ -134,10 +142,12 @@ namespace HarborFlow.Wpf.ViewModels
                 {
                     await _portServiceManager.UpdateServiceRequestAsync(requestCopy);
                     await LoadServiceRequestsAsync();
+                    _notificationService.ShowNotification("Service request updated successfully.", NotificationType.Success);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // In a real app, log this exception
+                    _logger.LogError(ex, "Failed to update service request.");
+                    _notificationService.ShowNotification($"Error updating service request: {ex.Message}", NotificationType.Error);
                 }
                 finally
                 {
@@ -150,20 +160,24 @@ namespace HarborFlow.Wpf.ViewModels
         {
             if (SelectedServiceRequest != null)
             {
-                _mainWindowViewModel.IsLoading = true;
-                try
+                if (_notificationService.ShowConfirmation("Delete Service Request", $"Are you sure you want to delete this service request?"))
                 {
-                    // Optional: Show a confirmation dialog here
-                    await _portServiceManager.DeleteServiceRequestAsync(SelectedServiceRequest.RequestId);
-                    await LoadServiceRequestsAsync();
-                }
-                catch (Exception)
-                {
-                    // In a real app, log this exception
-                }
-                finally
-                {
-                    _mainWindowViewModel.IsLoading = false;
+                    _mainWindowViewModel.IsLoading = true;
+                    try
+                    {
+                        await _portServiceManager.DeleteServiceRequestAsync(SelectedServiceRequest.RequestId);
+                        await LoadServiceRequestsAsync();
+                        _notificationService.ShowNotification("Service request deleted successfully.", NotificationType.Success);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to delete service request.");
+                        _notificationService.ShowNotification($"Error deleting service request: {ex.Message}", NotificationType.Error);
+                    }
+                    finally
+                    {
+                        _mainWindowViewModel.IsLoading = false;
+                    }
                 }
             }
         }
@@ -176,10 +190,12 @@ namespace HarborFlow.Wpf.ViewModels
             {
                 await _portServiceManager.ApproveServiceRequestAsync(SelectedServiceRequest.RequestId, _sessionContext.CurrentUser.UserId);
                 await LoadServiceRequestsAsync();
+                _notificationService.ShowNotification("Service request approved successfully.", NotificationType.Success);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // In a real app, log this exception
+                _logger.LogError(ex, "Failed to approve service request.");
+                _notificationService.ShowNotification($"Error approving service request: {ex.Message}", NotificationType.Error);
             }
             finally
             {
@@ -190,20 +206,26 @@ namespace HarborFlow.Wpf.ViewModels
         private async Task RejectServiceRequest()
         {
             if (SelectedServiceRequest == null || _sessionContext.CurrentUser == null) return;
-            _mainWindowViewModel.IsLoading = true;
-            try
+
+            var reason = _windowManager.ShowInputDialog("Reject Service Request", "Please provide a reason for rejection:");
+            if (reason != null)
             {
-                // In a real app, you would show a dialog to get the rejection reason
-                await _portServiceManager.RejectServiceRequestAsync(SelectedServiceRequest.RequestId, _sessionContext.CurrentUser.UserId, "Rejected from WPF App");
-                await LoadServiceRequestsAsync();
-            }
-            catch (Exception)
-            {
-                // In a real app, log this exception
-            }
-            finally
-            {
-                _mainWindowViewModel.IsLoading = false;
+                _mainWindowViewModel.IsLoading = true;
+                try
+                {
+                    await _portServiceManager.RejectServiceRequestAsync(SelectedServiceRequest.RequestId, _sessionContext.CurrentUser.UserId, reason);
+                    await LoadServiceRequestsAsync();
+                    _notificationService.ShowNotification("Service request rejected successfully.", NotificationType.Success);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to reject service request.");
+                    _notificationService.ShowNotification($"Error rejecting service request: {ex.Message}", NotificationType.Error);
+                }
+                finally
+                {
+                    _mainWindowViewModel.IsLoading = false;
+                }
             }
         }
 

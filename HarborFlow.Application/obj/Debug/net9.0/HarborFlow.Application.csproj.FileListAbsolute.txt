@@ -13,3 +13,5 @@
 /Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Application/obj/Debug/net9.0/refint/HarborFlow.Application.dll
 /Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Application/obj/Debug/net9.0/HarborFlow.Application.pdb
 /Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Application/obj/Debug/net9.0/ref/HarborFlow.Application.dll
+/Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Application/bin/Debug/net9.0/HarborFlow.Infrastructure.dll
+/Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Application/bin/Debug/net9.0/HarborFlow.Infrastructure.pdb

@@ -2,7 +2,7 @@
 using HarborFlow.Core.Models;
 using System.Collections.ObjectModel;
 
-namespace HarborFlow.Application.Interfaces
+namespace HarborFlow.Core.Interfaces
 {
     public interface IVesselTrackingService
     {
@@ -15,5 +15,6 @@ namespace HarborFlow.Application.Interfaces
         Task<Vessel> AddVesselAsync(Vessel vessel);
         Task<Vessel> UpdateVesselAsync(Vessel vessel);
         Task DeleteVesselAsync(string imo);
+        Task<IEnumerable<VesselPosition>> GetVesselHistoryAsync(string imo);
     }
 }

@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Threading.Tasks;
-using HarborFlow.Application.Interfaces;
+using HarborFlow.Core.Interfaces;
 using HarborFlow.Core.Models;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,6 +10,7 @@ using System.Linq;
 using System;
 using HarborFlow.Wpf.Interfaces;
 using System.Collections.Specialized;
+using Microsoft.Extensions.Logging;
 
 namespace HarborFlow.Wpf.ViewModels
 {
@@ -17,13 +18,18 @@ namespace HarborFlow.Wpf.ViewModels
     {
         private readonly IVesselTrackingService _vesselTrackingService;
         private readonly INotificationService _notificationService;
+        private readonly ILogger<MapViewModel> _logger;
         private string _searchTerm;
         private ObservableCollection<Vessel> _searchResults;
         private Vessel? _selectedVessel;
         private VesselType? _selectedVesselTypeFilter;
+        private bool _isHistoryVisible;
+        private string _selectedMapLayer;
 
         public event PropertyChangedEventHandler? PropertyChanged;
         public event EventHandler<Vessel>? VesselSelected;
+        public event EventHandler<IEnumerable<VesselPosition>>? HistoryTrackRequested;
+        public event EventHandler<string>? MapLayerChanged;
 
         public string SearchTerm
         {
@@ -38,6 +44,7 @@ namespace HarborFlow.Wpf.ViewModels
 
         public ObservableCollection<string> Suggestions { get; private set; }
         public ObservableCollection<VesselType> VesselTypeFilters { get; } = new ObservableCollection<VesselType>(Enum.GetValues(typeof(VesselType)).Cast<VesselType>());
+        public ObservableCollection<string> MapLayers { get; } = new ObservableCollection<string> { "Street", "Satellite", "Nautical" };
 
         public VesselType? SelectedVesselTypeFilter
         {
@@ -50,7 +57,37 @@ namespace HarborFlow.Wpf.ViewModels
             }
         }
 
+        public string SelectedMapLayer
+        {
+            get => _selectedMapLayer;
+            set
+            {
+                _selectedMapLayer = value;
+                OnPropertyChanged(nameof(SelectedMapLayer));
+                MapLayerChanged?.Invoke(this, _selectedMapLayer);
+            }
+        }
+
+        public bool IsHistoryVisible
+        {
+            get => _isHistoryVisible;
+            set
+            {
+                _isHistoryVisible = value;
+                OnPropertyChanged(nameof(IsHistoryVisible));
+                if (_isHistoryVisible)
+                {
+                    ShowHistoryTrack();
+                }
+                else
+                {
+                    ClearHistoryTrack();
+                }
+            }
+        }
+
         public ICommand SelectSuggestionCommand { get; }
+        public ICommand ToggleHistoryCommand { get; }
 
         public ObservableCollection<Vessel> SearchResults
         {
@@ -72,6 +109,10 @@ namespace HarborFlow.Wpf.ViewModels
                 if (_selectedVessel != null)
                 {
                     VesselSelected?.Invoke(this, _selectedVessel);
+                    if (IsHistoryVisible)
+                    {
+                        ShowHistoryTrack();
+                    }
                 }
             }
         }
@@ -80,15 +121,18 @@ namespace HarborFlow.Wpf.ViewModels
 
         public ICommand SearchVesselsCommand { get; }
 
-        public MapViewModel(IVesselTrackingService vesselTrackingService, INotificationService notificationService)
+        public MapViewModel(IVesselTrackingService vesselTrackingService, INotificationService notificationService, ILogger<MapViewModel> logger)
         {
             _vesselTrackingService = vesselTrackingService;
             _notificationService = notificationService;
+            _logger = logger;
             _searchTerm = string.Empty;
             _searchResults = new ObservableCollection<Vessel>();
             Suggestions = new ObservableCollection<string>();
+            _selectedMapLayer = MapLayers.First();
             SearchVesselsCommand = new RelayCommand(async _ => await SearchVesselsAsync());
             SelectSuggestionCommand = new RelayCommand(SelectSuggestion);
+            ToggleHistoryCommand = new RelayCommand(_ => IsHistoryVisible = !IsHistoryVisible);
 
             _vesselTrackingService.TrackedVessels.CollectionChanged += OnTrackedVesselsChanged;
             UpdateFilteredVessels();
@@ -149,7 +193,8 @@ namespace HarborFlow.Wpf.ViewModels
             }
             catch (Exception ex)
             {
-                _notificationService.ShowNotification("Failed to load search suggestions.");
+                _logger.LogError(ex, "Failed to load search suggestions.");
+                _notificationService.ShowNotification("Failed to load search suggestions.", NotificationType.Error);
             }
         }
 
@@ -160,10 +205,24 @@ namespace HarborFlow.Wpf.ViewModels
                 var results = await _vesselTrackingService.SearchVesselsAsync(SearchTerm);
                 SearchResults = new ObservableCollection<Vessel>(results);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                _notificationService.ShowNotification("Failed to perform vessel search.");
+                _logger.LogError(ex, "Failed to perform vessel search.");
+                _notificationService.ShowNotification("Failed to perform vessel search.", NotificationType.Error);
             }
+        }
+
+        private void ShowHistoryTrack()
+        {
+            if (SelectedVessel != null)
+            {
+                HistoryTrackRequested?.Invoke(this, SelectedVessel.Positions);
+            }
+        }
+
+        private void ClearHistoryTrack()
+        {
+            HistoryTrackRequested?.Invoke(this, new List<VesselPosition>());
         }
 
         protected virtual void OnPropertyChanged(string propertyName)

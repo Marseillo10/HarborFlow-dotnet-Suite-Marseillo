@@ -1,8 +1,9 @@
-using HarborFlow.Application.Interfaces;
+using HarborFlow.Core.Interfaces;
 using HarborFlow.Core.Models;
 using HarborFlow.Wpf.Commands;
 using HarborFlow.Wpf.Interfaces;
 using HarborFlow.Wpf.Services;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -17,6 +18,7 @@ namespace HarborFlow.Wpf.ViewModels
         private readonly IVesselTrackingService _vesselTrackingService;
         private readonly IWindowManager _windowManager;
         private readonly INotificationService _notificationService;
+        private readonly ILogger<VesselManagementViewModel> _logger;
         private readonly SessionContext _sessionContext;
         private readonly MainWindowViewModel _mainWindowViewModel;
 
@@ -44,11 +46,12 @@ namespace HarborFlow.Wpf.ViewModels
         public bool CanEditVessel => _sessionContext.CurrentUser?.Role == UserRole.Administrator;
         public bool CanDeleteVessel => _sessionContext.CurrentUser?.Role == UserRole.Administrator;
 
-        public VesselManagementViewModel(IVesselTrackingService vesselTrackingService, IWindowManager windowManager, INotificationService notificationService, SessionContext sessionContext, MainWindowViewModel mainWindowViewModel)
+        public VesselManagementViewModel(IVesselTrackingService vesselTrackingService, IWindowManager windowManager, INotificationService notificationService, ILogger<VesselManagementViewModel> logger, SessionContext sessionContext, MainWindowViewModel mainWindowViewModel)
         {
             _vesselTrackingService = vesselTrackingService;
             _windowManager = windowManager;
             _notificationService = notificationService;
+            _logger = logger;
             _sessionContext = sessionContext;
             _mainWindowViewModel = mainWindowViewModel;
             RefreshVesselsCommand = new AsyncRelayCommand(_ => LoadVesselsAsync());
@@ -71,6 +74,7 @@ namespace HarborFlow.Wpf.ViewModels
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to load vessels.");
                 _notificationService.ShowNotification($"Error loading vessels: {ex.Message}", NotificationType.Error);
             }
             finally
@@ -94,6 +98,7 @@ namespace HarborFlow.Wpf.ViewModels
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to add vessel.");
                     _notificationService.ShowNotification($"Error adding vessel: {ex.Message}", NotificationType.Error);
                 }
                 finally
@@ -120,6 +125,7 @@ namespace HarborFlow.Wpf.ViewModels
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to update vessel.");
                     _notificationService.ShowNotification($"Error updating vessel: {ex.Message}", NotificationType.Error);
                 }
                 finally
@@ -133,21 +139,24 @@ namespace HarborFlow.Wpf.ViewModels
         {
             if (SelectedVessel != null)
             {
-                _mainWindowViewModel.IsLoading = true;
-                try
+                if (_notificationService.ShowConfirmation("Delete Vessel", $"Are you sure you want to delete {SelectedVessel.Name}?"))
                 {
-                    // Optional: Show a confirmation dialog here
-                    await _vesselTrackingService.DeleteVesselAsync(SelectedVessel.IMO);
-                    await LoadVesselsAsync();
-                    _notificationService.ShowNotification("Vessel deleted successfully.", NotificationType.Success);
-                }
-                catch (Exception ex)
-                {
-                    _notificationService.ShowNotification($"Error deleting vessel: {ex.Message}", NotificationType.Error);
-                }
-                finally
-                {
-                    _mainWindowViewModel.IsLoading = false;
+                    _mainWindowViewModel.IsLoading = true;
+                    try
+                    {
+                        await _vesselTrackingService.DeleteVesselAsync(SelectedVessel.IMO);
+                        await LoadVesselsAsync();
+                        _notificationService.ShowNotification("Vessel deleted successfully.", NotificationType.Success);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to delete vessel.");
+                        _notificationService.ShowNotification($"Error deleting vessel: {ex.Message}", NotificationType.Error);
+                    }
+                    finally
+                    {
+                        _mainWindowViewModel.IsLoading = false;
+                    }
                 }
             }
         }

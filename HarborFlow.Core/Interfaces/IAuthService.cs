@@ -1,7 +1,7 @@
 using HarborFlow.Core.Models;
 using System.Threading.Tasks;
 
-namespace HarborFlow.Application.Interfaces
+namespace HarborFlow.Core.Interfaces
 {
     public interface IAuthService
     {

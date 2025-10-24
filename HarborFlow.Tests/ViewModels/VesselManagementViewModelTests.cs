@@ -1,5 +1,5 @@
 using FluentAssertions;
-using HarborFlow.Application.Interfaces;
+using HarborFlow.Core.Interfaces;
 using HarborFlow.Core.Models;
 using HarborFlow.Wpf.Commands;
 using HarborFlow.Wpf.Interfaces;
@@ -109,11 +109,12 @@ namespace HarborFlow.Tests.ViewModels
         }
 
         [Fact]
-        public async Task DeleteVesselCommand_ShouldDeleteVessel()
+        public async Task DeleteVesselCommand_ShouldDeleteVessel_WhenConfirmationIsAccepted()
         {
             // Arrange
-            var vessel = new Vessel { IMO = "123" };
+            var vessel = new Vessel { IMO = "123", Name = "Test Vessel" };
             _viewModel.SelectedVessel = vessel;
+            _notificationServiceMock.Setup(n => n.ShowConfirmation(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
 
             // Act
             await (_viewModel.DeleteVesselCommand as AsyncRelayCommand).ExecuteAsync(null);
@@ -121,6 +122,21 @@ namespace HarborFlow.Tests.ViewModels
             // Assert
             _vesselServiceMock.Verify(s => s.DeleteVesselAsync("123"), Times.Once);
             _vesselServiceMock.Verify(s => s.GetAllVesselsAsync(), Times.Once); // Because it reloads
+        }
+
+        [Fact]
+        public async Task DeleteVesselCommand_ShouldNotDeleteVessel_WhenConfirmationIsCancelled()
+        {
+            // Arrange
+            var vessel = new Vessel { IMO = "123", Name = "Test Vessel" };
+            _viewModel.SelectedVessel = vessel;
+            _notificationServiceMock.Setup(n => n.ShowConfirmation(It.IsAny<string>(), It.IsAny<string>())).Returns(false);
+
+            // Act
+            await (_viewModel.DeleteVesselCommand as AsyncRelayCommand).ExecuteAsync(null);
+
+            // Assert
+            _vesselServiceMock.Verify(s => s.DeleteVesselAsync(It.IsAny<string>()), Times.Never);
         }
     }
 }

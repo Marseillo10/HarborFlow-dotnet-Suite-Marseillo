@@ -5,10 +5,18 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:HarborFlow.Wpf.Views"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="600" d:DesignWidth="800">
     <Grid>
         <StackPanel>
-            <TextBlock Text="Dashboard" FontSize="28" FontWeight="Bold" Margin="20"/>
+            <Grid Margin="20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Dashboard" FontSize="28" FontWeight="Bold" VerticalAlignment="Center"/>
+                <Button Grid.Column="1" Content="Refresh" Command="{Binding RefreshCommand}" Style="{StaticResource PrimaryButtonStyle}" VerticalAlignment="Center"/>
+            </Grid>
+            
             <UniformGrid Columns="2" Margin="10">
                 <!-- Vessel Count Card -->
                 <Border Style="{StaticResource DashboardCardStyle}">
@@ -26,6 +34,42 @@
                     </StackPanel>
                 </Border>
             </UniformGrid>
+
+            <Grid Margin="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Recent Vessels -->
+                <StackPanel Grid.Column="0" Margin="10">
+                    <TextBlock Text="Recent Vessels" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                    <ListView ItemsSource="{Binding RecentVessels}" Style="{StaticResource ListViewStyle}">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" Width="150"/>
+                                <GridViewColumn Header="IMO" DisplayMemberBinding="{Binding IMO}" Width="100"/>
+                                <GridViewColumn Header="Updated" DisplayMemberBinding="{Binding UpdatedAt, StringFormat='{}{0:g}'}" Width="150"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </StackPanel>
+
+                <!-- Recent Service Requests -->
+                <StackPanel Grid.Column="1" Margin="10">
+                    <TextBlock Text="Recent Service Requests" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                    <ListView ItemsSource="{Binding RecentServiceRequests}" Style="{StaticResource ListViewStyle}">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Vessel IMO" DisplayMemberBinding="{Binding VesselImo}" Width="100"/>
+                                <GridViewColumn Header="Service Type" DisplayMemberBinding="{Binding ServiceType}" Width="150"/>
+                                <GridViewColumn Header="Status" DisplayMemberBinding="{Binding Status}" Width="100"/>
+                                <GridViewColumn Header="Requested" DisplayMemberBinding="{Binding RequestDate, StringFormat='{}{0:g}'}" Width="150"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </StackPanel>
+            </Grid>
         </StackPanel>
     </Grid>
 </UserControl>

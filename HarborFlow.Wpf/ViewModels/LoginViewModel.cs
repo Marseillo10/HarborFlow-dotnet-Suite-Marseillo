@@ -1,6 +1,8 @@
-using HarborFlow.Application.Interfaces;
+using HarborFlow.Core.Interfaces;
 using HarborFlow.Wpf.Commands;
 using HarborFlow.Wpf.Interfaces;
+using HarborFlow.Wpf.Services;
+using Microsoft.Extensions.Logging;
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -13,6 +15,9 @@ namespace HarborFlow.Wpf.ViewModels
     {
         private readonly IAuthService _authService;
         private readonly IWindowManager _windowManager;
+        private readonly SessionContext _sessionContext;
+        private readonly INotificationService _notificationService;
+        private readonly ILogger<LoginViewModel> _logger;
         private readonly MainWindowViewModel _mainWindowViewModel;
 
         private string _username = string.Empty;
@@ -51,23 +56,29 @@ namespace HarborFlow.Wpf.ViewModels
         }
 
         public ICommand LoginCommand { get; }
+        public ICommand OpenRegisterWindowCommand { get; }
 
-        public LoginViewModel(IAuthService authService, IWindowManager windowManager, MainWindowViewModel mainWindowViewModel)
+        public LoginViewModel(IAuthService authService, IWindowManager windowManager, SessionContext sessionContext, INotificationService notificationService, ILogger<LoginViewModel> logger, MainWindowViewModel mainWindowViewModel)
         {
             _authService = authService;
             _windowManager = windowManager;
+            _sessionContext = sessionContext;
+            _notificationService = notificationService;
+            _logger = logger;
             _mainWindowViewModel = mainWindowViewModel;
             LoginCommand = new AsyncRelayCommand(LoginAsync, CanLogin);
+            OpenRegisterWindowCommand = new RelayCommand(_ => _windowManager.ShowRegisterWindow());
         }
 
         private bool CanLogin(object? parameter)
         {
-            return !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(Password);
+            return !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(Password) && !_mainWindowViewModel.IsLoading;
         }
 
         private async Task LoginAsync(object? parameter)
         {
             _mainWindowViewModel.IsLoading = true;
+            (LoginCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
             ErrorMessage = string.Empty;
 
             try
@@ -75,21 +86,25 @@ namespace HarborFlow.Wpf.ViewModels
                 var user = await _authService.LoginAsync(Username, Password);
                 if (user != null)
                 {
+                    _sessionContext.CurrentUser = user;
                     _windowManager.ShowMainWindow();
+                    _windowManager.CloseLoginWindow();
                 }
                 else
                 {
-                    ErrorMessage = "Invalid username or password.";
+                    _notificationService.ShowNotification("Invalid username or password.", NotificationType.Error);
                 }
             }
             catch (Exception ex)
             {
-                // In a real app, log this exception
-                ErrorMessage = $"An error occurred during login: {ex.Message}";
+                _logger.LogError(ex, "An error occurred during login for user {Username}.", Username);
+                _notificationService.ShowNotification($"An error occurred during login: {ex.Message}", NotificationType.Error);
             }
             finally
             {
+                Password = string.Empty; // Clear password after login attempt
                 _mainWindowViewModel.IsLoading = false;
+                (LoginCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
             }
         }
 

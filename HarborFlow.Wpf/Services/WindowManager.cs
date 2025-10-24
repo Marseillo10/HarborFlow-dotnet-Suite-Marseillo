@@ -7,13 +7,15 @@ using HarborFlow.Wpf.Views;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace HarborFlow.Wpf.Services
 {
     public class WindowManager : IWindowManager
     {
         private readonly IServiceProvider _serviceProvider;
-        private Window? _currentWindow;
+        private Window? _loginWindow;
+        private Window? _mainWindow;
 
         public WindowManager(IServiceProvider serviceProvider)
         {
@@ -22,18 +24,35 @@ namespace HarborFlow.Wpf.Services
 
         public void ShowLoginWindow()
         {
-            var loginView = _serviceProvider.GetRequiredService<LoginView>();
-            _currentWindow?.Close();
-            _currentWindow = loginView;
-            loginView.Show();
+            if (_loginWindow == null)
+            {
+                _loginWindow = _serviceProvider.GetRequiredService<LoginView>();
+                _loginWindow.Closed += (s, e) => _loginWindow = null;
+            }
+            _loginWindow.Show();
+            _mainWindow?.Close();
         }
 
         public void ShowMainWindow()
         {
-            var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
-            _currentWindow?.Close();
-            _currentWindow = mainWindow;
-            mainWindow.Show();
+            if (_mainWindow == null)
+            {
+                _mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+                _mainWindow.Closed += (s, e) => _mainWindow = null;
+            }
+            _mainWindow.Show();
+        }
+
+        public void ShowRegisterWindow()
+        {
+            var registerView = _serviceProvider.GetRequiredService<RegisterView>();
+            registerView.Owner = System.Windows.Application.Current.MainWindow;
+            registerView.ShowDialog();
+        }
+
+        public void CloseLoginWindow()
+        {
+            _loginWindow?.Close();
         }
 
         public bool? ShowVesselEditorDialog(Vessel vessel)
@@ -42,7 +61,7 @@ namespace HarborFlow.Wpf.Services
             var viewModel = new VesselEditorViewModel(vessel, validator);
             var editorView = new VesselEditorView(viewModel)
             {
-                Owner = _currentWindow
+                Owner = _mainWindow
             };
             return editorView.ShowDialog();
         }
@@ -52,9 +71,44 @@ namespace HarborFlow.Wpf.Services
             var viewModel = new ServiceRequestEditorViewModel(serviceRequest);
             var editorView = new ServiceRequestEditorView(viewModel)
             {
-                Owner = _currentWindow
+                Owner = _mainWindow
             };
             return editorView.ShowDialog();
+        }
+
+        public string? ShowInputDialog(string title, string message)
+        {
+            var inputDialog = new Window
+            {
+                Title = title,
+                Content = new StackPanel
+                {
+                    Margin = new Thickness(10),
+                    Children =
+                    {
+                        new TextBlock { Text = message, Margin = new Thickness(0, 0, 0, 10) },
+                        new TextBox { Name = "InputTextBox" }
+                    }
+                },
+                Width = 300,
+                Height = 150,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Owner = _mainWindow
+            };
+
+            var okButton = new Button { Content = "OK", IsDefault = true, Margin = new Thickness(0, 10, 0, 0) };
+            var panel = (StackPanel)inputDialog.Content;
+            panel.Children.Add(okButton);
+
+            string? result = null;
+            okButton.Click += (sender, e) =>
+            {
+                result = ((TextBox)panel.FindName("InputTextBox")).Text;
+                inputDialog.DialogResult = true;
+            };
+
+            inputDialog.ShowDialog();
+            return result;
         }
     }
 }

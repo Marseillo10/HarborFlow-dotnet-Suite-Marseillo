@@ -9,6 +9,8 @@ using HarborFlow.Wpf.Commands;
 using System.Windows.Input;
 using System.Runtime.CompilerServices;
 using System.Collections.ObjectModel;
+using System.Windows;
+using System.Net.NetworkInformation;
 
 namespace HarborFlow.Wpf.ViewModels
 {
@@ -16,6 +18,7 @@ namespace HarborFlow.Wpf.ViewModels
     {
         public string? DisplayName { get; set; }
         public ICommand? Command { get; set; }
+        public bool IsVisible { get; set; } = true;
     }
 
     public class MainWindowViewModel : INotifyPropertyChanged
@@ -23,6 +26,7 @@ namespace HarborFlow.Wpf.ViewModels
         private readonly SessionContext _sessionContext;
         private readonly INotificationService _notificationService;
         private readonly IWindowManager _windowManager;
+        private readonly ISettingsService _settingsService;
         private readonly DashboardViewModel _dashboardViewModel;
         private readonly MapViewModel _mapViewModel;
         private readonly ServiceRequestViewModel _serviceRequestViewModel;
@@ -54,10 +58,45 @@ namespace HarborFlow.Wpf.ViewModels
         private bool _isNotificationVisible = false;
         private Brush _notificationBackground = Brushes.Red;
         private DispatcherTimer _notificationTimer;
+        private DispatcherTimer _onlineStatusTimer;
+
+        private PathGeometry _themeIcon;
+        public PathGeometry ThemeIcon
+        {
+            get => _themeIcon;
+            set
+            {
+                _themeIcon = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _onlineStatus = string.Empty;
+        public string OnlineStatus
+        {
+            get => _onlineStatus;
+            set
+            {
+                _onlineStatus = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private Brush _onlineStatusColor = Brushes.Green;
+        public Brush OnlineStatusColor
+        {
+            get => _onlineStatusColor;
+            set
+            {
+                _onlineStatusColor = value;
+                OnPropertyChanged();
+            }
+        }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public ICommand LogoutCommand { get; }
+        public ICommand ToggleThemeCommand { get; }
         public ICommand NavigateToDashboardCommand { get; }
         public ICommand NavigateToMapCommand { get; }
         public ICommand NavigateToServiceRequestCommand { get; }
@@ -110,16 +149,6 @@ namespace HarborFlow.Wpf.ViewModels
             }
         }
 
-        public bool IsServiceRequestVisible
-        {
-            get
-            {
-                if (_sessionContext.CurrentUser == null) return false;
-                return _sessionContext.CurrentUser.Role == UserRole.PortOfficer ||
-                       _sessionContext.CurrentUser.Role == UserRole.Administrator;
-            }
-        }
-
         public string CurrentUserName
         {
             get
@@ -128,20 +157,23 @@ namespace HarborFlow.Wpf.ViewModels
             }
         }
 
-        public MainWindowViewModel(SessionContext sessionContext, INotificationService notificationService, IWindowManager windowManager, DashboardViewModel dashboardViewModel, MapViewModel mapViewModel, ServiceRequestViewModel serviceRequestViewModel, VesselManagementViewModel vesselManagementViewModel)
+        public MainWindowViewModel(SessionContext sessionContext, INotificationService notificationService, IWindowManager windowManager, ISettingsService settingsService, DashboardViewModel dashboardViewModel, MapViewModel mapViewModel, ServiceRequestViewModel serviceRequestViewModel, VesselManagementViewModel vesselManagementViewModel)
         {
             _sessionContext = sessionContext;
             _notificationService = notificationService;
             _windowManager = windowManager;
+            _settingsService = settingsService;
             _dashboardViewModel = dashboardViewModel;
             _mapViewModel = mapViewModel;
             _serviceRequestViewModel = serviceRequestViewModel;
             _vesselManagementViewModel = vesselManagementViewModel;
             _currentViewModel = _dashboardViewModel; // Initialize non-nullable field
+            _themeIcon = new PathGeometry();
 
             _notificationService.NotificationRequested += OnNotificationRequested;
 
             LogoutCommand = new RelayCommand(_ => Logout());
+            ToggleThemeCommand = new RelayCommand(_ => ToggleTheme());
             NavigateToDashboardCommand = new RelayCommand(_ => CurrentViewModel = _dashboardViewModel);
             NavigateToMapCommand = new RelayCommand(_ => CurrentViewModel = _mapViewModel);
             NavigateToServiceRequestCommand = new RelayCommand(_ => CurrentViewModel = _serviceRequestViewModel);
@@ -151,8 +183,8 @@ namespace HarborFlow.Wpf.ViewModels
             {
                 new NavigationItem { DisplayName = "Dashboard", Command = NavigateToDashboardCommand },
                 new NavigationItem { DisplayName = "Map View", Command = NavigateToMapCommand },
-                new NavigationItem { DisplayName = "Vessel Management", Command = NavigateToVesselManagementCommand },
-                new NavigationItem { DisplayName = "Service Request", Command = NavigateToServiceRequestCommand }
+                new NavigationItem { DisplayName = "Vessel Management", Command = NavigateToVesselManagementCommand, IsVisible = _sessionContext.CurrentUser?.Role == UserRole.Administrator },
+                new NavigationItem { DisplayName = "Service Request", Command = NavigateToServiceRequestCommand, IsVisible = _sessionContext.CurrentUser?.Role == UserRole.PortOfficer || _sessionContext.CurrentUser?.Role == UserRole.Administrator }
             };
 
             _notificationTimer = new DispatcherTimer
@@ -161,15 +193,52 @@ namespace HarborFlow.Wpf.ViewModels
             };
             _notificationTimer.Tick += (s, e) => IsNotificationVisible = false;
 
+            _onlineStatusTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _onlineStatusTimer.Tick += (s, e) => CheckOnlineStatus();
+            _onlineStatusTimer.Start();
+
             // Set initial view
             CurrentViewModel = _dashboardViewModel;
             _selectedNavigationItem = NavigationItems[0];
+            UpdateThemeIcon(App.Theme);
+        }
+
+        private void CheckOnlineStatus()
+        {
+            if (NetworkInterface.GetIsNetworkAvailable())
+            {
+                OnlineStatus = "Online";
+                OnlineStatusColor = Brushes.Green;
+            }
+            else
+            {
+                OnlineStatus = "Offline";
+                OnlineStatusColor = Brushes.Red;
+            }
         }
 
         private void Logout()
         {
             _sessionContext.CurrentUser = null;
             _windowManager.ShowLoginWindow();
+        }
+
+        private void ToggleTheme()
+        {
+            var app = (App)System.Windows.Application.Current;
+            var newTheme = App.Theme == ThemeType.Light ? ThemeType.Dark : ThemeType.Light;
+            app.SetTheme(newTheme);
+            _settingsService.SetTheme(newTheme);
+            UpdateThemeIcon(newTheme);
+        }
+
+        private void UpdateThemeIcon(ThemeType theme)
+        {
+            var iconKey = theme == ThemeType.Light ? "MoonIcon" : "SunIcon";
+            ThemeIcon = (PathGeometry)System.Windows.Application.Current.FindResource(iconKey);
         }
 
         private void OnNotificationRequested(string message, NotificationType type)
@@ -189,8 +258,18 @@ namespace HarborFlow.Wpf.ViewModels
 
         public void OnLoginSuccess()
         {
-            OnPropertyChanged(nameof(IsServiceRequestVisible));
             OnPropertyChanged(nameof(CurrentUserName));
+            foreach (var item in NavigationItems)
+            {
+                if (item.DisplayName == "Vessel Management")
+                {
+                    item.IsVisible = _sessionContext.CurrentUser?.Role == UserRole.Administrator;
+                }
+                else if (item.DisplayName == "Service Request")
+                {
+                    item.IsVisible = _sessionContext.CurrentUser?.Role == UserRole.PortOfficer || _sessionContext.CurrentUser?.Role == UserRole.Administrator;
+                }
+            }
         }
 
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)

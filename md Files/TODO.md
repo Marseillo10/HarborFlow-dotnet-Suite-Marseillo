@@ -1,21 +1,31 @@
-# Daftar Tugas Pengembangan HarborFlow WPF - Fase 2
+# HarborFlow WPF Project TODO List - Phase 3
 
-- [ ] `[viewmodel]` Tambahkan `ApproveCommand` dan `RejectCommand` ke `ServiceRequestViewModel`.
-- [ ] `[viewmodel]` Implementasikan `CanExecute` untuk `ApproveCommand` dan `RejectCommand` berdasarkan peran pengguna dan item yang dipilih.
-- [ ] `[viewmodel]` Panggil metode `ApproveServiceRequestAsync` dan `RejectServiceRequestAsync` dari `IPortServiceManager` di dalam command.
-- [ ] `[view]` Tambahkan tombol "Approve" dan "Reject" ke `ServiceRequestView.xaml`.
-- [ ] `[view]` Ikat visibilitas tombol "Approve" dan "Reject" ke properti di `ServiceRequestViewModel`.
-- [ ] `[backend]` Tambahkan metode `DeleteServiceRequestAsync(Guid requestId)` ke `IPortServiceManager.cs`.
-- [ ] `[backend]` Implementasikan `DeleteServiceRequestAsync` di `PortServiceManager.cs`.
-- [ ] `[viewmodel]` Implementasikan logika untuk `DeleteServiceRequestCommand` di `ServiceRequestViewModel`.
-- [ ] `[view]` Tinjau dan perbaiki layout `VesselEditorView.xaml`.
-- [ ] `[viewmodel]` Tambahkan validasi input ke `VesselEditorViewModel`.
-- [ ] `[view]` Tampilkan pesan validasi di `VesselEditorView`.
-- [ ] `[viewmodel]` Gunakan `INotificationService` di `VesselManagementViewModel` untuk notifikasi.
-- [ ] `[viewmodel]` Tambahkan fungsionalitas filter tipe kapal ke `MapViewModel`.
-- [ ] `[view]` Tambahkan UI filter tipe kapal ke `MapView.xaml`.
-- [ ] `[viewmodel]` Sempurnakan auto-complete pencarian di `MapViewModel`.
-- [ ] `[viewmodel]` Tambahkan properti untuk kontrol visibilitas berbasis peran di semua ViewModel yang relevan.
-- [ ] `[view]` Ikat visibilitas/status `IsEnabled` kontrol UI ke properti RBAC di ViewModel.
-- [ ] `[view]` Desain ulang `DashboardView.xaml` dengan tata letak kartu.
-- [ ] `[view]` Implementasikan indikator loading di semua view yang relevan.
+## Phase 1: Code Quality and Robustness
+
+- [ ] `[backend]` Inject `ILogger` into all services and ViewModels.
+- [ ] `[backend]` Add logging for all important events, such as API calls, database operations, and errors.
+- [ ] `[backend]` Implement a global exception handler in `App.xaml.cs` to catch unhandled exceptions.
+- [ ] `[view]` Display user-friendly error messages for all exceptions.
+- [ ] `[backend]` Create validators for `ServiceRequest` and other models.
+- [ ] `[view]` Display validation errors in the editor views.
+
+## Phase 2: Feature Enhancements
+
+- [ ] `[backend]` Implement a caching service for offline data storage.
+- [ ] `[backend]` Implement a synchronization service to sync offline data.
+- [ ] `[view]` Add an online/offline status indicator to the `MainWindow`.
+- [ ] `[view]` Add a button to the `MapView` to toggle historical track view.
+- [ ] `[backend]` Add a method to `IVesselTrackingService` to get historical vessel positions.
+- [ ] `[view]` Implement the historical track display on the map.
+- [ ] `[view]` Add a map layer selection UI to the `MapView`.
+- [ ] `[view]` Implement vessel marker clustering on the map.
+- [ ] `[backend]` Create `IUserProfileService` and `UserProfileService`.
+- [ ] `[view]` Create `UserProfileView` and `UserProfileViewModel`.
+- [ ] `[view]` Add a "Profile" button to the `MainWindow` to open the `UserProfileView`.
+
+## Phase 3: Development Experience
+
+- [ ] `[devops]` Create a GitHub Actions workflow file (`.github/workflows/dotnet.yml`).
+- [ ] `[devops]` Configure the workflow to build and test the application.
+- [ ] `[devops]` Add a release step to the workflow.
+- [ ] `[devops]` Research and configure SonarQube integration.

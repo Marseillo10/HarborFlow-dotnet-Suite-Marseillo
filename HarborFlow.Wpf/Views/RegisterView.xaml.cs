@@ -34,9 +34,5 @@ namespace HarborFlow.Wpf.Views
                 viewModel.ConfirmPassword = passwordBox.Password;
             }
         }
-        private void LoginButton_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
     }
 }

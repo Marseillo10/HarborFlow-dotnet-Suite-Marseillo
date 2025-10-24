@@ -4,8 +4,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HarborFlow.Wpf.Views"
+        xmlns:viewmodels="clr-namespace:HarborFlow.Wpf.ViewModels"
         mc:Ignorable="d"
-        Title="Vessel Editor" Height="450" Width="400"
+        Title="Vessel Editor" Height="auto" Width="400"
+        SizeToContent="Height"
         WindowStartupLocation="CenterOwner">
     <Grid Margin="15">
         <Grid.RowDefinitions>
@@ -14,30 +16,61 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
 
-        <TextBlock Grid.Row="0" Grid.Column="0" Text="IMO:" Margin="0,0,10,10" VerticalAlignment="Center"/>
-        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Vessel.IMO, ValidatesOnNotifyDataErrors=True}" Margin="0,0,0,10"/>
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="IMO:"/>
+            <TextBox Text="{Binding Vessel.IMO, ValidatesOnNotifyDataErrors=True, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Text="{Binding (Validation.Errors)[0].ErrorContent}" Foreground="Red"/>
+        </StackPanel>
 
-        <TextBlock Grid.Row="1" Grid.Column="0" Text="Name:" Margin="0,0,10,10" VerticalAlignment="Center"/>
-        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Vessel.Name, ValidatesOnNotifyDataErrors=True}" Margin="0,0,0,10"/>
+        <StackPanel Grid.Row="1">
+            <TextBlock Text="Name:"/>
+            <TextBox Text="{Binding Vessel.Name, ValidatesOnNotifyDataErrors=True, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Text="{Binding (Validation.Errors)[0].ErrorContent}" Foreground="Red"/>
+        </StackPanel>
 
-        <TextBlock Grid.Row="2" Grid.Column="0" Text="Flag State:" Margin="0,0,10,10" VerticalAlignment="Center"/>
-        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Vessel.FlagState, ValidatesOnNotifyDataErrors=True}" Margin="0,0,0,10"/>
+        <StackPanel Grid.Row="2">
+            <TextBlock Text="Flag State:"/>
+            <TextBox Text="{Binding Vessel.FlagState, ValidatesOnNotifyDataErrors=True, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Text="{Binding (Validation.Errors)[0].ErrorContent}" Foreground="Red"/>
+        </StackPanel>
 
-        <TextBlock Grid.Row="3" Grid.Column="0" Text="Type:" Margin="0,0,10,10" VerticalAlignment="Center"/>
-        <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Vessel.VesselType, ValidatesOnNotifyDataErrors=True}" Margin="0,0,0,10"/>
+        <StackPanel Grid.Row="3">
+            <TextBlock Text="Type:"/>
+            <ComboBox ItemsSource="{Binding VesselTypes}" SelectedItem="{Binding Vessel.VesselType, ValidatesOnNotifyDataErrors=True, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Text="{Binding (Validation.Errors)[0].ErrorContent}" Foreground="Red"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="4">
+            <TextBlock Text="MMSI:"/>
+            <TextBox Text="{Binding Vessel.Mmsi, ValidatesOnNotifyDataErrors=True, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Text="{Binding (Validation.Errors)[0].ErrorContent}" Foreground="Red"/>
+        </StackPanel>
         
-        <TextBlock Grid.Row="4" Grid.Column="0" Text="MMSI:" Margin="0,0,10,10" VerticalAlignment="Center"/>
-        <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding Vessel.Mmsi, ValidatesOnNotifyDataErrors=True}" Margin="0,0,0,10"/>
+        <StackPanel Grid.Row="5">
+            <TextBlock Text="Length Overall:"/>
+            <TextBox Text="{Binding Vessel.LengthOverall, ValidatesOnNotifyDataErrors=True, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Text="{Binding (Validation.Errors)[0].ErrorContent}" Foreground="Red"/>
+        </StackPanel>
 
-        <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Grid.Row="6">
+            <TextBlock Text="Beam:"/>
+            <TextBox Text="{Binding Vessel.Beam, ValidatesOnNotifyDataErrors=True, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Text="{Binding (Validation.Errors)[0].ErrorContent}" Foreground="Red"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="7">
+            <TextBlock Text="Gross Tonnage:"/>
+            <TextBox Text="{Binding Vessel.GrossTonnage, ValidatesOnNotifyDataErrors=True, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Text="{Binding (Validation.Errors)[0].ErrorContent}" Foreground="Red"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
             <Button Content="Save" Command="{Binding SaveCommand}" IsDefault="True" MinWidth="80" Margin="0,0,10,0"/>
             <Button Content="Cancel" Command="{Binding CancelCommand}" IsCancel="True" MinWidth="80"/>
         </StackPanel>

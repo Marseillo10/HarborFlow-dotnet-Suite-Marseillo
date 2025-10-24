@@ -15,5 +15,6 @@ namespace HarborFlow.Wpf.Interfaces
     {
         event Action<string, NotificationType> NotificationRequested;
         void ShowNotification(string message, NotificationType type = NotificationType.Error);
+        bool ShowConfirmation(string title, string message);
     }
 }

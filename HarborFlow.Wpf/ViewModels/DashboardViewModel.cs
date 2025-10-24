@@ -1,11 +1,16 @@
-using HarborFlow.Application.Interfaces;
+using HarborFlow.Core.Interfaces;
 using HarborFlow.Core.Models;
+using HarborFlow.Wpf.Commands;
+using HarborFlow.Wpf.Interfaces;
 using HarborFlow.Wpf.Services;
+using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace HarborFlow.Wpf.ViewModels
 {
@@ -14,36 +19,50 @@ namespace HarborFlow.Wpf.ViewModels
         private readonly IPortServiceManager _portServiceManager;
         private readonly IVesselTrackingService _vesselTrackingService;
         private readonly SessionContext _sessionContext;
+        private readonly INotificationService _notificationService;
+        private readonly ILogger<DashboardViewModel> _logger;
         private readonly MainWindowViewModel _mainWindowViewModel;
 
         private int _vesselCount;
         public int VesselCount
         {
             get => _vesselCount;
-            set
-            {
-                _vesselCount = value;
-                OnPropertyChanged();
-            }
+            set { _vesselCount = value; OnPropertyChanged(); }
         }
 
         private int _activeServiceRequestCount;
         public int ActiveServiceRequestCount
         {
             get => _activeServiceRequestCount;
-            set
-            {
-                _activeServiceRequestCount = value;
-                OnPropertyChanged();
-            }
+            set { _activeServiceRequestCount = value; OnPropertyChanged(); }
         }
 
-        public DashboardViewModel(IPortServiceManager portServiceManager, IVesselTrackingService vesselTrackingService, SessionContext sessionContext, MainWindowViewModel mainWindowViewModel)
+        private ObservableCollection<Vessel> _recentVessels = new();
+        public ObservableCollection<Vessel> RecentVessels
+        {
+            get => _recentVessels;
+            set { _recentVessels = value; OnPropertyChanged(); }
+        }
+
+        private ObservableCollection<ServiceRequest> _recentServiceRequests = new();
+        public ObservableCollection<ServiceRequest> RecentServiceRequests
+        {
+            get => _recentServiceRequests;
+            set { _recentServiceRequests = value; OnPropertyChanged(); }
+        }
+
+        public ICommand RefreshCommand { get; }
+
+        public DashboardViewModel(IPortServiceManager portServiceManager, IVesselTrackingService vesselTrackingService, SessionContext sessionContext, INotificationService notificationService, ILogger<DashboardViewModel> logger, MainWindowViewModel mainWindowViewModel)
         {
             _portServiceManager = portServiceManager;
             _vesselTrackingService = vesselTrackingService;
             _sessionContext = sessionContext;
+            _notificationService = notificationService;
+            _logger = logger;
             _mainWindowViewModel = mainWindowViewModel;
+
+            RefreshCommand = new AsyncRelayCommand(_ => LoadDataAsync());
         }
 
         public async Task LoadDataAsync()
@@ -53,16 +72,19 @@ namespace HarborFlow.Wpf.ViewModels
             {
                 var vessels = await _vesselTrackingService.GetAllVesselsAsync();
                 VesselCount = vessels.Count();
+                RecentVessels = new ObservableCollection<Vessel>(vessels.OrderByDescending(v => v.UpdatedAt).Take(5));
 
                 if (_sessionContext.CurrentUser != null)
                 {
                     var serviceRequests = await _portServiceManager.GetAllServiceRequestsAsync(_sessionContext.CurrentUser);
                     ActiveServiceRequestCount = serviceRequests.Count(sr => sr.Status != RequestStatus.Completed);
+                    RecentServiceRequests = new ObservableCollection<ServiceRequest>(serviceRequests.OrderByDescending(sr => sr.RequestDate).Take(5));
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // In a real app, log this exception
+                _logger.LogError(ex, "Failed to load dashboard data.");
+                _notificationService.ShowNotification("Failed to load dashboard data. Please check your connection and try again.", NotificationType.Error);
             }
             finally
             {

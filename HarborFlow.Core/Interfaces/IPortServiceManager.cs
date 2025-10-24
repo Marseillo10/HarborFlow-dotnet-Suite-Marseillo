@@ -1,7 +1,7 @@
 
 using HarborFlow.Core.Models;
 
-namespace HarborFlow.Application.Interfaces
+namespace HarborFlow.Core.Interfaces
 {
     public interface IPortServiceManager
     {

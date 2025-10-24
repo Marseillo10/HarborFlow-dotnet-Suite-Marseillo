@@ -543,7 +543,9 @@
       "System.Text.Json/9.0.10": {},
       "HarborFlow.Application/1.0.0": {
         "dependencies": {
-          "HarborFlow.Core": "1.0.0"
+          "HarborFlow.Core": "1.0.0",
+          "HarborFlow.Infrastructure": "1.0.0",
+          "Microsoft.EntityFrameworkCore": "9.0.0"
         },
         "runtime": {
           "HarborFlow.Application.dll": {
@@ -573,7 +575,6 @@
       "HarborFlow.Infrastructure/1.0.0": {
         "dependencies": {
           "BCrypt.Net-Next": "4.0.3",
-          "HarborFlow.Application": "1.0.0",
           "HarborFlow.Core": "1.0.0",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.0"
         },

@@ -16,15 +16,6 @@ namespace HarborFlow.Wpf.Views
             DataContext = viewModel;
         }
 
-        private void RegisterButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (App.AppHost != null)
-            {
-                var registerView = App.AppHost.Services.GetRequiredService<RegisterView>();
-                registerView.Show();
-            }
-        }
-
         private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
             if (DataContext is LoginViewModel viewModel && sender is PasswordBox passwordBox)

@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using System.Collections.ObjectModel;
 
 namespace HarborFlow.Wpf.ViewModels
 {
@@ -27,6 +28,8 @@ namespace HarborFlow.Wpf.ViewModels
             }
         }
 
+        public ObservableCollection<VesselType> VesselTypes { get; }
+
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
 
@@ -38,6 +41,8 @@ namespace HarborFlow.Wpf.ViewModels
             _validator = validator;
             Vessel = vessel;
             
+            VesselTypes = new ObservableCollection<VesselType>(Enum.GetValues(typeof(VesselType)).Cast<VesselType>());
+
             SaveCommand = new RelayCommand(_ => Save(), _ => !HasErrors);
             CancelCommand = new RelayCommand(_ => Cancel());
 

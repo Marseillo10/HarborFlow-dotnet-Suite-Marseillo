@@ -1,8 +1,9 @@
 using FluentAssertions;
-using HarborFlow.Application.Interfaces;
+using HarborFlow.Core.Interfaces;
 using HarborFlow.Core.Models;
 using HarborFlow.Wpf.Commands;
 using HarborFlow.Wpf.Interfaces;
+using HarborFlow.Wpf.Services;
 using HarborFlow.Wpf.ViewModels;
 using Moq;
 using System.Threading.Tasks;
@@ -14,6 +15,8 @@ namespace HarborFlow.Tests.ViewModels
     {
         private readonly Mock<IAuthService> _authServiceMock;
         private readonly Mock<IWindowManager> _windowManagerMock;
+        private readonly Mock<INotificationService> _notificationServiceMock;
+        private readonly SessionContext _sessionContext;
         private readonly Mock<MainWindowViewModel> _mainWindowViewModelMock;
         private readonly LoginViewModel _viewModel;
 
@@ -21,8 +24,17 @@ namespace HarborFlow.Tests.ViewModels
         {
             _authServiceMock = new Mock<IAuthService>();
             _windowManagerMock = new Mock<IWindowManager>();
+            _notificationServiceMock = new Mock<INotificationService>();
+            _sessionContext = new SessionContext();
             _mainWindowViewModelMock = new Mock<MainWindowViewModel>();
-            _viewModel = new LoginViewModel(_authServiceMock.Object, _windowManagerMock.Object, _mainWindowViewModelMock.Object);
+            _viewModel = new LoginViewModel(_authServiceMock.Object, _windowManagerMock.Object, _sessionContext, _notificationServiceMock.Object, _mainWindowViewModelMock.Object);
+        }
+
+        [Fact]
+        public void OpenRegisterWindowCommand_ShouldNotBeNull()
+        {
+            // Assert
+            _viewModel.OpenRegisterWindowCommand.Should().NotBeNull();
         }
 
         [Fact]
@@ -68,23 +80,41 @@ namespace HarborFlow.Tests.ViewModels
         }
 
         [Fact]
-        public async Task LoginCommand_ShouldCallShowMainWindow_WhenLoginIsSuccessful()
+        public async Task LoginCommand_ShouldCallShowMainWindowAndSetSessionContext_WhenLoginIsSuccessful()
         {
             // Arrange
+            var user = new User();
             _viewModel.Username = "test";
             _viewModel.Password = "password";
             _authServiceMock.Setup(s => s.LoginAsync("test", "password"))
-                .ReturnsAsync(new User());
+                .ReturnsAsync(user);
 
             // Act
             await (_viewModel.LoginCommand as AsyncRelayCommand).ExecuteAsync(null);
 
             // Assert
             _windowManagerMock.Verify(w => w.ShowMainWindow(), Times.Once);
+            _sessionContext.CurrentUser.Should().Be(user);
         }
 
         [Fact]
-        public async Task LoginCommand_ShouldSetErrorMessage_WhenLoginFails()
+        public async Task LoginCommand_ShouldClearPassword_AfterLoginAttempt()
+        {
+            // Arrange
+            _viewModel.Username = "test";
+            _viewModel.Password = "password";
+            _authServiceMock.Setup(s => s.LoginAsync(It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync((User)null);
+
+            // Act
+            await (_viewModel.LoginCommand as AsyncRelayCommand).ExecuteAsync(null);
+
+            // Assert
+            _viewModel.Password.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task LoginCommand_ShouldShowNotification_WhenLoginFails()
         {
             // Arrange
             _viewModel.Username = "test";
@@ -96,7 +126,7 @@ namespace HarborFlow.Tests.ViewModels
             await (_viewModel.LoginCommand as AsyncRelayCommand).ExecuteAsync(null);
 
             // Assert
-            _viewModel.ErrorMessage.Should().NotBeNullOrEmpty();
+            _notificationServiceMock.Verify(n => n.ShowNotification(It.IsAny<string>(), NotificationType.Error), Times.Once);
             _windowManagerMock.Verify(w => w.ShowMainWindow(), Times.Never);
         }
     }

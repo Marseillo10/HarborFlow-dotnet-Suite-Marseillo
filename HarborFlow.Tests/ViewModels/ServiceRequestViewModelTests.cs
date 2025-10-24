@@ -1,5 +1,5 @@
 using FluentAssertions;
-using HarborFlow.Application.Interfaces;
+using HarborFlow.Core.Interfaces;
 using HarborFlow.Core.Models;
 using HarborFlow.Wpf.Commands;
 using HarborFlow.Wpf.Interfaces;
@@ -18,6 +18,7 @@ namespace HarborFlow.Tests.ViewModels
     {
         private readonly Mock<IPortServiceManager> _portServiceManagerMock;
         private readonly Mock<IWindowManager> _windowManagerMock;
+        private readonly Mock<INotificationService> _notificationServiceMock;
         private readonly SessionContext _sessionContext;
         private readonly Mock<MainWindowViewModel> _mainWindowViewModelMock;
         private readonly ServiceRequestViewModel _viewModel;
@@ -26,9 +27,10 @@ namespace HarborFlow.Tests.ViewModels
         {
             _portServiceManagerMock = new Mock<IPortServiceManager>();
             _windowManagerMock = new Mock<IWindowManager>();
-            _sessionContext = new SessionContext { CurrentUser = new User { UserId = Guid.NewGuid() } };
+            _notificationServiceMock = new Mock<INotificationService>();
+            _sessionContext = new SessionContext { CurrentUser = new User { UserId = Guid.NewGuid(), Role = UserRole.Administrator } };
             _mainWindowViewModelMock = new Mock<MainWindowViewModel>();
-            _viewModel = new ServiceRequestViewModel(_portServiceManagerMock.Object, _windowManagerMock.Object, _sessionContext, _mainWindowViewModelMock.Object);
+            _viewModel = new ServiceRequestViewModel(_portServiceManagerMock.Object, _windowManagerMock.Object, _notificationServiceMock.Object, _sessionContext, _mainWindowViewModelMock.Object);
         }
 
         [Fact]
@@ -65,7 +67,7 @@ namespace HarborFlow.Tests.ViewModels
         public void EditAndDeleteCommands_ShouldBeEnabled_WhenRequestIsSelected()
         {
             // Arrange
-            _viewModel.SelectedServiceRequest = new ServiceRequest();
+            _viewModel.SelectedServiceRequest = new ServiceRequest { RequestedBy = _sessionContext.CurrentUser.UserId };
 
             // Act
             var canEdit = _viewModel.EditServiceRequestCommand.CanExecute(null);
@@ -94,7 +96,7 @@ namespace HarborFlow.Tests.ViewModels
         public async Task EditServiceRequestCommand_ShouldUpdateRequest_WhenDialogIsSaved()
         {
             // Arrange
-            var request = new ServiceRequest { RequestId = Guid.NewGuid() };
+            var request = new ServiceRequest { RequestId = Guid.NewGuid(), RequestedBy = _sessionContext.CurrentUser.UserId };
             _viewModel.SelectedServiceRequest = request;
             _windowManagerMock.Setup(w => w.ShowServiceRequestEditorDialog(It.IsAny<ServiceRequest>())).Returns(true);
 
@@ -103,6 +105,53 @@ namespace HarborFlow.Tests.ViewModels
 
             // Assert
             _portServiceManagerMock.Verify(s => s.UpdateServiceRequestAsync(It.IsAny<ServiceRequest>()), Times.Once);
+            _portServiceManagerMock.Verify(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser), Times.Once); // Because it reloads
+        }
+
+        [Fact]
+        public async Task DeleteServiceRequestCommand_ShouldDeleteRequest_WhenConfirmationIsAccepted()
+        {
+            // Arrange
+            var request = new ServiceRequest { RequestId = Guid.NewGuid() };
+            _viewModel.SelectedServiceRequest = request;
+            _notificationServiceMock.Setup(n => n.ShowConfirmation(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+
+            // Act
+            await (_viewModel.DeleteServiceRequestCommand as AsyncRelayCommand).ExecuteAsync(null);
+
+            // Assert
+            _portServiceManagerMock.Verify(s => s.DeleteServiceRequestAsync(request.RequestId), Times.Once);
+            _portServiceManagerMock.Verify(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser), Times.Once); // Because it reloads
+        }
+
+        [Fact]
+        public async Task ApproveServiceRequestCommand_ShouldApproveRequest()
+        {
+            // Arrange
+            var request = new ServiceRequest { RequestId = Guid.NewGuid() };
+            _viewModel.SelectedServiceRequest = request;
+
+            // Act
+            await (_viewModel.ApproveServiceRequestCommand as AsyncRelayCommand).ExecuteAsync(null);
+
+            // Assert
+            _portServiceManagerMock.Verify(s => s.ApproveServiceRequestAsync(request.RequestId, _sessionContext.CurrentUser.UserId), Times.Once);
+            _portServiceManagerMock.Verify(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser), Times.Once); // Because it reloads
+        }
+
+        [Fact]
+        public async Task RejectServiceRequestCommand_ShouldRejectRequest_WhenReasonIsProvided()
+        {
+            // Arrange
+            var request = new ServiceRequest { RequestId = Guid.NewGuid() };
+            _viewModel.SelectedServiceRequest = request;
+            _windowManagerMock.Setup(w => w.ShowInputDialog(It.IsAny<string>(), It.IsAny<string>())).Returns("Test reason");
+
+            // Act
+            await (_viewModel.RejectServiceRequestCommand as AsyncRelayCommand).ExecuteAsync(null);
+
+            // Assert
+            _portServiceManagerMock.Verify(s => s.RejectServiceRequestAsync(request.RequestId, _sessionContext.CurrentUser.UserId, "Test reason"), Times.Once);
             _portServiceManagerMock.Verify(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser), Times.Once); // Because it reloads
         }
     }

@@ -3,9 +3,10 @@ using Microsoft.Extensions.Hosting;
 using System.IO;
 using System.Windows;
 using Microsoft.Extensions.Configuration;
-using HarborFlow.Application.Interfaces;
-using HarborFlow.Infrastructure.Services;
+using HarborFlow.Core.Interfaces;
+using HarborFlow.Application.Services;
 using HarborFlow.Infrastructure;
+using HarborFlow.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using HarborFlow.Wpf.Views;
 using HarborFlow.Wpf.ViewModels;
@@ -15,6 +16,8 @@ using System;
 using HarborFlow.Wpf.Interfaces;
 
 using HarborFlow.Wpf.Validators;
+using Microsoft.Extensions.Logging;
+using System.Windows.Threading;
 
 namespace HarborFlow.Wpf
 {
@@ -42,6 +45,7 @@ namespace HarborFlow.Wpf
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddLogging();
                     services.AddSingleton<MainWindow>();
                     services.AddSingleton<MainWindowViewModel>();
                     services.AddSingleton<MapViewModel>();
@@ -69,6 +73,8 @@ namespace HarborFlow.Wpf
                     services.AddSingleton<IWindowManager, WindowManager>();
                     services.AddSingleton<ISettingsService, SettingsService>();
                     services.AddSingleton<IFileService, FileService>();
+                    services.AddSingleton<ICachingService, CachingService>();
+                    services.AddSingleton<ISynchronizationService, SynchronizationService>();
 
                     services.AddScoped<IPortServiceManager, PortServiceManager>();
                     services.AddSingleton<IVesselTrackingService, VesselTrackingService>();
@@ -85,10 +91,20 @@ namespace HarborFlow.Wpf
 
         protected override async void OnStartup(StartupEventArgs e)
         {
+            DispatcherUnhandledException += OnDispatcherUnhandledException;
             await AppHost!.StartAsync();
 
             var windowManager = AppHost.Services.GetRequiredService<IWindowManager>();
             windowManager.ShowLoginWindow();
+        }
+
+        private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            e.Handled = true;
+            var notificationService = AppHost!.Services.GetRequiredService<INotificationService>();
+            notificationService.ShowNotification("An unexpected error occurred. Please check the logs for more details.", NotificationType.Error);
+            var logger = AppHost.Services.GetRequiredService<ILogger<App>>();
+            logger.LogError(e.Exception, "An unhandled exception occurred.");
         }
 
         protected override async void OnExit(ExitEventArgs e)

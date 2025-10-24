@@ -38,6 +38,9 @@
                     <Button Content="Search" Command="{Binding SearchVesselsCommand}" Margin="10,0,0,0"/>
                     <TextBlock Text="Vessel Type:" Margin="20,0,0,0" VerticalAlignment="Center"/>
                     <ComboBox ItemsSource="{Binding VesselTypeFilters}" SelectedItem="{Binding SelectedVesselTypeFilter}" Width="120" Margin="5,0,0,0"/>
+                    <Button Content="Toggle History" Command="{Binding ToggleHistoryCommand}" Margin="10,0,0,0"/>
+                    <TextBlock Text="Map Layer:" Margin="20,0,0,0" VerticalAlignment="Center"/>
+                    <ComboBox ItemsSource="{Binding MapLayers}" SelectedItem="{Binding SelectedMapLayer}" Width="120" Margin="5,0,0,0"/>
                 </StackPanel>
             </DockPanel>
         </Border>

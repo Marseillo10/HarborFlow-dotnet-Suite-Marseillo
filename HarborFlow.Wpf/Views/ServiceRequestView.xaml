@@ -34,7 +34,7 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Request ID" Binding="{Binding RequestId}" />
                 <DataGridTextColumn Header="Vessel IMO" Binding="{Binding VesselImo}" />
-                <DataGridTextColumn Header="Service Type" Binding="{Binding ServiceType.Name}" />
+                <DataGridTextColumn Header="Service Type" Binding="{Binding ServiceType}" />
                 <DataGridTextColumn Header="Status" Binding="{Binding Status}" />
                 <DataGridTextColumn Header="Request Date" Binding="{Binding RequestDate, StringFormat='d'}" />
             </DataGrid.Columns>

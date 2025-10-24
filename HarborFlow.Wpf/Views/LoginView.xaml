@@ -50,7 +50,7 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,0">
                     <TextBlock Text="Don't have an account? " VerticalAlignment="Center"/>
                     <Button Content="Register"
-                            Click="RegisterButton_Click"
+                            Command="{Binding OpenRegisterWindowCommand}"
                             Style="{StaticResource HyperlinkButtonStyle}"/>
                 </StackPanel>
             </StackPanel>

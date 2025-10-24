@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HarborFlow.Core\HarborFlow.Core.csproj" />
-    <ProjectReference Include="..\HarborFlow.Application\HarborFlow.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -7,7 +7,10 @@ namespace HarborFlow.Wpf.Interfaces
     {
         void ShowLoginWindow();
         void ShowMainWindow();
+        void ShowRegisterWindow();
+        void CloseLoginWindow();
         bool? ShowVesselEditorDialog(Vessel vessel);
         bool? ShowServiceRequestEditorDialog(ServiceRequest serviceRequest);
+        string? ShowInputDialog(string title, string message);
     }
 }

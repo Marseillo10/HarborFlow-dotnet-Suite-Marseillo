@@ -1,13 +1,12 @@
-using HarborFlow.Application.Interfaces;
+using HarborFlow.Core.Interfaces;
 using HarborFlow.Wpf.Commands;
+using HarborFlow.Wpf.Interfaces;
+using Microsoft.Extensions.Logging;
 using System.ComponentModel;
 using System.Windows.Input;
-using System.Windows.Controls;
 using System.Threading.Tasks;
 using System;
-
 using HarborFlow.Wpf.Validators;
-using FluentValidation;
 using System.Linq;
 
 namespace HarborFlow.Wpf.ViewModels
@@ -16,11 +15,13 @@ namespace HarborFlow.Wpf.ViewModels
     {
         private readonly IAuthService _authService;
         private readonly RegisterViewModelValidator _validator;
+        private readonly INotificationService _notificationService;
+        private readonly IWindowManager _windowManager;
+        private readonly ILogger<RegisterViewModel> _logger;
         private string _username = string.Empty;
         private string _email = string.Empty;
         private string _fullName = string.Empty;
-        private string _errorMessage = string.Empty;
-        private bool _isErrorVisible = false;
+        private bool _isLoading;
         private string _password = string.Empty;
         private string _confirmPassword = string.Empty;
 
@@ -30,119 +31,99 @@ namespace HarborFlow.Wpf.ViewModels
         public string Username
         {
             get => _username;
-            set
-            {
-                _username = value;
-                OnPropertyChanged(nameof(Username));
-                IsErrorVisible = false;
-            }
+            set { _username = value; OnPropertyChanged(nameof(Username)); }
         }
 
         public string Password
         {
             get => _password;
-            set
-            {
-                _password = value;
-                OnPropertyChanged(nameof(Password));
-                IsErrorVisible = false;
-            }
+            set { _password = value; OnPropertyChanged(nameof(Password)); }
         }
 
         public string ConfirmPassword
         {
             get => _confirmPassword;
-            set
-            {
-                _confirmPassword = value;
-                OnPropertyChanged(nameof(ConfirmPassword));
-                IsErrorVisible = false;
-            }
+            set { _confirmPassword = value; OnPropertyChanged(nameof(ConfirmPassword)); }
         }
 
         public string Email
         {
             get => _email;
-            set
-            {
-                _email = value;
-                OnPropertyChanged(nameof(Email));
-            }
+            set { _email = value; OnPropertyChanged(nameof(Email)); }
         }
 
         public string FullName
         {
             get => _fullName;
-            set
-            {
-                _fullName = value;
-                OnPropertyChanged(nameof(FullName));
-            }
+            set { _fullName = value; OnPropertyChanged(nameof(FullName)); }
         }
 
-        public string ErrorMessage
+        public bool IsLoading
         {
-            get => _errorMessage;
-            set
-            {
-                _errorMessage = value;
-                OnPropertyChanged(nameof(ErrorMessage));
-            }
-        }
-
-        public bool IsErrorVisible
-        {
-            get => _isErrorVisible;
-            set
-            {
-                _isErrorVisible = value;
-                OnPropertyChanged(nameof(IsErrorVisible));
-            }
+            get => _isLoading;
+            set { _isLoading = value; OnPropertyChanged(nameof(IsLoading)); }
         }
 
         public ICommand RegisterCommand { get; }
+        public ICommand OpenLoginWindowCommand { get; }
 
-        public RegisterViewModel(IAuthService authService, RegisterViewModelValidator validator)
+        public RegisterViewModel(IAuthService authService, RegisterViewModelValidator validator, INotificationService notificationService, IWindowManager windowManager, ILogger<RegisterViewModel> logger)
         {
             _authService = authService;
             _validator = validator;
-            RegisterCommand = new RelayCommand(async (_) => await Register(), _ => CanRegister());
+            _notificationService = notificationService;
+            _windowManager = windowManager;
+            _logger = logger;
+            RegisterCommand = new AsyncRelayCommand(_ => Register(), CanRegister);
+            OpenLoginWindowCommand = new RelayCommand(_ => _windowManager.ShowLoginWindow());
         }
 
-        private bool CanRegister()
+        private bool CanRegister(object? parameter)
         {
-            // Basic check, detailed validation is done on execution
             return !string.IsNullOrWhiteSpace(Username) && 
-                   !string.IsNullOrWhiteSpace(Password);
+                   !string.IsNullOrWhiteSpace(Password) && 
+                   !IsLoading;
         }
 
         public async Task Register()
         {
+            IsLoading = true;
+            ((AsyncRelayCommand)RegisterCommand).RaiseCanExecuteChanged();
+
             var validationResult = _validator.Validate(this);
             if (!validationResult.IsValid)
             {
-                ErrorMessage = string.Join("\n", validationResult.Errors.Select(e => e.ErrorMessage));
-                IsErrorVisible = true;
+                _notificationService.ShowNotification(string.Join("\n", validationResult.Errors.Select(e => e.ErrorMessage)), NotificationType.Error);
+                IsLoading = false;
+                ((AsyncRelayCommand)RegisterCommand).RaiseCanExecuteChanged();
                 return;
             }
 
             if (await _authService.UserExistsAsync(Username))
             {
-                ErrorMessage = "Username already exists.";
-                IsErrorVisible = true;
+                _notificationService.ShowNotification("Username already exists.", NotificationType.Error);
+                IsLoading = false;
+                ((AsyncRelayCommand)RegisterCommand).RaiseCanExecuteChanged();
                 return;
             }
 
             try
             {
                 await _authService.RegisterAsync(Username, Password, Email, FullName);
-                IsErrorVisible = false;
+                _notificationService.ShowNotification("Registration successful! Please log in.", NotificationType.Success);
                 RegistrationSucceeded?.Invoke(this, EventArgs.Empty);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                ErrorMessage = "An unexpected error occurred during registration.";
-                IsErrorVisible = true;
+                _logger.LogError(ex, "An error occurred during registration for user {Username}.", Username);
+                _notificationService.ShowNotification($"An unexpected error occurred during registration: {ex.Message}", NotificationType.Error);
+            }
+            finally
+            {
+                Password = string.Empty;
+                ConfirmPassword = string.Empty;
+                IsLoading = false;
+                ((AsyncRelayCommand)RegisterCommand).RaiseCanExecuteChanged();
             }
         }
 

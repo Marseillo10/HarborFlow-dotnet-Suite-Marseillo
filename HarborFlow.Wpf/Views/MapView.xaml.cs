@@ -28,6 +28,8 @@ namespace HarborFlow.Wpf.Views
             _viewModel.FilteredVesselsOnMap.CollectionChanged += VesselsOnMap_CollectionChanged;
             _viewModel.SearchResults.CollectionChanged += SearchResults_CollectionChanged;
             _viewModel.VesselSelected += ViewModel_VesselSelected;
+            _viewModel.HistoryTrackRequested += ViewModel_HistoryTrackRequested;
+            _viewModel.MapLayerChanged += ViewModel_MapLayerChanged;
         }
 
         private async void InitializeWebViewAsync()
@@ -61,6 +63,7 @@ namespace HarborFlow.Wpf.Views
                     Latitude = pos?.Latitude, 
                     Longitude = pos?.Longitude,
                     Course = pos?.CourseOverGround,
+                    Speed = pos?.SpeedOverGround,
                     VesselType = v.VesselType.ToString()
                 };
             }).Where(p => p.Latitude.HasValue && p.Longitude.HasValue).ToList();
@@ -77,7 +80,24 @@ namespace HarborFlow.Wpf.Views
             if (lastPosition != null)
             {
                 await WebView.CoreWebView2.ExecuteScriptAsync($"centerOnVessel({lastPosition.Latitude}, {lastPosition.Longitude})");
+                await WebView.CoreWebView2.ExecuteScriptAsync($"openVesselPopup({lastPosition.Latitude}, {lastPosition.Longitude})");
             }
+        }
+
+        private async void ViewModel_HistoryTrackRequested(object? sender, IEnumerable<VesselPosition> e)
+        {
+            if (!_isWebViewInitialized) return;
+
+            var historyTrack = e.Select(p => new { p.Latitude, p.Longitude }).ToList();
+            var json = JsonSerializer.Serialize(historyTrack);
+            await WebView.CoreWebView2.ExecuteScriptAsync($"drawHistoryTrack('{json}')");
+        }
+
+        private async void ViewModel_MapLayerChanged(object? sender, string e)
+        {
+            if (!_isWebViewInitialized) return;
+
+            await WebView.CoreWebView2.ExecuteScriptAsync($"setMapLayer('{e}')");
         }
     }
 }
