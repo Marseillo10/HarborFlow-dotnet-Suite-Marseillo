@@ -1,5 +1,6 @@
 
 using HarborFlow.Core.Models;
+using HarborFlow.Wpf.Validators;
 using HarborFlow.Wpf.Interfaces;
 using HarborFlow.Wpf.ViewModels;
 using HarborFlow.Wpf.Views;
@@ -37,7 +38,8 @@ namespace HarborFlow.Wpf.Services
 
         public bool? ShowVesselEditorDialog(Vessel vessel)
         {
-            var viewModel = new VesselEditorViewModel(vessel);
+            var validator = _serviceProvider.GetRequiredService<VesselValidator>();
+            var viewModel = new VesselEditorViewModel(vessel, validator);
             var editorView = new VesselEditorView(viewModel)
             {
                 Owner = _currentWindow

@@ -29,10 +29,12 @@ namespace HarborFlow.Tests.ViewModels
             _notificationServiceMock = new Mock<INotificationService>();
             _sessionContext = new SessionContext();
             
+            var mainWindowViewModelMock = new Mock<MainWindowViewModel>();
+
             _mapViewModel = new MapViewModel(_vesselTrackingServiceMock.Object, _notificationServiceMock.Object);
-            _dashboardViewModel = new DashboardViewModel(_portServiceManagerMock.Object, _vesselTrackingServiceMock.Object, _sessionContext);
-            _serviceRequestViewModel = new ServiceRequestViewModel(_portServiceManagerMock.Object, _windowManagerMock.Object, _sessionContext);
-            _vesselManagementViewModel = new VesselManagementViewModel(_vesselTrackingServiceMock.Object, _windowManagerMock.Object);
+            _dashboardViewModel = new DashboardViewModel(_portServiceManagerMock.Object, _vesselTrackingServiceMock.Object, _sessionContext, mainWindowViewModelMock.Object);
+            _serviceRequestViewModel = new ServiceRequestViewModel(_portServiceManagerMock.Object, _windowManagerMock.Object, _sessionContext, mainWindowViewModelMock.Object);
+            _vesselManagementViewModel = new VesselManagementViewModel(_vesselTrackingServiceMock.Object, _windowManagerMock.Object, _notificationServiceMock.Object, _sessionContext, mainWindowViewModelMock.Object);
 
             _viewModel = new MainWindowViewModel(
                 _sessionContext,

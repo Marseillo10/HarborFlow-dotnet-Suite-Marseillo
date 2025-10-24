@@ -14,6 +14,14 @@
           "HarborFlow.Application.dll": {}
         }
       },
+      "FluentValidation/11.9.0": {
+        "runtime": {
+          "lib/net8.0/FluentValidation.dll": {
+            "assemblyVersion": "11.0.0.0",
+            "fileVersion": "11.9.0.0"
+          }
+        }
+      },
       "Microsoft.Extensions.Configuration/9.0.10": {
         "dependencies": {
           "Microsoft.Extensions.Configuration.Abstractions": "9.0.10",
@@ -414,6 +422,7 @@
       "System.Text.Json/9.0.10": {},
       "HarborFlow.Core/1.0.0": {
         "dependencies": {
+          "FluentValidation": "11.9.0",
           "Microsoft.Extensions.Configuration": "9.0.10",
           "Microsoft.Extensions.Configuration.Json": "9.0.10",
           "Microsoft.Extensions.DependencyInjection": "9.0.10",
@@ -436,6 +445,13 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "FluentValidation/11.9.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-VneVlTvwYDkfHV5av3QrQ0amALgrLX6LV94wlYyEsh0B/klJBW7C8y2eAtj5tOZ3jH6CAVpr4s1ZGgew/QWyig==",
+      "path": "fluentvalidation/11.9.0",
+      "hashPath": "fluentvalidation.11.9.0.nupkg.sha512"
     },
     "Microsoft.Extensions.Configuration/9.0.10": {
       "type": "package",

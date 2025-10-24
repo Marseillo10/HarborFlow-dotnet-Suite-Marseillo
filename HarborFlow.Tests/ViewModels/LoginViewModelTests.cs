@@ -14,13 +14,15 @@ namespace HarborFlow.Tests.ViewModels
     {
         private readonly Mock<IAuthService> _authServiceMock;
         private readonly Mock<IWindowManager> _windowManagerMock;
+        private readonly Mock<MainWindowViewModel> _mainWindowViewModelMock;
         private readonly LoginViewModel _viewModel;
 
         public LoginViewModelTests()
         {
             _authServiceMock = new Mock<IAuthService>();
             _windowManagerMock = new Mock<IWindowManager>();
-            _viewModel = new LoginViewModel(_authServiceMock.Object, _windowManagerMock.Object);
+            _mainWindowViewModelMock = new Mock<MainWindowViewModel>();
+            _viewModel = new LoginViewModel(_authServiceMock.Object, _windowManagerMock.Object, _mainWindowViewModelMock.Object);
         }
 
         [Fact]

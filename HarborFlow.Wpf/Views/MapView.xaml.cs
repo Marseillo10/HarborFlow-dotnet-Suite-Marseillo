@@ -25,7 +25,7 @@ namespace HarborFlow.Wpf.Views
 
             InitializeWebViewAsync();
 
-            _viewModel.VesselsOnMap.CollectionChanged += VesselsOnMap_CollectionChanged;
+            _viewModel.FilteredVesselsOnMap.CollectionChanged += VesselsOnMap_CollectionChanged;
             _viewModel.SearchResults.CollectionChanged += SearchResults_CollectionChanged;
             _viewModel.VesselSelected += ViewModel_VesselSelected;
         }
@@ -40,7 +40,7 @@ namespace HarborFlow.Wpf.Views
 
         private void VesselsOnMap_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            UpdateVesselsOnMapAsync(_viewModel.VesselsOnMap);
+            UpdateVesselsOnMapAsync(_viewModel.FilteredVesselsOnMap);
         }
 
         private void SearchResults_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)

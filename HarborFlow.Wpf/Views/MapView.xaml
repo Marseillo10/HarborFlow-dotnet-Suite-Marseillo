@@ -37,7 +37,7 @@
                     </Grid>
                     <Button Content="Search" Command="{Binding SearchVesselsCommand}" Margin="10,0,0,0"/>
                     <TextBlock Text="Vessel Type:" Margin="20,0,0,0" VerticalAlignment="Center"/>
-                    <ComboBox ItemsSource="{Binding VesselTypes}" SelectedItem="{Binding SelectedVesselType}" Width="120" Margin="5,0,0,0"/>
+                    <ComboBox ItemsSource="{Binding VesselTypeFilters}" SelectedItem="{Binding SelectedVesselTypeFilter}" Width="120" Margin="5,0,0,0"/>
                 </StackPanel>
             </DockPanel>
         </Border>

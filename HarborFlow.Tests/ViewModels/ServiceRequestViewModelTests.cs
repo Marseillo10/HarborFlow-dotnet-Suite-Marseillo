@@ -19,6 +19,7 @@ namespace HarborFlow.Tests.ViewModels
         private readonly Mock<IPortServiceManager> _portServiceManagerMock;
         private readonly Mock<IWindowManager> _windowManagerMock;
         private readonly SessionContext _sessionContext;
+        private readonly Mock<MainWindowViewModel> _mainWindowViewModelMock;
         private readonly ServiceRequestViewModel _viewModel;
 
         public ServiceRequestViewModelTests()
@@ -26,7 +27,8 @@ namespace HarborFlow.Tests.ViewModels
             _portServiceManagerMock = new Mock<IPortServiceManager>();
             _windowManagerMock = new Mock<IWindowManager>();
             _sessionContext = new SessionContext { CurrentUser = new User { UserId = Guid.NewGuid() } };
-            _viewModel = new ServiceRequestViewModel(_portServiceManagerMock.Object, _windowManagerMock.Object, _sessionContext);
+            _mainWindowViewModelMock = new Mock<MainWindowViewModel>();
+            _viewModel = new ServiceRequestViewModel(_portServiceManagerMock.Object, _windowManagerMock.Object, _sessionContext, _mainWindowViewModelMock.Object);
         }
 
         [Fact]

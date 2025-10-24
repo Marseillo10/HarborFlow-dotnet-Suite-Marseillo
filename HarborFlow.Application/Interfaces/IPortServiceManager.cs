@@ -12,5 +12,6 @@ namespace HarborFlow.Application.Interfaces
         Task<ServiceRequest?> GetServiceRequestByIdAsync(Guid requestId);
         Task<IEnumerable<ServiceRequest>> GetAllServiceRequestsAsync(User currentUser);
         Task<ServiceRequest> UpdateServiceRequestAsync(ServiceRequest request);
+        Task DeleteServiceRequestAsync(Guid requestId);
     }
 }

@@ -8,8 +8,8 @@ using System.Windows.Input;
 using HarborFlow.Wpf.Commands;
 using System.Linq;
 using System;
-
 using HarborFlow.Wpf.Interfaces;
+using System.Collections.Specialized;
 
 namespace HarborFlow.Wpf.ViewModels
 {
@@ -20,6 +20,7 @@ namespace HarborFlow.Wpf.ViewModels
         private string _searchTerm;
         private ObservableCollection<Vessel> _searchResults;
         private Vessel? _selectedVessel;
+        private VesselType? _selectedVesselTypeFilter;
 
         public event PropertyChangedEventHandler? PropertyChanged;
         public event EventHandler<Vessel>? VesselSelected;
@@ -36,6 +37,18 @@ namespace HarborFlow.Wpf.ViewModels
         }
 
         public ObservableCollection<string> Suggestions { get; private set; }
+        public ObservableCollection<VesselType> VesselTypeFilters { get; } = new ObservableCollection<VesselType>(Enum.GetValues(typeof(VesselType)).Cast<VesselType>());
+
+        public VesselType? SelectedVesselTypeFilter
+        {
+            get => _selectedVesselTypeFilter;
+            set
+            {
+                _selectedVesselTypeFilter = value;
+                OnPropertyChanged(nameof(SelectedVesselTypeFilter));
+                UpdateFilteredVessels();
+            }
+        }
 
         public ICommand SelectSuggestionCommand { get; }
 
@@ -63,8 +76,7 @@ namespace HarborFlow.Wpf.ViewModels
             }
         }
 
-        // Directly expose the collection from the service
-        public ObservableCollection<Vessel> VesselsOnMap => _vesselTrackingService.TrackedVessels;
+        public ObservableCollection<Vessel> FilteredVesselsOnMap { get; } = new ObservableCollection<Vessel>();
 
         public ICommand SearchVesselsCommand { get; }
 
@@ -78,6 +90,9 @@ namespace HarborFlow.Wpf.ViewModels
             SearchVesselsCommand = new RelayCommand(async _ => await SearchVesselsAsync());
             SelectSuggestionCommand = new RelayCommand(SelectSuggestion);
 
+            _vesselTrackingService.TrackedVessels.CollectionChanged += OnTrackedVesselsChanged;
+            UpdateFilteredVessels();
+
             // Define a bounding box for Southeast Asia / Indonesia
             var boundingBoxes = new[]
             {
@@ -86,6 +101,23 @@ namespace HarborFlow.Wpf.ViewModels
             };
 
             _ = _vesselTrackingService.StartTracking(boundingBoxes);
+        }
+
+        private void OnTrackedVesselsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            UpdateFilteredVessels();
+        }
+
+        private void UpdateFilteredVessels()
+        {
+            FilteredVesselsOnMap.Clear();
+            var filtered = _vesselTrackingService.TrackedVessels
+                .Where(v => SelectedVesselTypeFilter == null || v.VesselType == SelectedVesselTypeFilter);
+            
+            foreach (var vessel in filtered)
+            {
+                FilteredVesselsOnMap.Add(vessel);
+            }
         }
 
         private void SelectSuggestion(object? suggestion)
@@ -141,6 +173,7 @@ namespace HarborFlow.Wpf.ViewModels
 
         public void Dispose()
         {
+            _vesselTrackingService.TrackedVessels.CollectionChanged -= OnTrackedVesselsChanged;
             _vesselTrackingService.StopTracking().Wait();
         }
     }

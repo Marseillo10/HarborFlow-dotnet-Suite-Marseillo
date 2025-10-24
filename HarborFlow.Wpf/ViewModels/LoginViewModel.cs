@@ -13,6 +13,7 @@ namespace HarborFlow.Wpf.ViewModels
     {
         private readonly IAuthService _authService;
         private readonly IWindowManager _windowManager;
+        private readonly MainWindowViewModel _mainWindowViewModel;
 
         private string _username = string.Empty;
         public string Username
@@ -38,17 +39,6 @@ namespace HarborFlow.Wpf.ViewModels
             }
         }
 
-        private bool _isLoading;
-        public bool IsLoading
-        {
-            get => _isLoading;
-            set
-            {
-                _isLoading = value;
-                OnPropertyChanged();
-            }
-        }
-
         private string _errorMessage = string.Empty;
         public string ErrorMessage
         {
@@ -62,10 +52,11 @@ namespace HarborFlow.Wpf.ViewModels
 
         public ICommand LoginCommand { get; }
 
-        public LoginViewModel(IAuthService authService, IWindowManager windowManager)
+        public LoginViewModel(IAuthService authService, IWindowManager windowManager, MainWindowViewModel mainWindowViewModel)
         {
             _authService = authService;
             _windowManager = windowManager;
+            _mainWindowViewModel = mainWindowViewModel;
             LoginCommand = new AsyncRelayCommand(LoginAsync, CanLogin);
         }
 
@@ -76,7 +67,7 @@ namespace HarborFlow.Wpf.ViewModels
 
         private async Task LoginAsync(object? parameter)
         {
-            IsLoading = true;
+            _mainWindowViewModel.IsLoading = true;
             ErrorMessage = string.Empty;
 
             try
@@ -98,7 +89,7 @@ namespace HarborFlow.Wpf.ViewModels
             }
             finally
             {
-                IsLoading = false;
+                _mainWindowViewModel.IsLoading = false;
             }
         }
 

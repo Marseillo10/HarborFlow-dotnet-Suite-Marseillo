@@ -1,6 +1,7 @@
 using HarborFlow.Application.Interfaces;
 using HarborFlow.Core.Models;
 using HarborFlow.Wpf.Services;
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -13,6 +14,7 @@ namespace HarborFlow.Wpf.ViewModels
         private readonly IPortServiceManager _portServiceManager;
         private readonly IVesselTrackingService _vesselTrackingService;
         private readonly SessionContext _sessionContext;
+        private readonly MainWindowViewModel _mainWindowViewModel;
 
         private int _vesselCount;
         public int VesselCount
@@ -36,22 +38,35 @@ namespace HarborFlow.Wpf.ViewModels
             }
         }
 
-        public DashboardViewModel(IPortServiceManager portServiceManager, IVesselTrackingService vesselTrackingService, SessionContext sessionContext)
+        public DashboardViewModel(IPortServiceManager portServiceManager, IVesselTrackingService vesselTrackingService, SessionContext sessionContext, MainWindowViewModel mainWindowViewModel)
         {
             _portServiceManager = portServiceManager;
             _vesselTrackingService = vesselTrackingService;
             _sessionContext = sessionContext;
+            _mainWindowViewModel = mainWindowViewModel;
         }
 
         public async Task LoadDataAsync()
         {
-            var vessels = await _vesselTrackingService.GetAllVesselsAsync();
-            VesselCount = vessels.Count();
-
-            if (_sessionContext.CurrentUser != null)
+            _mainWindowViewModel.IsLoading = true;
+            try
             {
-                var serviceRequests = await _portServiceManager.GetAllServiceRequestsAsync(_sessionContext.CurrentUser);
-                ActiveServiceRequestCount = serviceRequests.Count(sr => sr.Status != RequestStatus.Completed);
+                var vessels = await _vesselTrackingService.GetAllVesselsAsync();
+                VesselCount = vessels.Count();
+
+                if (_sessionContext.CurrentUser != null)
+                {
+                    var serviceRequests = await _portServiceManager.GetAllServiceRequestsAsync(_sessionContext.CurrentUser);
+                    ActiveServiceRequestCount = serviceRequests.Count(sr => sr.Status != RequestStatus.Completed);
+                }
+            }
+            catch (Exception)
+            {
+                // In a real app, log this exception
+            }
+            finally
+            {
+                _mainWindowViewModel.IsLoading = false;
             }
         }
 

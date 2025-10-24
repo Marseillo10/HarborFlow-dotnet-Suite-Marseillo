@@ -554,6 +554,7 @@
       },
       "HarborFlow.Core/1.0.0": {
         "dependencies": {
+          "FluentValidation": "12.0.0",
           "Microsoft.Extensions.Configuration": "9.0.10",
           "Microsoft.Extensions.Configuration.Json": "9.0.10",
           "Microsoft.Extensions.DependencyInjection": "9.0.10",

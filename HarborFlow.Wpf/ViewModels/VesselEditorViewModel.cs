@@ -1,14 +1,20 @@
+using FluentValidation.Results;
 using HarborFlow.Core.Models;
+using HarborFlow.Wpf.Validators;
 using HarborFlow.Wpf.Commands;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
 namespace HarborFlow.Wpf.ViewModels
 {
-    public class VesselEditorViewModel : INotifyPropertyChanged
+    public class VesselEditorViewModel : ValidatableViewModelBase
     {
+        private readonly VesselValidator _validator;
         private Vessel _vessel;
         public Vessel Vessel
         {
@@ -17,6 +23,7 @@ namespace HarborFlow.Wpf.ViewModels
             {
                 _vessel = value;
                 OnPropertyChanged();
+                Validate();
             }
         }
 
@@ -25,32 +32,44 @@ namespace HarborFlow.Wpf.ViewModels
 
         public event Action<bool>? CloseRequested;
 
-        public VesselEditorViewModel(Vessel vessel)
+        public VesselEditorViewModel(Vessel vessel, VesselValidator validator)
         {
-            _vessel = vessel; // Initialize the non-nullable field
+            _vessel = vessel;
+            _validator = validator;
             Vessel = vessel;
-            // In a real app, you might want to work on a copy of the vessel
-            // and only apply changes on save.
-
-            SaveCommand = new RelayCommand(_ => Save());
+            
+            SaveCommand = new RelayCommand(_ => Save(), _ => !HasErrors);
             CancelCommand = new RelayCommand(_ => Cancel());
+
+            Validate();
+        }
+
+        private void Validate()
+        {
+            ClearErrors(nameof(Vessel));
+            ValidationResult result = _validator.Validate(Vessel);
+            if (!result.IsValid)
+            {
+                foreach (var error in result.Errors)
+                {
+                    AddError(nameof(Vessel) + "." + error.PropertyName, error.ErrorMessage);
+                }
+            }
+            (SaveCommand as RelayCommand)?.RaiseCanExecuteChanged();
         }
 
         private void Save()
         {
-            CloseRequested?.Invoke(true);
+            Validate();
+            if (!HasErrors)
+            {
+                CloseRequested?.Invoke(true);
+            }
         }
 
         private void Cancel()
         {
             CloseRequested?.Invoke(false);
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

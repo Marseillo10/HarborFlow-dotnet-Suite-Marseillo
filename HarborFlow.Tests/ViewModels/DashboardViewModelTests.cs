@@ -16,6 +16,7 @@ namespace HarborFlow.Tests.ViewModels
         private readonly Mock<IPortServiceManager> _portServiceManagerMock;
         private readonly Mock<IVesselTrackingService> _vesselTrackingServiceMock;
         private readonly SessionContext _sessionContext;
+        private readonly Mock<MainWindowViewModel> _mainWindowViewModelMock;
         private readonly DashboardViewModel _viewModel;
 
         public DashboardViewModelTests()
@@ -23,7 +24,8 @@ namespace HarborFlow.Tests.ViewModels
             _portServiceManagerMock = new Mock<IPortServiceManager>();
             _vesselTrackingServiceMock = new Mock<IVesselTrackingService>();
             _sessionContext = new SessionContext { CurrentUser = new User { UserId = System.Guid.NewGuid() } };
-            _viewModel = new DashboardViewModel(_portServiceManagerMock.Object, _vesselTrackingServiceMock.Object, _sessionContext);
+            _mainWindowViewModelMock = new Mock<MainWindowViewModel>();
+            _viewModel = new DashboardViewModel(_portServiceManagerMock.Object, _vesselTrackingServiceMock.Object, _sessionContext, _mainWindowViewModelMock.Object);
         }
 
         [Fact]

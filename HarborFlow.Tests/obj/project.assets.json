@@ -1360,6 +1360,7 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "dependencies": {
+          "FluentValidation": "11.9.0",
           "Microsoft.Extensions.Configuration": "9.0.10",
           "Microsoft.Extensions.Configuration.Json": "9.0.10",
           "Microsoft.Extensions.DependencyInjection": "9.0.10",

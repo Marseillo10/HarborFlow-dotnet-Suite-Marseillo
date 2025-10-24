@@ -127,5 +127,15 @@ namespace HarborFlow.Infrastructure.Services
             await _context.SaveChangesAsync();
             return existingRequest;
         }
+
+        public async Task DeleteServiceRequestAsync(Guid requestId)
+        {
+            var request = await _context.ServiceRequests.FindAsync(requestId);
+            if (request != null)
+            {
+                _context.ServiceRequests.Remove(request);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

@@ -39,6 +39,17 @@ namespace HarborFlow.Wpf.ViewModels
             }
         }
 
+        private bool _isLoading; 
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set
+            {
+                _isLoading = value;
+                OnPropertyChanged();
+            }
+        } 
+
         private string _notificationMessage = string.Empty;
         private bool _isNotificationVisible = false;
         private Brush _notificationBackground = Brushes.Red;

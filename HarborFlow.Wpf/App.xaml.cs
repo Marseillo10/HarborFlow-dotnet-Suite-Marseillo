@@ -52,6 +52,7 @@ namespace HarborFlow.Wpf
                     services.AddTransient<VesselManagementView>();
                     services.AddTransient<VesselEditorViewModel>();
                     services.AddTransient<VesselEditorView>();
+                    services.AddTransient<VesselValidator>();
                     services.AddTransient<ServiceRequestViewModel>();
                     services.AddTransient<ServiceRequestView>();
 
