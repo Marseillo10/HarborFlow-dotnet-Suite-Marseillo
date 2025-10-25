@@ -95,7 +95,6 @@ namespace HarborFlow.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load service requests.");
-                _notificationService.ShowNotification($"Error loading service requests: {ex.Message}", NotificationType.Error);
             }
             finally
             {
@@ -115,12 +114,10 @@ namespace HarborFlow.Wpf.ViewModels
                 {
                     await _portServiceManager.SubmitServiceRequestAsync(newRequest);
                     await LoadServiceRequestsAsync();
-                    _notificationService.ShowNotification("Service request added successfully.", NotificationType.Success);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to add service request.");
-                    _notificationService.ShowNotification($"Error adding service request: {ex.Message}", NotificationType.Error);
                 }
                 finally
                 {
@@ -142,12 +139,10 @@ namespace HarborFlow.Wpf.ViewModels
                 {
                     await _portServiceManager.UpdateServiceRequestAsync(requestCopy);
                     await LoadServiceRequestsAsync();
-                    _notificationService.ShowNotification("Service request updated successfully.", NotificationType.Success);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to update service request.");
-                    _notificationService.ShowNotification($"Error updating service request: {ex.Message}", NotificationType.Error);
                 }
                 finally
                 {
@@ -167,12 +162,10 @@ namespace HarborFlow.Wpf.ViewModels
                     {
                         await _portServiceManager.DeleteServiceRequestAsync(SelectedServiceRequest.RequestId);
                         await LoadServiceRequestsAsync();
-                        _notificationService.ShowNotification("Service request deleted successfully.", NotificationType.Success);
                     }
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Failed to delete service request.");
-                        _notificationService.ShowNotification($"Error deleting service request: {ex.Message}", NotificationType.Error);
                     }
                     finally
                     {
@@ -190,12 +183,10 @@ namespace HarborFlow.Wpf.ViewModels
             {
                 await _portServiceManager.ApproveServiceRequestAsync(SelectedServiceRequest.RequestId, _sessionContext.CurrentUser.UserId);
                 await LoadServiceRequestsAsync();
-                _notificationService.ShowNotification("Service request approved successfully.", NotificationType.Success);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to approve service request.");
-                _notificationService.ShowNotification($"Error approving service request: {ex.Message}", NotificationType.Error);
             }
             finally
             {
@@ -215,12 +206,10 @@ namespace HarborFlow.Wpf.ViewModels
                 {
                     await _portServiceManager.RejectServiceRequestAsync(SelectedServiceRequest.RequestId, _sessionContext.CurrentUser.UserId, reason);
                     await LoadServiceRequestsAsync();
-                    _notificationService.ShowNotification("Service request rejected successfully.", NotificationType.Success);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to reject service request.");
-                    _notificationService.ShowNotification($"Error rejecting service request: {ex.Message}", NotificationType.Error);
                 }
                 finally
                 {

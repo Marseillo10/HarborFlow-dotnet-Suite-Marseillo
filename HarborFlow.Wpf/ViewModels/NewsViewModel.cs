@@ -1,59 +1,116 @@
-
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using HarborFlow.Core.Interfaces;
 using HarborFlow.Core.Models;
 using HarborFlow.Wpf.Commands;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace HarborFlow.Wpf.ViewModels
 {
-    public class NewsViewModel : ViewModelBase
+    public class NewsViewModel : ValidatableViewModelBase
     {
         private readonly IRssService _rssService;
-        private readonly IRssFeedManager _rssFeedManager;
-        private ObservableCollection<NewsArticle> _newsArticles;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<NewsViewModel> _logger;
 
-        public ObservableCollection<NewsArticle> NewsArticles
+        private readonly List<string> _maritimeKeywords = new List<string>
         {
-            get => _newsArticles;
+            "maritime", "shipping", "vessel", "port", "kapal", "pelabuhan", "pelayaran", 
+            "cargo", "logistik", "shipyard", "offshore", "imo", "sail", "tanker", "container"
+        };
+
+        private List<NewsArticle> _allLoadedArticles = new List<NewsArticle>();
+
+        private bool _isLoading;
+        public bool IsLoading
+        {
+            get => _isLoading;
             set
             {
-                _newsArticles = value;
+                _isLoading = value;
                 OnPropertyChanged();
             }
         }
 
-        public AsyncRelayCommand OpenArticleCommand { get; }
+        private string _searchText = string.Empty;
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                _searchText = value;
+                OnPropertyChanged();
+                FilterAndDisplayArticles();
+            }
+        }
 
-        public NewsViewModel(IRssService rssService, IRssFeedManager rssFeedManager)
+        public ObservableCollection<NewsArticle> Articles { get; } = new();
+
+        public ICommand LoadNewsCommand { get; }
+
+        public NewsViewModel(IRssService rssService, IConfiguration configuration, ILogger<NewsViewModel> logger)
         {
             _rssService = rssService;
-            _rssFeedManager = rssFeedManager;
-            _newsArticles = new ObservableCollection<NewsArticle>();
-            OpenArticleCommand = new AsyncRelayCommand(OpenArticle);
-            LoadNewsAsync();
+            _configuration = configuration;
+            _logger = logger;
+            LoadNewsCommand = new AsyncRelayCommand(LoadNewsAsync);
         }
 
-        private async Task LoadNewsAsync()
+        private async Task LoadNewsAsync(object? parameter)
         {
-            var allArticles = new List<NewsArticle>();
-            var feedUrls = _rssFeedManager.GetFeedUrls();
-            foreach (var url in feedUrls)
+            if (IsLoading) return;
+
+            IsLoading = true;
+            _allLoadedArticles.Clear();
+            
+            var feedUrls = _configuration.GetSection("RssFeeds").Get<List<string>>();
+            if (feedUrls == null || !feedUrls.Any())
             {
-                var articles = await _rssService.GetNewsAsync(url);
-                allArticles.AddRange(articles);
+                _logger.LogWarning("No RSS feeds configured in appsettings.json");
+                IsLoading = false;
+                return;
             }
-            NewsArticles = new ObservableCollection<NewsArticle>(allArticles.OrderByDescending(a => a.PublishDate));
+
+            var tasks = feedUrls.Select(url => _rssService.FetchNewsAsync(url));
+            var results = await Task.WhenAll(tasks);
+
+            _allLoadedArticles = results.SelectMany(articles => articles)
+                .Where(article => !string.IsNullOrWhiteSpace(article.Title) &&
+                                  _maritimeKeywords.Any(keyword => 
+                                      article.Title.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                                      (article.Description != null && article.Description.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                                  ))
+                .DistinctBy(a => a.Link)
+                .OrderByDescending(a => a.PublishDate)
+                .ToList();
+            
+            FilterAndDisplayArticles();
+
+            IsLoading = false;
         }
 
-        private Task OpenArticle(object? articleObj)
+        private void FilterAndDisplayArticles()
         {
-            if (articleObj is NewsArticle article && article?.Link != null)
+            Articles.Clear();
+            IEnumerable<NewsArticle> filteredArticles = _allLoadedArticles;
+
+            if (!string.IsNullOrWhiteSpace(SearchText))
             {
-                Process.Start(new ProcessStartInfo(article.Link) { UseShellExecute = true });
+                filteredArticles = filteredArticles.Where(a => 
+                    a.Title.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                    (a.Description != null && a.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
+                );
             }
-            return Task.CompletedTask;
+
+            foreach (var article in filteredArticles.Take(50))
+            {
+                Articles.Add(article);
+            }
         }
     }
 }

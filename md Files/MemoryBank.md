@@ -1,85 +1,61 @@
+# Project Memory Bank
 
-# Memory Bank: Proyek HarborFlow WPF
+This document serves as a log of key architectural decisions, refactoring efforts, and feature implementations made during the development of HarborFlow.
 
-## 1. Detail Proyek
+## Major Refinements & Decisions
 
-- **Nama Proyek**: HarborFlow
-- **Deskripsi**: Sistem Manajemen Pelabuhan Cerdas yang dirancang untuk mendigitalkan dan mengoptimalkan alur kerja operasional di pelabuhan. Ini adalah aplikasi desktop yang dibangun dengan .NET 9 dan WPF, menampilkan tema Fluent yang modern.
-- **Masalah Bisnis Inti yang Diselesaikan**:
-    - Kurangnya digitalisasi (proses manual yang tidak efisien).
-    - Fragmentasi informasi di antara para pemangku kepentingan.
-    - Pelacakan kapal yang manual dan rawan kesalahan.
-- **Pemangku Kepentingan Utama**: Petugas Pelabuhan, Agen Maritim, Operator Kapal, Manajemen Pelabuhan.
+### 1. Database Environment: Dockerization
 
-## 2. Arsitektur
+- **Decision:** Migrated the database setup from a local PostgreSQL installation to a containerized environment using Docker Compose.
+- **Reasoning:** To ensure a consistent, isolated, and easy-to-set-up database environment for all developers, regardless of their operating system. This resolves common "it works on my machine" issues related to database configuration.
+- **Implementation:**
+    - Created a `docker-compose.yml` file to define the `postgres` service.
+    - Updated the connection string in `appsettings.json` to point to the Docker container's port (`5433`).
+    - Added a `HarborFlowDbContextFactory` to enable `dotnet ef` tools to work correctly from the command line.
 
-- **Gaya**: Arsitektur 3-Tier dengan pola Model-View-ViewModel (MVVM).
-- **Lapisan**:
-    - **Lapisan Presentasi**: Aplikasi WPF (`HarborFlow.Wpf`) yang bertanggung jawab atas UI dan interaksi pengguna.
-    - **Lapisan Logika Bisnis**: Pustaka Kelas .NET (`HarborFlow.Application`) yang berisi aturan bisnis, validasi, dan antarmuka layanan.
-    - **Lapisan Akses Data**: Pustaka Kelas .NET (`HarborFlow.Infrastructure`) yang bertanggung jawab atas persistensi data, komunikasi dengan database, dan implementasi layanan eksternal.
-- **Alur Data**: Alur data searah dari Lapisan Presentasi ke Lapisan Logika Bisnis dan kemudian ke Lapisan Akses Data.
-- **Injeksi Dependensi**: Aplikasi menggunakan `Microsoft.Extensions.DependencyInjection` untuk mengelola dependensi antar lapisan.
+### 2. Application Flow: Guest Mode & In-App Authentication
 
-## 3. Tumpukan Teknologi
+- **Decision:** Refactored the application startup flow. Instead of forcing a login screen, the app now starts directly into the main window in a "Guest" mode.
+- **Reasoning:** To provide a more modern, user-friendly experience, allowing users to explore public features before committing to registration. This follows the "freemium" model common in modern applications.
+- **Implementation:**
+    - Changed the startup view in `App.xaml.cs` from `LoginView` to `MainWindow`.
+    - Implemented `IsLoggedIn` and `IsGuest` properties in `MainWindowViewModel` to dynamically control UI element visibility.
+    - Created a `UserChanged` event in `SessionContext` to allow the UI to react automatically to login/logout events.
+    - Modified `LoginViewModel` to close itself as a dialog instead of opening a new main window.
 
-- **Framework Utama**: .NET 9
-- **Framework UI**: Windows Presentation Foundation (WPF)
-- **Database**: PostgreSQL 17
-- **ORM**: Entity Framework Core 9 dengan penyedia Npgsql.
-- **Validasi**: FluentValidation
-- **Bahasa Pemrograman**: C# 12 dan XAML.
-- **Pustaka Kunci**:
-    - `Microsoft.Extensions.Hosting` untuk hosting dan konfigurasi aplikasi.
-    - `Microsoft.Extensions.DependencyInjection` untuk DI.
-    - `Microsoft.Web.WebView2` untuk menampilkan konten web (peta).
+### 3. UI/UX Overhaul
 
-## 4. Kebutuhan Proyek
+- **Decision:** Redesigned key views to be more visually appealing and intuitive.
+- **Implementation:**
+    - **Authentication Screens:** Applied a professional, full-image background (`AuthorizationBackground.jpg`) to `LoginView` and `RegisterView`, with a semi-transparent panel to ensure form readability.
+    - **Dashboard:** Replaced static data lists with interactive charts from the `LiveCharts.Wpf` library. Added visual cards with vector icons (`Icons.xaml`) for key metrics.
 
-### Fitur Wajib Dimiliki:
-- **F-001: Peta Dasar**: Peta interaktif yang menampilkan posisi kapal secara real-time menggunakan data dari penyedia AIS.
-- **F-002: Pencarian Kapal**: Kemampuan untuk mencari kapal berdasarkan nama atau nomor IMO.
-- **F-003: Manajemen Layanan Pelabuhan**: Platform untuk mengajukan dan menyetujui/menolak permintaan layanan, termasuk lampiran dokumen.
+### 4. Feature Implementation: Maritime News Feed
 
-### Fitur Sebaiknya Dimiliki:
-- Filter tampilan peta berdasarkan jenis kapal.
-- Pelengkapan otomatis untuk pencarian nama kapal.
+- **Decision:** Added a new feature to aggregate and display maritime news from various sources.
+- **Reasoning:** To enrich the application's value as a central information portal for port stakeholders.
+- **Implementation:**
+    - **Backend:** Created `RssService` to fetch and parse XML data from a configurable list of RSS feeds in `appsettings.json`.
+    - **Filtering:** Implemented a dual-filtering mechanism in `NewsViewModel`:
+        1.  Automatic filtering based on a predefined list of maritime keywords.
+        2.  A user-facing search box for real-time manual filtering.
+    - **UI:** Designed a modern, card-based layout in `NewsView.xaml` to display articles.
 
-### Kebutuhan Teknis Utama:
-- Kompatibilitas dengan .NET 9.
-- Arsitektur 3-lapis.
-- UI yang responsif.
-- Kontrol akses berbasis peran (RBAC).
+### 5. Feature Implementation: Map Bookmarks
 
-## 5. Status/Progres Pekerjaan
+- **Decision:** Implemented a feature allowing logged-in users to save and navigate to specific map locations.
+- **Reasoning:** To improve user efficiency by providing quick access to frequently viewed areas.
+- **Implementation:**
+    - **Data Layer:** Added a `MapBookmark` model and a corresponding `map_bookmarks` table to the database via an EF migration.
+    - **Backend:** Created `BookmarkService` to handle all CRUD operations for bookmarks.
+    - **UI:** Added a floating control panel to `MapView` containing a dropdown list of saved bookmarks and buttons to add/delete them. The panel's visibility is tied to the user's login state.
 
-- **Pengaturan Proyek**: Solusi dan proyek telah diatur dengan DI.
-- **Fitur F-001 (Tampilan Peta)**: **Selesai** (dengan data dummy).
-    - Migrasi dari Bing Maps ke solusi OpenStreetMap + Leaflet.js menggunakan WebView2 telah selesai.
-    - Logika untuk mengambil data dari API (dengan fallback ke data dummy) telah diimplementasikan.
-    - Penanda kapal di peta sekarang menampilkan warna berdasarkan tipe dan rotasi berdasarkan arah kapal.
-- **Fitur F-002 (Pencarian Kapal)**: **Selesai**. Termasuk fungsionalitas *auto-complete*.
-- **Fitur F-003 (Manajemen Layanan Pelabuhan)**: **Selesai**.
-    - Pengajuan, persetujuan, dan penolakan permintaan layanan berfungsi.
-    - Fungsionalitas unggah dokumen (menyalin ke folder aplikasi) telah diimplementasikan.
-- **Otentikasi dan Otorisasi**: **Selesai**.
-    - Alur Login, Logout, dan Registrasi berfungsi penuh.
-    - Manajemen jendela terpusat menggunakan `IWindowManager`.
-    - RBAC telah diperluas untuk memfilter data dan menyembunyikan elemen UI berdasarkan peran pengguna.
-- **UI dan Tema**:
-    - Sistem tema terang/gelap berfungsi dan pilihan pengguna disimpan antar sesi.
-    - Semua tampilan utama (`Login`, `Register`, `MainWindow`, `ServiceRequest`, `MapView`) telah disempurnakan dengan gaya Fluent Design.
-    - Animasi transisi *fade* telah ditambahkan.
-- **Kualitas Kode**:
-    - Proyek pengujian unit (`HarborFlow.Tests`) telah dibuat dan dikonfigurasi.
-    - Unit test telah ditulis untuk `AuthService` dan semua ViewModel utama.
-    - Semua peringatan saat build telah diperbaiki.
-- **Layanan Aplikasi**:
-    - `INotificationService` untuk notifikasi toast.
-    - `ISettingsService` untuk menyimpan pengaturan pengguna.
-    - `IFileService` untuk menangani penyimpanan dokumen.
+### 6. Architectural Refactoring: Notification System
 
-### Langkah Selanjutnya:
-- **Prioritas Utama**: Mengintegrasikan kunci API yang sebenarnya untuk data kapal real-time untuk memverifikasi fungsionalitas peta secara penuh.
-- **Prioritas Kedua**: Menambahkan lebih banyak pengujian unit untuk cakupan yang lebih luas, terutama untuk logika yang baru ditambahkan.
-- **Polesan Akhir**: Menambahkan detail kecil lainnya pada UI jika diperlukan.
+- **Decision:** Centralized the application's notification logic.
+- **Reasoning:** To decouple the business logic from the UI presentation and create a single source of truth for all user-facing notifications. This prepares the architecture for a future move to a real-time system like SignalR.
+- **Implementation:**
+    - Created a singleton `INotificationHub` service to act as a central event bus.
+    - Modified business services (e.g., `PortServiceManager`) to send notifications to the hub instead of directly to a UI service.
+    - Modified `MainWindowViewModel` to subscribe to the hub and be the sole component responsible for displaying toast notifications.
+    - Removed all direct calls to `INotificationService` from other ViewModels.

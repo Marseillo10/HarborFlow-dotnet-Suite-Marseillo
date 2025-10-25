@@ -26,6 +26,9 @@
         <DataTemplate DataType="{x:Type viewmodels:ServiceRequestViewModel}">
             <views:ServiceRequestView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:NewsViewModel}">
+            <views:NewsView/>
+        </DataTemplate>
         <Style x:Key="NavListBoxItemStyle" TargetType="ListBoxItem">
             <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BoolToVis}}"/>
         </Style>
@@ -60,10 +63,17 @@
             <Border Grid.Row="0" Background="{DynamicResource PrimaryBackgroundColor}" BorderBrush="{DynamicResource TextBoxBorderColor}" BorderThickness="0,0,0,1">
                 <Grid Margin="10">
                     <TextBlock Text="{Binding CurrentUserName, StringFormat='Welcome, {0}'}" FontSize="18" VerticalAlignment="Center"/>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="Profile" Command="{Binding ShowUserProfileCommand}" Style="{StaticResource HyperlinkButtonStyle}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <!-- Guest Buttons -->
+                        <Button Content="Login" Command="{Binding LoginCommand}" Style="{StaticResource HyperlinkButtonStyle}" VerticalAlignment="Center" Margin="0,0,10,0" Visibility="{Binding IsGuest, Converter={StaticResource BoolToVis}}"/>
+                        <Button Content="Register" Command="{Binding RegisterCommand}" Style="{StaticResource HyperlinkButtonStyle}" VerticalAlignment="Center" Margin="0,0,10,0" Visibility="{Binding IsGuest, Converter={StaticResource BoolToVis}}"/>
+
+                        <!-- Logged In Buttons -->
+                        <Button Content="Profile" Command="{Binding ShowUserProfileCommand}" Style="{StaticResource HyperlinkButtonStyle}" VerticalAlignment="Center" Margin="0,0,10,0" Visibility="{Binding IsLoggedIn, Converter={StaticResource BoolToVis}}"/>
                         <TextBlock Text="{Binding OnlineStatus}" Foreground="{Binding OnlineStatusColor}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <Button Content="Logout" Command="{Binding LogoutCommand}" Style="{StaticResource HyperlinkButtonStyle}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <Button Content="Logout" Command="{Binding LogoutCommand}" Style="{StaticResource HyperlinkButtonStyle}" VerticalAlignment="Center" Margin="0,0,10,0" Visibility="{Binding IsLoggedIn, Converter={StaticResource BoolToVis}}"/>
+                        
+                        <!-- Theme Toggle Button (Always Visible) -->
                         <Button Command="{Binding ToggleThemeCommand}" 
                                 ToolTip="Toggle Theme"
                                 Width="30" 

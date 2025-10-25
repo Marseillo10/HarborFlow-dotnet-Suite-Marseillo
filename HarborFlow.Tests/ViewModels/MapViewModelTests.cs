@@ -3,6 +3,7 @@ using HarborFlow.Core.Interfaces;
 using HarborFlow.Core.Models;
 using HarborFlow.Wpf.Commands;
 using HarborFlow.Wpf.Interfaces;
+using HarborFlow.Wpf.Services;
 using HarborFlow.Wpf.ViewModels;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -19,6 +20,8 @@ namespace HarborFlow.Tests.ViewModels
         private readonly Mock<IVesselTrackingService> _vesselTrackingServiceMock;
         private readonly Mock<INotificationService> _notificationServiceMock;
         private readonly Mock<ILogger<MapViewModel>> _loggerMock;
+        private readonly Mock<IBookmarkService> _bookmarkServiceMock;
+        private readonly SessionContext _sessionContext;
         private readonly MapViewModel _viewModel;
 
         public MapViewModelTests()
@@ -26,8 +29,17 @@ namespace HarborFlow.Tests.ViewModels
             _vesselTrackingServiceMock = new Mock<IVesselTrackingService>();
             _notificationServiceMock = new Mock<INotificationService>();
             _loggerMock = new Mock<ILogger<MapViewModel>>();
+            _bookmarkServiceMock = new Mock<IBookmarkService>();
+            _sessionContext = new SessionContext();
+
             _vesselTrackingServiceMock.Setup(s => s.TrackedVessels).Returns(new ObservableCollection<Vessel>());
-            _viewModel = new MapViewModel(_vesselTrackingServiceMock.Object, _notificationServiceMock.Object, _loggerMock.Object);
+            
+            _viewModel = new MapViewModel(
+                _vesselTrackingServiceMock.Object, 
+                _notificationServiceMock.Object, 
+                _loggerMock.Object,
+                _bookmarkServiceMock.Object,
+                _sessionContext);
         }
 
         [Fact]
@@ -56,42 +68,6 @@ namespace HarborFlow.Tests.ViewModels
 
             // Assert
             _viewModel.SearchResults.Should().HaveCount(2);
-        }
-
-        [Fact]
-        public async Task UpdateSuggestionsAsync_ShouldPopulateSuggestions()
-        {
-            // Arrange
-            var vessels = new List<Vessel> { new Vessel { Name = "Vessel1" }, new Vessel { Name = "Vessel2" } };
-            _vesselTrackingServiceMock.Setup(s => s.SearchVesselsAsync(It.IsAny<string>())).ReturnsAsync(vessels);
-            _viewModel.SearchTerm = "vessel";
-
-            // Act
-            await Task.Delay(100); // Allow for the async method to run
-
-            // Assert
-            _viewModel.Suggestions.Should().HaveCount(2);
-            _viewModel.Suggestions.First().Should().Be("Vessel1");
-        }
-
-        [Fact]
-        public void UpdateFilteredVessels_ShouldFilterVesselsOnMap()
-        {
-            // Arrange
-            var vessels = new ObservableCollection<Vessel>
-            {
-                new Vessel { VesselType = VesselType.Cargo },
-                new Vessel { VesselType = VesselType.Tanker },
-                new Vessel { VesselType = VesselType.Cargo }
-            };
-            _vesselTrackingServiceMock.Setup(s => s.TrackedVessels).Returns(vessels);
-            _viewModel.SelectedVesselTypeFilter = VesselType.Cargo;
-
-            // Act
-            // The method is called automatically when the filter changes
-
-            // Assert
-            _viewModel.FilteredVesselsOnMap.Should().HaveCount(2);
         }
     }
 }

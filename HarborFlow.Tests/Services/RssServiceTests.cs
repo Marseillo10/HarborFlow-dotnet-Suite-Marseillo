@@ -1,19 +1,20 @@
-
 using System.Net.Http;
 using System.Threading.Tasks;
-using HarborFlow.Application.Services;
 using Moq;
 using Moq.Protected;
 using System.Threading;
 using Xunit;
 using System.Linq;
+using HarborFlow.Infrastructure.Services;
+using Microsoft.Extensions.Logging;
+using FluentAssertions;
 
 namespace HarborFlow.Tests.Services
 {
     public class RssServiceTests
     {
         [Fact]
-        public async Task GetNewsAsync_ShouldReturnListOfNewsArticles()
+        public async Task FetchNewsAsync_ShouldReturnListOfNewsArticles()
         {
             // Arrange
             var handlerMock = new Mock<HttpMessageHandler>();
@@ -43,20 +44,21 @@ namespace HarborFlow.Tests.Services
                .ReturnsAsync(response);
 
             var httpClient = new HttpClient(handlerMock.Object);
-            var rssService = new RssService(httpClient);
+            var loggerMock = new Mock<ILogger<RssService>>();
+            var rssService = new RssService(httpClient, loggerMock.Object);
 
             // Act
-            var result = await rssService.GetNewsAsync("http://example.com/feed");
+            var result = await rssService.FetchNewsAsync("http://example.com/feed");
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Single(result);
+            result.Should().NotBeNull();
+            result.Should().HaveCount(1);
             var article = result.First();
-            Assert.Equal("Test Article", article.Title);
-            Assert.Equal("http://example.com/article", article.Link);
-            Assert.Equal("Test Description", article.Description);
-            Assert.Equal(new System.DateTime(2025, 10, 25, 12, 0, 0, System.DateTimeKind.Utc), article.PublishDate);
-            Assert.Equal("Test Feed", article.Source);
+            article.Title.Should().Be("Test Article");
+            article.Link.Should().Be("http://example.com/article");
+            article.Description.Should().Be("Test Description");
+            article.PublishDate.Should().Be(new System.DateTimeOffset(2025, 10, 25, 12, 0, 0, System.TimeSpan.Zero));
+            article.Source.Should().Be("Test Feed");
         }
     }
 }

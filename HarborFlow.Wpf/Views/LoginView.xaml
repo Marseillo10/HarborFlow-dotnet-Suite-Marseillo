@@ -7,39 +7,43 @@
         xmlns:converters="clr-namespace:HarborFlow.Wpf.Converters"
         mc:Ignorable="d"
         Title="HarborFlow - Login"
-        Height="480"
-        Width="400"
-        WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource WindowBackgroundColor}">
+        Height="540"
+        Width="960"
+        WindowStartupLocation="CenterScreen">
+    <Window.Background>
+        <ImageBrush ImageSource="/Assets/Images/AuthorizationBackground.jpg" Stretch="UniformToFill"/>
+    </Window.Background>
     <Window.Resources>
         <converters:BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </Window.Resources>
     <Grid>
-        <Border Background="{DynamicResource PrimaryBackgroundColor}" 
+        <Border Background="#D8FFFFFF" 
                 VerticalAlignment="Center"
                 HorizontalAlignment="Center"
-                CornerRadius="8"
-                Padding="40">
+                CornerRadius="10"
+                Padding="40"
+                MaxWidth="450">
             <Border.Effect>
-                <DropShadowEffect Color="#FFCCCCCC" Direction="320" ShadowDepth="3" BlurRadius="5" Opacity="0.3"/>
+                <DropShadowEffect Color="#FFBBBBBB" Direction="320" ShadowDepth="5" BlurRadius="10" Opacity="0.5"/>
             </Border.Effect>
-            <StackPanel Width="280">
-                <TextBlock Text="HarborFlow" 
+            <StackPanel>
+                <TextBlock Text="HarborFlow Login" 
                            FontSize="28"
                            FontWeight="Bold"
                            HorizontalAlignment="Center"
-                           Margin="0,0,0,20"/>
+                           Margin="0,0,0,25"/>
 
-                <TextBlock Text="Username" Margin="0,0,0,5"/>
-                <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,15"/>
+                <TextBlock Text="Username" Margin="0,0,0,5" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,15" Height="30"/>
                 
-                <TextBlock Text="Password" Margin="0,0,0,5"/>
-                <PasswordBox x:Name="PasswordBox" Margin="0,0,0,15" PasswordChanged="PasswordBox_PasswordChanged"/>
+                <TextBlock Text="Password" Margin="0,0,0,5" FontWeight="SemiBold"/>
+                <PasswordBox x:Name="PasswordBox" Margin="0,0,0,20" Height="30" PasswordChanged="PasswordBox_PasswordChanged"/>
                 
                 <TextBlock Text="{Binding ErrorMessage}" 
                            Foreground="Red" 
                            Visibility="{Binding IsErrorVisible, Converter={StaticResource BoolToVis}}"
-                           Margin="0,0,0,10"/>
+                           Margin="0,0,0,10"
+                           TextWrapping="Wrap"/>
 
                 <Button Content="Login" 
                         Command="{Binding LoginCommand}" 
@@ -47,7 +51,7 @@
                         Height="40" 
                         FontWeight="Bold"/>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,0">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
                     <TextBlock Text="Don't have an account? " VerticalAlignment="Center"/>
                     <Button Content="Register"
                             Command="{Binding OpenRegisterWindowCommand}"

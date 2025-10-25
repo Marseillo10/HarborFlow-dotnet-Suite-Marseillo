@@ -8,9 +8,14 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Threading;
+using LiveCharts;
+using LiveCharts.Wpf;
 
 namespace HarborFlow.Wpf.ViewModels
 {
@@ -23,6 +28,7 @@ namespace HarborFlow.Wpf.ViewModels
         private readonly ILogger<DashboardViewModel> _logger;
         private readonly MainWindowViewModel _mainWindowViewModel;
         private readonly IWindowManager _windowManager;
+        private readonly DispatcherTimer _onlineStatusTimer;
 
         private int _vesselCount;
         public int VesselCount
@@ -38,19 +44,23 @@ namespace HarborFlow.Wpf.ViewModels
             set { _activeServiceRequestCount = value; OnPropertyChanged(); }
         }
 
-        private ObservableCollection<Vessel> _recentVessels = new();
-        public ObservableCollection<Vessel> RecentVessels
+        private string _onlineStatus = string.Empty;
+        public string OnlineStatus
         {
-            get => _recentVessels;
-            set { _recentVessels = value; OnPropertyChanged(); }
+            get => _onlineStatus;
+            set { _onlineStatus = value; OnPropertyChanged(); }
         }
 
-        private ObservableCollection<ServiceRequest> _recentServiceRequests = new();
-        public ObservableCollection<ServiceRequest> RecentServiceRequests
+        private Brush _onlineStatusColor = Brushes.Green;
+        public Brush OnlineStatusColor
         {
-            get => _recentServiceRequests;
-            set { _recentServiceRequests = value; OnPropertyChanged(); }
+            get => _onlineStatusColor;
+            set { _onlineStatusColor = value; OnPropertyChanged(); }
         }
+
+        public SeriesCollection ServiceRequestStatusSeries { get; private set; }
+        public SeriesCollection VesselTypeSeries { get; private set; }
+        public string[] VesselTypeLabels { get; private set; }
 
         public ICommand RefreshCommand { get; }
         public ICommand ShowUserProfileCommand { get; }
@@ -65,8 +75,33 @@ namespace HarborFlow.Wpf.ViewModels
             _mainWindowViewModel = mainWindowViewModel;
             _windowManager = windowManager;
 
+            ServiceRequestStatusSeries = new SeriesCollection();
+            VesselTypeSeries = new SeriesCollection();
+            VesselTypeLabels = Array.Empty<string>();
+
             RefreshCommand = new AsyncRelayCommand(_ => LoadDataAsync());
             ShowUserProfileCommand = new RelayCommand(_ => ShowUserProfile());
+
+            _onlineStatusTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _onlineStatusTimer.Tick += (s, e) => CheckOnlineStatus();
+            _onlineStatusTimer.Start();
+        }
+
+        private void CheckOnlineStatus()
+        {
+            if (NetworkInterface.GetIsNetworkAvailable())
+            {
+                OnlineStatus = "Online";
+                OnlineStatusColor = Brushes.Green;
+            }
+            else
+            {
+                OnlineStatus = "Offline";
+                OnlineStatusColor = Brushes.Red;
+            }
         }
 
         private void ShowUserProfile()
@@ -81,24 +116,64 @@ namespace HarborFlow.Wpf.ViewModels
             {
                 var vessels = await _vesselTrackingService.GetAllVesselsAsync();
                 VesselCount = vessels.Count();
-                RecentVessels = new ObservableCollection<Vessel>(vessels.OrderByDescending(v => v.UpdatedAt).Take(5));
+                UpdateVesselTypeChart(vessels);
 
                 if (_sessionContext.CurrentUser != null)
                 {
                     var serviceRequests = await _portServiceManager.GetAllServiceRequestsAsync(_sessionContext.CurrentUser);
-                    ActiveServiceRequestCount = serviceRequests.Count(sr => sr.Status != RequestStatus.Completed);
-                    RecentServiceRequests = new ObservableCollection<ServiceRequest>(serviceRequests.OrderByDescending(sr => sr.RequestDate).Take(5));
+                    ActiveServiceRequestCount = serviceRequests.Count(sr => sr.Status != RequestStatus.Completed && sr.Status != RequestStatus.Rejected && sr.Status != RequestStatus.Cancelled);
+                    UpdateServiceRequestChart(serviceRequests);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load dashboard data.");
-                _notificationService.ShowNotification("Failed to load dashboard data. Please check your connection and try again.", NotificationType.Error);
+                
             }
             finally
             {
                 _mainWindowViewModel.IsLoading = false;
             }
+        }
+
+        private void UpdateServiceRequestChart(IEnumerable<ServiceRequest> serviceRequests)
+        {
+            var statusGroups = serviceRequests
+                .GroupBy(sr => sr.Status)
+                .Select(g => new { Status = g.Key.ToString(), Count = g.Count() })
+                .ToList();
+
+            ServiceRequestStatusSeries.Clear();
+            foreach (var group in statusGroups)
+            {
+                ServiceRequestStatusSeries.Add(new PieSeries
+                {
+                    Title = group.Status,
+                    Values = new ChartValues<int> { group.Count },
+                    DataLabels = true
+                });
+            }
+            OnPropertyChanged(nameof(ServiceRequestStatusSeries));
+        }
+
+        private void UpdateVesselTypeChart(IEnumerable<Vessel> vessels)
+        {
+            var typeGroups = vessels
+                .GroupBy(v => v.VesselType)
+                .Select(g => new { Type = g.Key.ToString(), Count = g.Count() })
+                .OrderBy(g => g.Type)
+                .ToList();
+
+            VesselTypeLabels = typeGroups.Select(g => g.Type).ToArray();
+            VesselTypeSeries.Clear();
+            VesselTypeSeries.Add(new ColumnSeries
+            {
+                Title = "Vessels",
+                Values = new ChartValues<int>(typeGroups.Select(g => g.Count))
+            });
+
+            OnPropertyChanged(nameof(VesselTypeLabels));
+            OnPropertyChanged(nameof(VesselTypeSeries));
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

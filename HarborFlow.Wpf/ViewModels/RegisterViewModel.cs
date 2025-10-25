@@ -93,7 +93,7 @@ namespace HarborFlow.Wpf.ViewModels
             var validationResult = _validator.Validate(this);
             if (!validationResult.IsValid)
             {
-                _notificationService.ShowNotification(string.Join("\n", validationResult.Errors.Select(e => e.ErrorMessage)), NotificationType.Error);
+                
                 IsLoading = false;
                 ((AsyncRelayCommand)RegisterCommand).RaiseCanExecuteChanged();
                 return;
@@ -101,7 +101,7 @@ namespace HarborFlow.Wpf.ViewModels
 
             if (await _authService.UserExistsAsync(Username))
             {
-                _notificationService.ShowNotification("Username already exists.", NotificationType.Error);
+                
                 IsLoading = false;
                 ((AsyncRelayCommand)RegisterCommand).RaiseCanExecuteChanged();
                 return;
@@ -110,13 +110,13 @@ namespace HarborFlow.Wpf.ViewModels
             try
             {
                 await _authService.RegisterAsync(Username, Password, Email, FullName);
-                _notificationService.ShowNotification("Registration successful! Please log in.", NotificationType.Success);
+                
                 RegistrationSucceeded?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred during registration for user {Username}.", Username);
-                _notificationService.ShowNotification($"An unexpected error occurred during registration: {ex.Message}", NotificationType.Error);
+                
             }
             finally
             {

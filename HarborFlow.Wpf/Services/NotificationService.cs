@@ -1,5 +1,6 @@
 
 using HarborFlow.Wpf.Interfaces;
+using HarborFlow.Core.Models;
 using System;
 using System.Windows;
 
@@ -9,7 +10,7 @@ namespace HarborFlow.Wpf.Services
     {
         public event Action<string, NotificationType>? NotificationRequested;
 
-        public void ShowNotification(string message, NotificationType type = NotificationType.Error)
+                        public void ShowNotification(string message, NotificationType type = NotificationType.Error)
         {
             NotificationRequested?.Invoke(message, type);
         }
@@ -19,5 +20,6 @@ namespace HarborFlow.Wpf.Services
             var result = MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Warning);
             return result == MessageBoxResult.Yes;
         }
+
     }
 }

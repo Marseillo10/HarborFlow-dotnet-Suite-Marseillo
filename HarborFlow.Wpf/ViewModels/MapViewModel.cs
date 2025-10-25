@@ -11,6 +11,7 @@ using System;
 using HarborFlow.Wpf.Interfaces;
 using System.Collections.Specialized;
 using Microsoft.Extensions.Logging;
+using HarborFlow.Wpf.Services;
 
 namespace HarborFlow.Wpf.ViewModels
 {
@@ -19,17 +20,21 @@ namespace HarborFlow.Wpf.ViewModels
         private readonly IVesselTrackingService _vesselTrackingService;
         private readonly INotificationService _notificationService;
         private readonly ILogger<MapViewModel> _logger;
+        private readonly IBookmarkService _bookmarkService;
+        private readonly SessionContext _sessionContext;
+
         private string _searchTerm;
-        private ObservableCollection<Vessel> _searchResults;
         private Vessel? _selectedVessel;
         private VesselType? _selectedVesselTypeFilter;
         private bool _isHistoryVisible;
         private string _selectedMapLayer;
+        private MapBookmark? _selectedBookmark;
 
         public event PropertyChangedEventHandler? PropertyChanged;
         public event EventHandler<Vessel>? VesselSelected;
         public event EventHandler<IEnumerable<VesselPosition>>? HistoryTrackRequested;
         public event EventHandler<string>? MapLayerChanged;
+        public event EventHandler<MapBookmark>? BookmarkNavigationRequested;
 
         public string SearchTerm
         {
@@ -45,6 +50,9 @@ namespace HarborFlow.Wpf.ViewModels
         public ObservableCollection<string> Suggestions { get; private set; }
         public ObservableCollection<VesselType> VesselTypeFilters { get; } = new ObservableCollection<VesselType>(Enum.GetValues(typeof(VesselType)).Cast<VesselType>());
         public ObservableCollection<string> MapLayers { get; } = new ObservableCollection<string> { "Street", "Satellite", "Nautical" };
+        public ObservableCollection<MapBookmark> Bookmarks { get; } = new();
+
+        public bool IsBookmarkFeatureEnabled => _sessionContext.CurrentUser != null;
 
         public VesselType? SelectedVesselTypeFilter
         {
@@ -68,6 +76,20 @@ namespace HarborFlow.Wpf.ViewModels
             }
         }
 
+        public MapBookmark? SelectedBookmark
+        {
+            get => _selectedBookmark;
+            set
+            {
+                _selectedBookmark = value;
+                OnPropertyChanged(nameof(SelectedBookmark));
+                if (_selectedBookmark != null)
+                {
+                    BookmarkNavigationRequested?.Invoke(this, _selectedBookmark);
+                }
+            }
+        }
+
         public bool IsHistoryVisible
         {
             get => _isHistoryVisible;
@@ -88,16 +110,12 @@ namespace HarborFlow.Wpf.ViewModels
 
         public ICommand SelectSuggestionCommand { get; }
         public ICommand ToggleHistoryCommand { get; }
+        public ICommand SearchVesselsCommand { get; }
+        public ICommand AddBookmarkCommand { get; }
+        public ICommand DeleteBookmarkCommand { get; }
+        public ICommand LoadBookmarksCommand { get; }
 
-        public ObservableCollection<Vessel> SearchResults
-        {
-            get => _searchResults;
-            set
-            {
-                _searchResults = value;
-                OnPropertyChanged(nameof(SearchResults));
-            }
-        }
+        public ObservableCollection<Vessel> SearchResults { get; set; } = new();
 
         public Vessel? SelectedVessel
         {
@@ -119,32 +137,99 @@ namespace HarborFlow.Wpf.ViewModels
 
         public ObservableCollection<Vessel> FilteredVesselsOnMap { get; } = new ObservableCollection<Vessel>();
 
-        public ICommand SearchVesselsCommand { get; }
-
-        public MapViewModel(IVesselTrackingService vesselTrackingService, INotificationService notificationService, ILogger<MapViewModel> logger)
+        public MapViewModel(IVesselTrackingService vesselTrackingService, INotificationService notificationService, ILogger<MapViewModel> logger, IBookmarkService bookmarkService, SessionContext sessionContext)
         {
             _vesselTrackingService = vesselTrackingService;
             _notificationService = notificationService;
             _logger = logger;
+            _bookmarkService = bookmarkService;
+            _sessionContext = sessionContext;
+
             _searchTerm = string.Empty;
-            _searchResults = new ObservableCollection<Vessel>();
             Suggestions = new ObservableCollection<string>();
             _selectedMapLayer = MapLayers.First();
+
             SearchVesselsCommand = new RelayCommand(async _ => await SearchVesselsAsync());
             SelectSuggestionCommand = new RelayCommand(SelectSuggestion);
             ToggleHistoryCommand = new RelayCommand(_ => IsHistoryVisible = !IsHistoryVisible);
+            AddBookmarkCommand = new RelayCommand(async _ => await AddBookmarkAsync(), _ => IsBookmarkFeatureEnabled);
+            DeleteBookmarkCommand = new RelayCommand(async _ => await DeleteBookmarkAsync(), _ => SelectedBookmark != null && IsBookmarkFeatureEnabled);
+            LoadBookmarksCommand = new RelayCommand(async _ => await LoadBookmarksAsync());
 
             _vesselTrackingService.TrackedVessels.CollectionChanged += OnTrackedVesselsChanged;
-            UpdateFilteredVessels();
+            _sessionContext.UserChanged += OnUserChanged;
 
-            // Define a bounding box for Southeast Asia / Indonesia
-            var boundingBoxes = new[]
+            UpdateFilteredVessels();
+            OnUserChanged(); // Initial check
+
+            var boundingBoxes = new[] { new[] { -15.0, 90.0 }, new[] { 20.0, 150.0 } };
+            _ = _vesselTrackingService.StartTracking(boundingBoxes);
+        }
+
+        private async Task AddBookmarkAsync()
+        {
+            // In a real app, we'd use a dialog to get the name and bounds.
+            // For now, we'll use a default name and placeholder bounds.
+            if (_sessionContext.CurrentUser == null) return;
+
+            var newBookmark = new MapBookmark
             {
-                new[] { -15.0, 90.0 }, // Min (Lat, Lon)
-                new[] { 20.0, 150.0 }  // Max (Lat, Lon)
+                Name = $"New Bookmark {DateTime.Now:HH:mm:ss}",
+                UserId = _sessionContext.CurrentUser.UserId,
+                North = 10, South = -10, East = 110, West = 100 // Placeholder bounds
             };
 
-            _ = _vesselTrackingService.StartTracking(boundingBoxes);
+            try
+            {
+                await _bookmarkService.AddBookmarkAsync(newBookmark);
+                await LoadBookmarksAsync();
+                
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to add bookmark.");
+                
+            }
+        }
+
+        private async Task DeleteBookmarkAsync()
+        {
+            if (SelectedBookmark == null || _sessionContext.CurrentUser == null) return;
+
+            try
+            {
+                bool success = await _bookmarkService.DeleteBookmarkAsync(SelectedBookmark.Id, _sessionContext.CurrentUser.UserId);
+                if (success)
+                {
+                    await LoadBookmarksAsync();
+                    
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete bookmark.");
+                
+            }
+        }
+
+        private async Task LoadBookmarksAsync()
+        {
+            Bookmarks.Clear();
+            if (_sessionContext.CurrentUser == null) return;
+
+            var bookmarks = await _bookmarkService.GetBookmarksForUserAsync(_sessionContext.CurrentUser.UserId);
+            foreach (var bookmark in bookmarks)
+            {
+                Bookmarks.Add(bookmark);
+            }
+        }
+
+        private void OnUserChanged()
+        {
+            _ = LoadBookmarksAsync();
+            OnPropertyChanged(nameof(IsBookmarkFeatureEnabled));
+            (AddBookmarkCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (DeleteBookmarkCommand as RelayCommand)?.RaiseCanExecuteChanged();
         }
 
         private void OnTrackedVesselsChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -186,7 +271,7 @@ namespace HarborFlow.Wpf.ViewModels
 
                 var results = await _vesselTrackingService.SearchVesselsAsync(SearchTerm);
                 Suggestions.Clear();
-                foreach (var vessel in results.Take(10)) // Limit suggestions
+                foreach (var vessel in results.Take(10))
                 {
                     Suggestions.Add(vessel.Name);
                 }
@@ -194,7 +279,7 @@ namespace HarborFlow.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load search suggestions.");
-                _notificationService.ShowNotification("Failed to load search suggestions.", NotificationType.Error);
+                
             }
         }
 
@@ -208,7 +293,7 @@ namespace HarborFlow.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to perform vessel search.");
-                _notificationService.ShowNotification("Failed to perform vessel search.", NotificationType.Error);
+                
             }
         }
 
@@ -233,6 +318,7 @@ namespace HarborFlow.Wpf.ViewModels
         public void Dispose()
         {
             _vesselTrackingService.TrackedVessels.CollectionChanged -= OnTrackedVesselsChanged;
+            _sessionContext.UserChanged -= OnUserChanged;
             _vesselTrackingService.StopTracking().Wait();
         }
     }

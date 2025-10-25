@@ -1,4 +1,3 @@
-
 using HarborFlow.Core.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,6 +14,7 @@ public class HarborFlowDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<ServiceRequest> ServiceRequests { get; set; }
     public DbSet<ApprovalHistory> ApprovalHistories { get; set; }
+    public DbSet<MapBookmark> MapBookmarks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -45,6 +45,13 @@ public class HarborFlowDbContext : DbContext
         modelBuilder.Entity<ServiceRequest>(entity =>
         {
             entity.HasKey(e => e.RequestId);
+        });
+
+        modelBuilder.Entity<MapBookmark>(entity =>
+        {
+            entity.ToTable("map_bookmarks");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.UserId, e.Name }).IsUnique();
         });
     }
 }

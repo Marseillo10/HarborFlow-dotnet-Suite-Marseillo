@@ -18,6 +18,7 @@ using HarborFlow.Wpf.Interfaces;
 using HarborFlow.Wpf.Validators;
 using Microsoft.Extensions.Logging;
 using System.Windows.Threading;
+using HarborFlow.Core.Models;
 
 namespace HarborFlow.Wpf
 {
@@ -60,6 +61,9 @@ namespace HarborFlow.Wpf
                     services.AddTransient<ServiceRequestViewModel>();
                     services.AddTransient<ServiceRequestView>();
 
+                    services.AddTransient<NewsViewModel>();
+                    services.AddTransient<NewsView>();
+
                     services.AddTransient<UserProfileViewModel>();
                     services.AddTransient<UserProfileView>();
 
@@ -78,9 +82,13 @@ namespace HarborFlow.Wpf
                     services.AddSingleton<IFileService, FileService>();
                     services.AddSingleton<ICachingService, CachingService>();
                     services.AddSingleton<ISynchronizationService, SynchronizationService>();
+                    services.AddSingleton<INotificationHub, NotificationHub>();
 
                     services.AddScoped<IPortServiceManager, PortServiceManager>();
+                    services.AddScoped<IBookmarkService, BookmarkService>();
                     services.AddSingleton<IVesselTrackingService, VesselTrackingService>();
+
+                    services.AddHttpClient<IRssService, RssService>();
 
                     services.AddDbContext<HarborFlowDbContext>(options =>
                         options.UseNpgsql(hostContext.Configuration.GetConnectionString("DefaultConnection")));
@@ -98,7 +106,7 @@ namespace HarborFlow.Wpf
             await AppHost!.StartAsync();
 
             var windowManager = AppHost.Services.GetRequiredService<IWindowManager>();
-            windowManager.ShowLoginWindow();
+                        windowManager.ShowMainWindow();
         }
 
         private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

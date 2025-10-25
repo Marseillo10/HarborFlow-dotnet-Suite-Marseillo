@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "iyeuM/Uin+g=",
+  "dgSpecHash": "LaiptuvtdFo=",
   "success": true,
   "projectFilePath": "/Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Infrastructure/HarborFlow.Infrastructure.csproj",
   "expectedPackageFiles": [
@@ -67,6 +67,7 @@
     "/Users/marseillosatrian/.nuget/packages/system.io.pipelines/7.0.0/system.io.pipelines.7.0.0.nupkg.sha512",
     "/Users/marseillosatrian/.nuget/packages/system.reflection.metadata/7.0.0/system.reflection.metadata.7.0.0.nupkg.sha512",
     "/Users/marseillosatrian/.nuget/packages/system.runtime.compilerservices.unsafe/6.0.0/system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
+    "/Users/marseillosatrian/.nuget/packages/system.servicemodel.syndication/9.0.10/system.servicemodel.syndication.9.0.10.nupkg.sha512",
     "/Users/marseillosatrian/.nuget/packages/system.text.json/9.0.10/system.text.json.9.0.10.nupkg.sha512",
     "/Users/marseillosatrian/.nuget/packages/system.threading.channels/7.0.0/system.threading.channels.7.0.0.nupkg.sha512"
   ],

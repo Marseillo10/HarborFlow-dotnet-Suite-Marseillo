@@ -1,7 +1,7 @@
 using HarborFlow.Core.Interfaces;
 using HarborFlow.Core.Models;
 using HarborFlow.Infrastructure;
-using HarborFlow.Infrastructure.Services; // Assuming OfflineChange is here
+using HarborFlow.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
@@ -13,13 +13,15 @@ namespace HarborFlow.Application.Services
         private readonly HarborFlowDbContext _context;
         private readonly ILogger<PortServiceManager> _logger;
         private readonly ISynchronizationService _syncService;
-        private bool _isOnline = true; // This should be managed by a network detection service
+        private readonly INotificationHub _notificationHub;
+        private bool _isOnline = true;
 
-        public PortServiceManager(HarborFlowDbContext context, ILogger<PortServiceManager> logger, ISynchronizationService syncService)
+        public PortServiceManager(HarborFlowDbContext context, ILogger<PortServiceManager> logger, ISynchronizationService syncService, INotificationHub notificationHub)
         {
             _context = context;
             _logger = logger;
             _syncService = syncService;
+            _notificationHub = notificationHub;
         }
 
         public async Task<ServiceRequest?> GetServiceRequestByIdAsync(Guid requestId)
@@ -55,19 +57,6 @@ namespace HarborFlow.Application.Services
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            if (!_isOnline)
-            {
-                var change = new OfflineChange
-                {
-                    ChangeType = ChangeType.Add,
-                    EntityType = nameof(ServiceRequest),
-                    DataJson = JsonSerializer.Serialize(request)
-                };
-                await _syncService.AddChangeToQueueAsync(change);
-                _logger.LogInformation("Service request {RequestId} queued for submission.", request.RequestId);
-                return request; // Return the request as is, it will be processed later
-            }
-
             try
             {
                 request.RequestId = Guid.NewGuid();
@@ -79,11 +68,13 @@ namespace HarborFlow.Application.Services
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Service request {RequestId} submitted successfully.", request.RequestId);
+                _notificationHub.SendNotification($"Service request for vessel {request.VesselImo} submitted successfully.", NotificationType.Success);
                 return request;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while submitting service request for vessel {VesselImo}.", request.VesselImo);
+                _notificationHub.SendNotification("Failed to submit service request.", NotificationType.Error);
                 throw;
             }
         }
@@ -112,11 +103,13 @@ namespace HarborFlow.Application.Services
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Service request {RequestId} approved successfully by {ApproverId}.", requestId, approverId);
+                _notificationHub.SendNotification($"Service request {request.RequestId} approved.", NotificationType.Success);
                 return request;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while approving service request {RequestId}.", requestId);
+                _notificationHub.SendNotification("Failed to approve service request.", NotificationType.Error);
                 throw;
             }
         }
@@ -147,11 +140,13 @@ namespace HarborFlow.Application.Services
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Service request {RequestId} rejected successfully by {RejectorId}.", requestId, rejectorId);
+                _notificationHub.SendNotification($"Service request {request.RequestId} rejected.", NotificationType.Warning);
                 return request;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while rejecting service request {RequestId}.", requestId);
+                _notificationHub.SendNotification("Failed to reject service request.", NotificationType.Error);
                 throw;
             }
         }
@@ -169,7 +164,6 @@ namespace HarborFlow.Application.Services
                 {
                     query = query.Where(r => r.RequestedBy == currentUser.UserId);
                 }
-                // Administrators and PortOfficers can see all requests, so no filter is applied
 
                 return await query.OrderByDescending(r => r.RequestDate).ToListAsync();
             }
@@ -184,19 +178,6 @@ namespace HarborFlow.Application.Services
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
-
-            if (!_isOnline)
-            {
-                var change = new OfflineChange
-                {
-                    ChangeType = ChangeType.Update,
-                    EntityType = nameof(ServiceRequest),
-                    DataJson = JsonSerializer.Serialize(request)
-                };
-                await _syncService.AddChangeToQueueAsync(change);
-                _logger.LogInformation("Service request {RequestId} queued for update.", request.RequestId);
-                return request;
-            }
 
             try
             {
@@ -213,30 +194,19 @@ namespace HarborFlow.Application.Services
 
                 await _context.SaveChangesAsync();
                 _logger.LogInformation("Service request {RequestId} updated successfully.", request.RequestId);
+                _notificationHub.SendNotification($"Service request {request.RequestId} updated.", NotificationType.Info);
                 return existingRequest;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while updating service request {RequestId}.", request.RequestId);
+                _notificationHub.SendNotification("Failed to update service request.", NotificationType.Error);
                 throw;
             }
         }
 
         public async Task DeleteServiceRequestAsync(Guid requestId)
         {
-            if (!_isOnline)
-            {
-                var change = new OfflineChange
-                {
-                    ChangeType = ChangeType.Delete,
-                    EntityType = nameof(ServiceRequest),
-                    DataJson = JsonSerializer.Serialize(new { RequestId = requestId })
-                };
-                await _syncService.AddChangeToQueueAsync(change);
-                _logger.LogInformation("Service request {RequestId} queued for deletion.", requestId);
-                return;
-            }
-
             try
             {
                 var request = await _context.ServiceRequests.FindAsync(requestId);
@@ -245,11 +215,13 @@ namespace HarborFlow.Application.Services
                     _context.ServiceRequests.Remove(request);
                     await _context.SaveChangesAsync();
                     _logger.LogInformation("Service request {RequestId} deleted successfully.", requestId);
+                    _notificationHub.SendNotification($"Service request {requestId} deleted.", NotificationType.Info);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while deleting service request {RequestId}.", requestId);
+                _notificationHub.SendNotification("Failed to delete service request.", NotificationType.Error);
                 throw;
             }
         }

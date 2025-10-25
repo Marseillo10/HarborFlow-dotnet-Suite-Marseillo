@@ -75,7 +75,7 @@ namespace HarborFlow.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load vessels.");
-                _notificationService.ShowNotification($"Error loading vessels: {ex.Message}", NotificationType.Error);
+                
             }
             finally
             {
@@ -94,12 +94,12 @@ namespace HarborFlow.Wpf.ViewModels
                 {
                     await _vesselTrackingService.AddVesselAsync(newVessel);
                     await LoadVesselsAsync();
-                    _notificationService.ShowNotification("Vessel added successfully.", NotificationType.Success);
+                    
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to add vessel.");
-                    _notificationService.ShowNotification($"Error adding vessel: {ex.Message}", NotificationType.Error);
+                    
                 }
                 finally
                 {
@@ -121,12 +121,12 @@ namespace HarborFlow.Wpf.ViewModels
                 {
                     await _vesselTrackingService.UpdateVesselAsync(vesselCopy);
                     await LoadVesselsAsync();
-                    _notificationService.ShowNotification("Vessel updated successfully.", NotificationType.Success);
+                    
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to update vessel.");
-                    _notificationService.ShowNotification($"Error updating vessel: {ex.Message}", NotificationType.Error);
+                    
                 }
                 finally
                 {
@@ -146,12 +146,12 @@ namespace HarborFlow.Wpf.ViewModels
                     {
                         await _vesselTrackingService.DeleteVesselAsync(SelectedVessel.IMO);
                         await LoadVesselsAsync();
-                        _notificationService.ShowNotification("Vessel deleted successfully.", NotificationType.Success);
+                        
                     }
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Failed to delete vessel.");
-                        _notificationService.ShowNotification($"Error deleting vessel: {ex.Message}", NotificationType.Error);
+                        
                     }
                     finally
                     {

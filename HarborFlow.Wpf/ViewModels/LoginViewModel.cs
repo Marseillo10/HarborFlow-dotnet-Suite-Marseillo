@@ -86,19 +86,18 @@ namespace HarborFlow.Wpf.ViewModels
                 var user = await _authService.AuthenticateAsync(Username, Password);
                 if (user != null)
                 {
-                    _sessionContext.CurrentUser = user;
-                    _windowManager.ShowMainWindow();
+                                        _sessionContext.CurrentUser = user; // This triggers the UserChanged event
                     _windowManager.CloseLoginWindow();
                 }
                 else
                 {
-                    _notificationService.ShowNotification("Invalid username or password.", NotificationType.Error);
+                    
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred during login for user {Username}.", Username);
-                _notificationService.ShowNotification($"An error occurred during login: {ex.Message}", NotificationType.Error);
+                
             }
             finally
             {

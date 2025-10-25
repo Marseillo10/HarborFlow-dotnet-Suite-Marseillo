@@ -1,0 +1,51 @@
+HarborFlow Application
+│
+├─── 🚀 Aplikasi Dimulai
+│    └─── 🏠 Jendela Utama (MainWindow) Ditampilkan
+│         │
+│         ├─── 👤 Mode Pengguna: Tamu (Default)
+│         │    │
+│         │    ├─── 🗺️ Navigasi -> Peta Kapal (MapView)
+│         │    │    └─── Fitur: Lacak kapal secara real-time.
+│         │    │
+│         │    ├─── 📰 Navigasi -> Berita Maritim (NewsView)
+│         │    │    ├─── Fitur: Lihat berita maritim terkini.
+│         │    │    └─── Fitur: Filter berita dengan kata kunci.
+│         │    │
+│         │    ├─── 🔐 Header -> Tombol "Login"
+│         │    │    └─── Aksi: Membuka dialog Login.
+│         │    │
+│         │    └─── ➕ Header -> Tombol "Register"
+│         │         └─── Aksi: Membuka dialog Registrasi.
+│
+└─── 🔑 Pengguna Melakukan Login
+     │
+     └─── 👤 Mode Pengguna: Terotentikasi
+          │
+          ├─── 📊 Navigasi -> Dasbor (DashboardView)
+          │    ├─── Fitur: Lihat grafik status permintaan layanan.
+          │    └─── Fitur: Lihat grafik jumlah kapal per tipe.
+          │
+          ├─── 🗺️ Navigasi -> Peta Kapal (MapView)
+          │    ├─── Fitur: Lacak kapal secara real-time.
+          │    └─── ⭐ Fitur Login: Panel Bookmark
+          │         ├─── Aksi: Tambah bookmark dari tampilan peta saat ini.
+          │         ├─── Aksi: Pilih bookmark untuk navigasi cepat.
+          │         └─── Aksi: Hapus bookmark yang tersimpan.
+          │
+          ├─── 📰 Navigasi -> Berita Maritim (NewsView)
+          │    ├─── Fitur: Lihat berita maritim terkini.
+          │    └─── Fitur: Filter berita dengan kata kunci.
+          │
+          ├─── 🚢 Navigasi -> Manajemen Kapal (VesselManagementView)
+          │    │    (Hanya terlihat oleh Admin)
+          │    ├─── Fitur: Tambah, Edit, Hapus data kapal.
+          │    └─── Fitur: Lihat daftar semua kapal di database.
+          │
+          ├─── 📋 Navigasi -> Permintaan Layanan (ServiceRequestView)
+          │    │    (Hanya terlihat oleh Petugas & Admin)
+          │    ├─── Fitur: Lihat semua permintaan layanan.
+          │    └─── Fitur: Setujui atau Tolak permintaan.
+          │
+          └─── 🚪 Header -> Tombol "Logout"
+               └─── Aksi: Kembali ke Mode Tamu.

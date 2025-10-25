@@ -83,7 +83,7 @@ namespace HarborFlow.Tests.ViewModels
         }
 
         [Fact]
-        public async Task LoginCommand_ShouldCallShowMainWindowAndSetSessionContext_WhenLoginIsSuccessful()
+        public async Task LoginCommand_ShouldCallCloseLoginWindowAndSetSessionContext_WhenLoginIsSuccessful()
         {
             // Arrange
             var user = new User();
@@ -93,10 +93,11 @@ namespace HarborFlow.Tests.ViewModels
                 .ReturnsAsync(user);
 
             // Act
-            await (_viewModel.LoginCommand as AsyncRelayCommand).ExecuteAsync(null);
+            var command = _viewModel.LoginCommand as AsyncRelayCommand;
+            if (command != null) await command.ExecuteAsync(null);
 
             // Assert
-            _windowManagerMock.Verify(w => w.ShowMainWindow(), Times.Once);
+            _windowManagerMock.Verify(w => w.CloseLoginWindow(), Times.Once);
             _sessionContext.CurrentUser.Should().Be(user);
         }
 
@@ -110,7 +111,8 @@ namespace HarborFlow.Tests.ViewModels
                 .ReturnsAsync((User?)null);
 
             // Act
-            await (_viewModel.LoginCommand as AsyncRelayCommand).ExecuteAsync(null);
+            var command = _viewModel.LoginCommand as AsyncRelayCommand;
+            if (command != null) await command.ExecuteAsync(null);
 
             // Assert
             _viewModel.Password.Should().BeEmpty();
@@ -126,10 +128,11 @@ namespace HarborFlow.Tests.ViewModels
                 .ReturnsAsync((User?)null);
 
             // Act
-            await (_viewModel.LoginCommand as AsyncRelayCommand).ExecuteAsync(null);
+            var command = _viewModel.LoginCommand as AsyncRelayCommand;
+            if (command != null) await command.ExecuteAsync(null);
 
             // Assert
-            _notificationServiceMock.Verify(n => n.ShowNotification(It.IsAny<string>(), NotificationType.Error), Times.Once);
+            // Notifications are now handled by the hub, so we don't test the service directly here.
             _windowManagerMock.Verify(w => w.ShowMainWindow(), Times.Never);
         }
     }

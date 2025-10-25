@@ -1,39 +1,54 @@
-# HarborFlow
+# HarborFlow - Smart Port Management System
 
-HarborFlow is a Smart Port Management System designed to digitize and streamline operational workflows in a port. This project is built as a desktop application using .NET 9 with Windows Presentation Foundation (WPF), following the MVVM pattern.
+HarborFlow is a modern desktop application designed to digitize and streamline port operations. Built with .NET 9 WPF, it features real-time vessel tracking, a digital service request workflow, and a maritime news aggregator.
 
-## Features
+For detailed technical information, system architecture, and feature breakdowns, please see the **[Full Project Documentation](md%20Files/HarborFlow_Full_Documentation.md)**.
 
-- **Real-time Vessel Tracking:** Track vessel positions in real-time on an interactive map using AIS data.
-- **Digital Workflow Management:** A platform for submitting and approving port service requests.
-- **Centralized Information Portal:** A single point of access for all port-related information for stakeholders.
+## Key Features
 
-## Technology Stack
+- **Live Map:** Real-time vessel tracking on an interactive map.
+- **Maritime News:** An integrated news feed with articles from leading maritime sources.
+- **Service Workflow:** A complete system for submitting, approving, and managing port service requests (requires login).
+- **Map Bookmarks:** Save and quickly navigate to important map areas (requires login).
+- **Guest Mode:** Explore public features like the map and news feed without needing an account.
 
-- **.NET 9 WPF:** For the desktop application.
-- **PostgreSQL:** As the primary database.
-- **Entity Framework Core 9:** For data access.
-- **MVVM Pattern:** For a clean and maintainable architecture.
+## Tech Stack
 
-## Project Structure
+- **Frontend:** .NET 9 WPF
+- **Backend:** .NET 9 Class Libraries
+- **Database:** PostgreSQL (managed via Docker)
+- **Architecture:** Clean Architecture, MVVM Pattern
 
-The solution is divided into the following projects, following the principles of Clean Architecture:
+## Quick Start (Recommended)
 
-- **HarborFlow.Core:** This is the core of the application, containing the domain models (entities) and the interfaces for the services. It has no dependencies on other projects in the solution.
-- **HarborFlow.Application:** This project contains the business logic of the application. It implements the interfaces defined in `HarborFlow.Core` and orchestrates the domain models to perform application-specific tasks.
-- **HarborFlow.Infrastructure:** This project handles all external concerns, such as data access, file system access, and communication with external APIs. It implements the interfaces defined in `HarborFlow.Core` and provides the concrete implementation for the data access layer using Entity Framework Core.
-- **HarborFlow.Wpf:** This is the presentation layer of the application, built with WPF and the MVVM pattern. It is responsible for the user interface and user experience.
-- **HarborFlow.Tests:** This project contains unit and integration tests for the application, ensuring the quality and correctness of the code.
+This project uses Docker to provide a consistent and easy-to-use database environment.
 
-## How to Run
+### Prerequisites
 
-1.  **Clone the repository.**
-2.  **Configure the database connection:**
-    - Open the `appsettings.json` file in the `HarborFlow.Wpf` project.
-    - Update the `DefaultConnection` string with your PostgreSQL connection details.
-3.  **Run the database migrations:**
-    - Open a terminal in the `HarborFlow.Infrastructure` directory.
-    - Run the command: `dotnet ef database update`
-4.  **Run the application:**
-    - Set the `HarborFlow.Wpf` project as the startup project.
-    - Run the application from Visual Studio or by using the command `dotnet run` in the `HarborFlow.Wpf` directory.
+- .NET 9 SDK
+- Docker Desktop (must be running)
+
+### Steps
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/Marseillo10/HarborFlow_WPF.git
+    cd HarborFlow_WPF
+    ```
+
+2.  **Start the database:**
+    ```bash
+    docker-compose up -d
+    ```
+
+3.  **Apply database migrations (first time only):**
+    ```bash
+    dotnet ef database update --project HarborFlow.Infrastructure
+    ```
+
+4.  **Run the application (Windows only):**
+    ```bash
+    dotnet run --project HarborFlow.Wpf
+    ```
+
+> **Note for macOS/Linux users:** You can build and contribute to the non-UI projects (`Core`, `Application`, `Infrastructure`), but you cannot run the WPF user interface. See [WINDOWS_DEVELOPMENT.md](WINDOWS_DEVELOPMENT.md) for more details.

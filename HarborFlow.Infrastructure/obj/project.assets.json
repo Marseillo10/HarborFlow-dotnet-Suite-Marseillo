@@ -1403,6 +1403,22 @@
           "buildTransitive/netcoreapp3.1/_._": {}
         }
       },
+      "System.ServiceModel.Syndication/9.0.10": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/System.ServiceModel.Syndication.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/System.ServiceModel.Syndication.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
+        }
+      },
       "System.Text.Json/9.0.10": {
         "type": "package",
         "compile": {
@@ -3911,6 +3927,34 @@
         "useSharedDesignerContext.txt"
       ]
     },
+    "System.ServiceModel.Syndication/9.0.10": {
+      "sha512": "jWOXgKi51ULlPDi+YIWsZglIYUYC1DixAs2j6xdy8fzhuxvXO82yUEXv4wFziqzoG1FmTAV/uv5psxb+3MqB7w==",
+      "type": "package",
+      "path": "system.servicemodel.syndication/9.0.10",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/System.ServiceModel.Syndication.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net8.0/_._",
+        "buildTransitive/netcoreapp2.0/System.ServiceModel.Syndication.targets",
+        "lib/net462/System.ServiceModel.Syndication.dll",
+        "lib/net462/System.ServiceModel.Syndication.xml",
+        "lib/net8.0/System.ServiceModel.Syndication.dll",
+        "lib/net8.0/System.ServiceModel.Syndication.xml",
+        "lib/net9.0/System.ServiceModel.Syndication.dll",
+        "lib/net9.0/System.ServiceModel.Syndication.xml",
+        "lib/netstandard2.0/System.ServiceModel.Syndication.dll",
+        "lib/netstandard2.0/System.ServiceModel.Syndication.xml",
+        "system.servicemodel.syndication.9.0.10.nupkg.sha512",
+        "system.servicemodel.syndication.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
     "System.Text.Json/9.0.10": {
       "sha512": "XM02ZBnzxk7Ti6l9YRy8Bp639wANqJzJzw4W4VYiCh+HXY9hBOWkGB4k89OLP/s/RxgM02P4a/mWcJTgFiLf1Q==",
       "type": "package",
@@ -4022,7 +4066,8 @@
       "BCrypt.Net-Next >= 4.0.3",
       "HarborFlow.Core >= 1.0.0",
       "Microsoft.EntityFrameworkCore.Design >= 9.0.0",
-      "Npgsql.EntityFrameworkCore.PostgreSQL >= 9.0.0"
+      "Npgsql.EntityFrameworkCore.PostgreSQL >= 9.0.0",
+      "System.ServiceModel.Syndication >= 9.0.10"
     ]
   },
   "packageFolders": {
@@ -4086,6 +4131,10 @@
           "Npgsql.EntityFrameworkCore.PostgreSQL": {
             "target": "Package",
             "version": "[9.0.0, )"
+          },
+          "System.ServiceModel.Syndication": {
+            "target": "Package",
+            "version": "[9.0.10, )"
           }
         },
         "imports": [

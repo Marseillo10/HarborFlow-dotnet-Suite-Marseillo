@@ -50,6 +50,42 @@ namespace HarborFlow.Infrastructure.Migrations
                     b.ToTable("ApprovalHistories");
                 });
 
+            modelBuilder.Entity("HarborFlow.Core.Models.MapBookmark", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double>("East")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double>("North")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("South")
+                        .HasColumnType("double precision");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("West")
+                        .HasColumnType("double precision");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("map_bookmarks", (string)null);
+                });
+
             modelBuilder.Entity("HarborFlow.Core.Models.ServiceRequest", b =>
                 {
                     b.Property<Guid>("RequestId")

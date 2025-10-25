@@ -1,47 +1,47 @@
-# Tugas Pengembangan Khusus Windows untuk HarborFlow WPF
+# Windows-Specific Development Tasks for HarborFlow
 
-Dokumen ini menjelaskan tugas-tugas pengembangan yang spesifik untuk lingkungan Windows dan tidak dapat dilakukan oleh developer yang menggunakan macOS, karena sifat proyek ini yang berbasis Windows Presentation Foundation (WPF).
+This document outlines development tasks that are specific to the Windows environment due to the project's use of Windows Presentation Foundation (WPF).
 
-## Latar Belakang
+## Background
 
-Meskipun sebagian besar codebase (.NET Class Libraries) bersifat cross-platform dan dapat dibangun di macOS atau Linux, bagian antarmuka pengguna (UI) adalah aplikasi WPF. Ini menciptakan beberapa batasan bagi developer yang tidak menggunakan Windows.
+While the majority of the codebase (.NET Class Libraries for Core, Application, and Infrastructure) is cross-platform, the user interface (`HarborFlow.Wpf`) is a WPF application. This creates some limitations for developers not using Windows.
 
-## Tugas yang Memerlukan Windows
+## Why Windows is Required for Full Testing
 
-Berikut adalah daftar tugas penting yang harus dilakukan di lingkungan Windows untuk memastikan fungsionalitas dan kualitas aplikasi.
+### 1. Running and Debugging the UI
 
-### 1. Menjalankan dan Melakukan Debugging Aplikasi
+The main `HarborFlow.Wpf` application can **only** be run and debugged on a Windows operating system. This is the only way to visually verify that the UI, including all new features and layouts, functions as expected.
 
-Aplikasi utama `HarborFlow.Wpf` hanya dapat dijalankan dan di-debug pada sistem operasi Windows. Ini adalah satu-satunya cara untuk memverifikasi secara visual bahwa UI berfungsi seperti yang diharapkan.
+**Steps on Windows:**
+- Open the solution file (`HarborFlow.sln`) in Visual Studio.
+- Set `HarborFlow.Wpf` as the "Startup Project".
+- Run the application by pressing `F5` or the "Start" button.
 
-**Langkah-langkah:**
-- Buka file solusi (`HarborFlow.sln`) di Visual Studio.
-- Atur `HarborFlow.Wpf` sebagai "Startup Project".
-- Jalankan aplikasi dengan menekan `F5` atau tombol "Start".
+### 2. Running Unit & UI Tests
 
-### 2. Menjalankan Unit Test
+Executing the tests in the `HarborFlow.Tests` project requires the .NET Desktop Runtime (`Microsoft.WindowsDesktop.App`), which is only available on Windows. Running these tests is critical for validating ViewModel logic and preventing regressions.
 
-Meskipun proyek berhasil di-build di macOS, **eksekusi unit test gagal** karena memerlukan .NET Desktop Runtime (`Microsoft.WindowsDesktop.App`) yang tidak tersedia di macOS.
-
-Menjalankan tes ini sangat penting untuk memvalidasi logika di ViewModels dan memastikan tidak ada regresi.
-
-**Langkah-langkah:**
-- Buka terminal (Command Prompt atau PowerShell) di direktori root proyek.
-- Jalankan perintah berikut:
+**Steps on Windows:**
+- Open a terminal (Command Prompt or PowerShell) in the project's root directory.
+- Run the command:
   ```shell
   dotnet test
   ```
-- Atau, jalankan tes melalui **Test Explorer** di Visual Studio.
+- Alternatively, run the tests via the **Test Explorer** in Visual Studio.
 
-### 3. Verifikasi Visual dan Interaksi UI
+## Cross-Platform Contributions (macOS/Linux)
 
-Setiap perubahan pada file XAML (`.xaml`) yang mendefinisikan antarmuka pengguna—seperti tata letak, gaya, warna, dan data binding—harus diverifikasi secara visual dengan menjalankan aplikasi di Windows.
+Developers on non-Windows systems can fully contribute to the core logic of the application. The setup process for the database is now seamless on any platform thanks to Docker.
 
-Ini adalah satu-satunya cara untuk memastikan bahwa:
-- Tampilan sesuai dengan desain.
-- Semua kontrol (tombol, daftar, dll.) dapat di-render dan berinteraksi dengan benar.
-- Data binding antara View dan ViewModel berfungsi seperti yang diharapkan.
+**What you CAN do on macOS/Linux:**
+- **Set up the database:** Run `docker-compose up -d` and `dotnet ef database update`.
+- **Build the solution:** Run `dotnet build` to check for compilation errors in the core projects.
+- **Develop features:** Write and modify code in the `HarborFlow.Core`, `HarborFlow.Application`, and `HarborFlow.Infrastructure` projects.
 
-## Kesimpulan
+**What you CANNOT do on macOS/Linux:**
+- Run the `HarborFlow.Wpf` application to see the UI.
+- Run the tests in the `HarborFlow.Tests` project.
 
-Developer di macOS dapat berkontribusi pada logika bisnis di proyek `HarborFlow.Core`, `HarborFlow.Application`, dan `HarborFlow.Infrastructure`. Namun, setiap pekerjaan yang menyentuh UI (`HarborFlow.Wpf`) atau memerlukan verifikasi melalui tes (`HarborFlow.Tests`) harus divalidasi dan diuji di lingkungan Windows sebelum dianggap selesai.
+## Conclusion
+
+Any work that touches the UI (`HarborFlow.Wpf`) or requires validation through tests (`HarborFlow.Tests`) **must** ultimately be validated on a Windows environment before being considered complete. However, the core backend development is fully cross-platform.

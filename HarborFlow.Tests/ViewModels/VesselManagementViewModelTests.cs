@@ -88,7 +88,8 @@ namespace HarborFlow.Tests.ViewModels
             _windowManagerMock.Setup(w => w.ShowVesselEditorDialog(It.IsAny<Vessel>())).Returns(true);
 
             // Act
-            await (_viewModel.AddVesselCommand as AsyncRelayCommand).ExecuteAsync(null);
+            var command = _viewModel.AddVesselCommand as AsyncRelayCommand;
+            if (command != null) await command.ExecuteAsync(null);
 
             // Assert
             _vesselServiceMock.Verify(s => s.AddVesselAsync(It.IsAny<Vessel>()), Times.Once);
@@ -104,7 +105,8 @@ namespace HarborFlow.Tests.ViewModels
             _windowManagerMock.Setup(w => w.ShowVesselEditorDialog(It.IsAny<Vessel>())).Returns(true);
 
             // Act
-            await (_viewModel.EditVesselCommand as AsyncRelayCommand).ExecuteAsync(null);
+            var command = _viewModel.EditVesselCommand as AsyncRelayCommand;
+            if (command != null) await command.ExecuteAsync(null);
 
             // Assert
             _vesselServiceMock.Verify(s => s.UpdateVesselAsync(It.IsAny<Vessel>()), Times.Once);
@@ -120,7 +122,8 @@ namespace HarborFlow.Tests.ViewModels
             _notificationServiceMock.Setup(n => n.ShowConfirmation(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
 
             // Act
-            await (_viewModel.DeleteVesselCommand as AsyncRelayCommand).ExecuteAsync(null);
+            var command = _viewModel.DeleteVesselCommand as AsyncRelayCommand;
+            if (command != null) await command.ExecuteAsync(null);
 
             // Assert
             _vesselServiceMock.Verify(s => s.DeleteVesselAsync("123"), Times.Once);
@@ -136,7 +139,8 @@ namespace HarborFlow.Tests.ViewModels
             _notificationServiceMock.Setup(n => n.ShowConfirmation(It.IsAny<string>(), It.IsAny<string>())).Returns(false);
 
             // Act
-            await (_viewModel.DeleteVesselCommand as AsyncRelayCommand).ExecuteAsync(null);
+            var command = _viewModel.DeleteVesselCommand as AsyncRelayCommand;
+            if (command != null) await command.ExecuteAsync(null);
 
             // Assert
             _vesselServiceMock.Verify(s => s.DeleteVesselAsync(It.IsAny<string>()), Times.Never);
