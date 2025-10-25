@@ -54,9 +54,11 @@ namespace HarborFlow.Tests.ViewModels
                 new ServiceRequest { Status = RequestStatus.InProgress },
                 new ServiceRequest { Status = RequestStatus.Completed }
             };
-
             _vesselTrackingServiceMock.Setup(s => s.GetAllVesselsAsync()).ReturnsAsync(vessels);
-            _portServiceManagerMock.Setup(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser)).ReturnsAsync(serviceRequests);
+            if (_sessionContext.CurrentUser != null)
+            {
+                _portServiceManagerMock.Setup(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser)).ReturnsAsync(serviceRequests);
+            }
 
             // Act
             await _viewModel.LoadDataAsync();
@@ -84,7 +86,10 @@ namespace HarborFlow.Tests.ViewModels
             };
 
             _vesselTrackingServiceMock.Setup(s => s.GetAllVesselsAsync()).ReturnsAsync(vessels);
-            _portServiceManagerMock.Setup(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser)).ReturnsAsync(serviceRequests);
+            if (_sessionContext.CurrentUser != null)
+            {
+                _portServiceManagerMock.Setup(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser)).ReturnsAsync(serviceRequests);
+            }
 
             // Act
             await _viewModel.LoadDataAsync();

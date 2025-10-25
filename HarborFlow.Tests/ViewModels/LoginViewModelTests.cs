@@ -107,7 +107,7 @@ namespace HarborFlow.Tests.ViewModels
             _viewModel.Username = "test";
             _viewModel.Password = "password";
             _authServiceMock.Setup(s => s.AuthenticateAsync(It.IsAny<string>(), It.IsAny<string>()))
-                .ReturnsAsync((User)null);
+                .ReturnsAsync((User?)null);
 
             // Act
             await (_viewModel.LoginCommand as AsyncRelayCommand).ExecuteAsync(null);
@@ -123,7 +123,7 @@ namespace HarborFlow.Tests.ViewModels
             _viewModel.Username = "test";
             _viewModel.Password = "wrongpassword";
             _authServiceMock.Setup(s => s.AuthenticateAsync("test", "wrongpassword"))
-                .ReturnsAsync((User)null);
+                .ReturnsAsync((User?)null);
 
             // Act
             await (_viewModel.LoginCommand as AsyncRelayCommand).ExecuteAsync(null);

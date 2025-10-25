@@ -1,19 +1,17 @@
+# Test Plan and Execution Log (TEST.md)
+
+This file documents the test plan and the execution of the tests for the HarborFlow WPF project.
+
+## Test Plan
+
+1.  **Run unit tests**: Execute all the unit tests in the `HarborFlow.Tests` project and check for any regressions.
+
 ## Test Execution
 
-**2025-10-24 11:15:00** - Cleaning the solution.
+**2025-10-24 12:00:00** - Running unit tests.
 
 ```
-dotnet clean "/Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.sln"
-```
-
-**Result:** Success
-
---- 
-
-**2025-10-24 11:16:00** - Building the solution.
-
-```
-dotnet build "/Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.sln"
+dotnet test "/Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Tests/HarborFlow.Tests.csproj"
 ```
 
 **Result:** Failure
@@ -21,25 +19,12 @@ dotnet build "/Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.sln"
 **Output:**
 
 ```
-Build failed with 6 error(s) and 2 warning(s)
+You must install or update .NET to run this application.
+Framework: 'Microsoft.WindowsDesktop.App', version '9.0.0' (arm64)
+.NET location: /usr/local/share/dotnet/
+No frameworks were found.
 ```
-
---- 
-
-**2025-10-24 11:20:00** - Applying fixes to the code.
-
-**Result:** Success
-
---- 
-
-**2025-10-24 11:21:00** - Building the solution after fixes.
-
-```
-dotnet build "/Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.sln"
-```
-
-**Result:** Success
 
 ## Test Summary
 
-The initial build failed due to compilation errors in the `HarborFlow.Wpf` and `HarborFlow.Tests` projects. The errors were caused by incorrect method signatures and missing dependencies in the constructors of several ViewModels and Services. After applying the necessary fixes, the solution was rebuilt successfully.
+The test run failed because the .NET Desktop Runtime is not installed. The user has been instructed to install the missing framework.

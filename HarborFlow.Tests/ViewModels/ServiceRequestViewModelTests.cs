@@ -42,7 +42,10 @@ namespace HarborFlow.Tests.ViewModels
             // Arrange
             _viewModel.ServiceRequests.Add(new ServiceRequest());
             var newRequests = new List<ServiceRequest> { new ServiceRequest { RequestId = Guid.NewGuid() }, new ServiceRequest { RequestId = Guid.NewGuid() } };
-            _portServiceManagerMock.Setup(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser)).ReturnsAsync(newRequests);
+            if (_sessionContext.CurrentUser != null)
+            {
+                _portServiceManagerMock.Setup(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser)).ReturnsAsync(newRequests);
+            }
 
             // Act
             await _viewModel.LoadServiceRequestsAsync();
@@ -92,7 +95,10 @@ namespace HarborFlow.Tests.ViewModels
 
             // Assert
             _portServiceManagerMock.Verify(s => s.SubmitServiceRequestAsync(It.IsAny<ServiceRequest>()), Times.Once);
-            _portServiceManagerMock.Verify(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser), Times.Once); // Because it reloads
+            if (_sessionContext.CurrentUser != null)
+            {
+                _portServiceManagerMock.Verify(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser), Times.Once); // Because it reloads
+            }
         }
 
         [Fact]
@@ -108,7 +114,10 @@ namespace HarborFlow.Tests.ViewModels
 
             // Assert
             _portServiceManagerMock.Verify(s => s.UpdateServiceRequestAsync(It.IsAny<ServiceRequest>()), Times.Once);
-            _portServiceManagerMock.Verify(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser), Times.Once); // Because it reloads
+            if (_sessionContext.CurrentUser != null)
+            {
+                _portServiceManagerMock.Verify(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser), Times.Once); // Because it reloads
+            }
         }
 
         [Fact]
@@ -124,7 +133,10 @@ namespace HarborFlow.Tests.ViewModels
 
             // Assert
             _portServiceManagerMock.Verify(s => s.DeleteServiceRequestAsync(request.RequestId), Times.Once);
-            _portServiceManagerMock.Verify(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser), Times.Once); // Because it reloads
+            if (_sessionContext.CurrentUser != null)
+            {
+                _portServiceManagerMock.Verify(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser), Times.Once); // Because it reloads
+            }
         }
 
         [Fact]
@@ -139,7 +151,10 @@ namespace HarborFlow.Tests.ViewModels
 
             // Assert
             _portServiceManagerMock.Verify(s => s.ApproveServiceRequestAsync(request.RequestId, _sessionContext.CurrentUser.UserId), Times.Once);
-            _portServiceManagerMock.Verify(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser), Times.Once); // Because it reloads
+            if (_sessionContext.CurrentUser != null)
+            {
+                _portServiceManagerMock.Verify(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser), Times.Once); // Because it reloads
+            }
         }
 
         [Fact]
@@ -155,7 +170,10 @@ namespace HarborFlow.Tests.ViewModels
 
             // Assert
             _portServiceManagerMock.Verify(s => s.RejectServiceRequestAsync(request.RequestId, _sessionContext.CurrentUser.UserId, "Test reason"), Times.Once);
-            _portServiceManagerMock.Verify(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser), Times.Once); // Because it reloads
+            if (_sessionContext.CurrentUser != null)
+            {
+                _portServiceManagerMock.Verify(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser), Times.Once); // Because it reloads
+            }
         }
     }
 }

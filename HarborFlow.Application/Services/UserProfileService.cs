@@ -19,7 +19,7 @@ namespace HarborFlow.Application.Services
             _logger = logger;
         }
 
-        public async Task<User> GetUserProfileAsync(Guid userId)
+        public async Task<User?> GetUserProfileAsync(Guid userId)
         {
             try
             {

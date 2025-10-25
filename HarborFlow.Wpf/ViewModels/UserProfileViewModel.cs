@@ -83,6 +83,8 @@ namespace HarborFlow.Wpf.ViewModels
 
         private async Task UpdateProfile(object? parameter)
         {
+            if (_sessionContext.CurrentUser == null) return;
+
             try
             {
                 var userUpdate = new User { UserId = _sessionContext.CurrentUser.UserId, Username = Username, Email = Email };
@@ -112,11 +114,12 @@ namespace HarborFlow.Wpf.ViewModels
                            NewPassword == ConfirmPassword;
                 }
         
-                private async Task ChangePassword(object? parameter)
-                {
-                    try
-                    {
-                        var success = await _authService.ChangePasswordAsync(_sessionContext.CurrentUser.UserId, CurrentPassword, NewPassword);
+                        private async Task ChangePassword(object? parameter)
+                        {
+                            if (_sessionContext.CurrentUser == null) return;
+                
+                            try
+                            {                        var success = await _authService.ChangePasswordAsync(_sessionContext.CurrentUser.UserId, CurrentPassword, NewPassword);
                         if (success)
                         {                    _logger.LogInformation("Password changed successfully.");
                     // Optionally show a success notification and clear password fields
