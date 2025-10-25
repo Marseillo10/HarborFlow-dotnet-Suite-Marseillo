@@ -1,12 +1,10 @@
+using System;
+using System.Collections.Generic;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading.Tasks;
 using HarborFlow.Core.Interfaces;
 using HarborFlow.Core.Models;
-using HarborFlow.Infrastructure.DTOs;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
 
 namespace HarborFlow.Infrastructure.Services
 {
@@ -23,37 +21,17 @@ namespace HarborFlow.Infrastructure.Services
 
         public async Task<Vessel> GetVesselDataAsync(string imo)
         {
-            var apiKey = _configuration["ApiKeys:VesselFinder"] ?? _configuration["ApiKeys:AisStream"];
-            var url = $"https://api.vesselfinder.com/vessels?userkey={apiKey}&imo={imo}";
+            // The VesselFinder API has been removed as per user request as it is not a free service.
+            // This method now returns a placeholder Vessel object.
+            // Further integration with a different data provider is needed to restore full functionality.
+            await Task.CompletedTask; // Represents a completed async operation.
 
-            var response = await _httpClient.GetAsync(url);
-            response.EnsureSuccessStatusCode();
-
-            var content = await response.Content.ReadAsStringAsync();
-            var vesselFinderResponse = JsonSerializer.Deserialize<VesselFinderResponse>(content);
-
-            if (vesselFinderResponse?.Ais == null)
-            {
-                throw new Exception("Failed to deserialize vessel data or AIS data is null.");
-            }
-
-            var aisData = vesselFinderResponse.Ais;
             var vessel = new Vessel
             {
-                IMO = aisData.Imo.ToString(),
-                Mmsi = aisData.Mmsi.ToString(),
-                Name = aisData.Name ?? "N/A",
-                Positions = new List<VesselPosition>
-                {
-                    new VesselPosition
-                    {
-                        Latitude = aisData.Latitude,
-                        Longitude = aisData.Longitude,
-                        PositionTimestamp = DateTime.UtcNow,
-                        SpeedOverGround = (decimal)aisData.Speed,
-                        CourseOverGround = (decimal)aisData.Course
-                    }
-                },
+                IMO = imo,
+                Mmsi = "N/A",
+                Name = "N/A (Data Source Removed)",
+                Positions = new List<VesselPosition>(), // No position data from this service
                 UpdatedAt = DateTime.UtcNow,
                 CreatedAt = DateTime.UtcNow
             };

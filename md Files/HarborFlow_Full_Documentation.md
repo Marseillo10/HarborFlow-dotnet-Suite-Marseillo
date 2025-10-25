@@ -137,13 +137,7 @@ The application provides an interactive map for real-time vessel tracking, built
 
 ### 4.6. External API Integration (AIS Data)
 
-A core feature of HarborFlow is its ability to track vessels in real-time. This is achieved by integrating with third-party AIS (Automatic Identification System) data providers. The application uses two different services for this purpose.
-
--   **`AisDataService` (Polling for Specific Vessels):**
-    -   **Provider:** VesselFinder (`api.vesselfinder.com`)
-    -   **Purpose:** This service is used to fetch detailed information about a single, specific vessel using its IMO number.
-    -   **Implementation:** It makes a standard HTTP GET request to the VesselFinder API and deserializes the JSON response.
-    -   **Configuration:** Requires an API key to be configured in `appsettings.json` under `ApiKeys:VesselFinder`.
+A core feature of HarborFlow is its ability to track vessels in real-time. This is achieved by integrating with a third-party AIS (Automatic Identification System) data provider.
 
 -   **`AisStreamService` (Real-time Streaming):**
     -   **Provider:** AISstream (`stream.aisstream.io`)
@@ -151,7 +145,7 @@ A core feature of HarborFlow is its ability to track vessels in real-time. This 
     -   **Implementation:** It establishes a persistent WebSocket connection to the AISstream server. After connecting, it sends a subscription message for a global bounding box and then continuously listens for incoming position reports. When a new position is received, it raises a `PositionReceived` event that other parts of the application can subscribe to.
     -   **Configuration:** Requires an API key to be configured in `appsettings.json` under `ApiKeys:AisStream`.
 
-This dual-service approach allows the application to both get on-demand details for a specific vessel and receive live updates for general map visualization.
+The `AisDataService` currently returns placeholder data, as the previous non-free data source has been removed. It can be integrated with a detailed vessel data provider in the future.
 
 ## 5. Future Development Roadmap
 
