@@ -119,6 +119,25 @@ The domain layer of the application is built around a set of core entities that 
 
 -   **Supporting Enums**: The models are supported by various enums like `UserRole`, `VesselType`, `ServiceType`, and `RequestStatus` to provide clear, predefined options for specific fields.
 
+### 3.5 WPF MVVM Implementation Details
+
+To support the Model-View-ViewModel (MVVM) pattern effectively, the `HarborFlow.Wpf` project includes several key helper components in the `Commands`, `Services`, and `Converters` directories.
+
+-   **Commands (`RelayCommand` & `AsyncRelayCommand`)**:
+    -   **Purpose**: These classes are implementations of the `ICommand` interface. They act as a bridge between the UI (e.g., a button click) and the logic in the `ViewModel`.
+    -   **`RelayCommand`**: Used for synchronous operations that complete instantly.
+    -   **`AsyncRelayCommand`**: A custom implementation for asynchronous operations (e.g., fetching data from a service). It includes logic to prevent a command from being executed again while it's already running, providing built-in protection against double-clicks.
+
+-   **Custom UI Services**:
+    -   **`IWindowManager`**: This service abstracts away the logic for creating, showing, and managing windows and dialogs (e.g., `LoginView`, `VesselEditorView`). By using this service in the `ViewModel`, we avoid direct references to UI-specific window classes, which makes the `ViewModel` more testable and independent of the `View`.
+    -   **`ISettingsService`**: Manages user-specific application settings, such as the selected theme (Light/Dark). It handles loading these settings from a `usersettings.json` file and saving them back.
+    -   **`IFileService`**: Provides an abstraction for file-related operations, such as saving documents to a dedicated application folder.
+
+-   **Value Converters**:
+    -   **Purpose**: Converters are small classes that translate data from one format to another directly in the XAML binding. This keeps the `ViewModel` clean of UI-specific presentation logic.
+    -   **`BooleanToVisibilityConverter`**: A common WPF converter that translates a `true`/`false` value into `Visibility.Visible`/`Visibility.Collapsed`, used to easily show or hide UI elements based on a condition in the `ViewModel`.
+    -   **`CountToVisibilityConverter`**: Similar to the above, but it shows an element only if a collection's count is greater than zero.
+
 ## 4. Feature Implementation Details
 
 ### 4.1. Guest Mode & Authentication Flow
