@@ -104,9 +104,11 @@ This section covers the technical "how-to" of the codebase, including configurat
 
 The application uses a central `appsettings.json` file to manage external configurations. This allows settings to be changed without modifying the source code.
 
--   **`ConnectionStrings`**: Contains the `DefaultConnection` string used by Entity Framework Core to connect to the PostgreSQL database.
--   **`ApiKeys`**: Contains the `AisStream` key required for the real-time vessel tracking service.
--   **`RssFeeds`**: A list of URLs used by the `RssService` to aggregate articles for the News feature.
+-   **`ConnectionStrings`**: Contains the `DefaultConnection` string for the PostgreSQL database.
+-   **`ApiKeys`**:
+    -   `AisStream`: The key for the real-time position streaming service.
+    -   `GlobalFishingWatch`: The key for the vessel detail and identity service.
+-   **`RssFeeds`**: A list of URLs for the maritime news aggregator.
 
 ### 4.2. WPF Presentation Layer (MVVM)
 
@@ -118,11 +120,16 @@ To support the MVVM pattern effectively, the `HarborFlow.Wpf` project includes s
 
 ### 4.3. External API Integration (AIS Data)
 
-A core feature of HarborFlow is its ability to track vessels in real-time via the `AisStreamService`.
+The application uses a dual-service approach to handle vessel data: one for real-time positions and another for detailed vessel identity information.
 
--   **Provider:** AISstream (`stream.aisstream.io`)
--   **Implementation:** The service establishes a persistent WebSocket connection to the AISstream server, subscribes to a global bounding box, and listens for incoming position reports. It raises a `PositionReceived` event that other parts of the application use to update the map.
--   **Note:** The `AisDataService` currently returns placeholder data, as the previous non-free data source has been removed.
+-   **`AisStreamService` (Real-time Positions):**
+    -   **Provider:** AISstream (`stream.aisstream.io`)
+    -   **Implementation:** This service establishes a persistent WebSocket connection to receive live position updates for vessels, which are then displayed on the map.
+
+-   **`AisDataService` (Vessel Details):**
+    -   **Provider:** Global Fishing Watch (`api.globalfishingwatch.org`)
+    -   **Implementation:** This service replaces the previous placeholder data. When details for a specific vessel are needed, it makes a REST API call to the Global Fishing Watch `v2/vessels` endpoint, authenticated with a Bearer Token. It searches for the vessel by its IMO number and maps the resulting data (name, type, flag, etc.) to the application's `Vessel` model.
+    -   **Note:** This integration is free for non-commercial use, which aligns with this project's academic purpose.
 
 ### 4.4. Key Third-Party Libraries
 
