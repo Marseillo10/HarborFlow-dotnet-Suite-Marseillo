@@ -59,3 +59,12 @@ This document serves as a log of key architectural decisions, refactoring effort
     - Modified business services (e.g., `PortServiceManager`) to send notifications to the hub instead of directly to a UI service.
     - Modified `MainWindowViewModel` to subscribe to the hub and be the sole component responsible for displaying toast notifications.
     - Removed all direct calls to `INotificationService` from other ViewModels.
+
+### 7. API Refactoring: Vessel Detail Provider
+
+- **Decision:** Replaced the `VesselFinder` API with the `Global Fishing Watch` API as the primary source for detailed vessel data.
+- **Reasoning:** The original `VesselFinder` API was not entirely free. After analysis, the `Global Fishing Watch` API was identified as a suitable alternative that provides a free tier for non-commercial use, which aligns with the academic scope of this project.
+- **Implementation:**
+    - The `AisDataService` was refactored to call the Global Fishing Watch API endpoint.
+    - A new DTO, `GfwVesselResponse.cs`, was created to handle the API's JSON response.
+    - A new configuration key, `ApiKeys:GlobalFishingWatch`, was added to `appsettings.json` to store the required API token.
