@@ -1,7 +1,7 @@
 using HarborFlow.Core.Interfaces;
 using HarborFlow.Core.Models;
 using HarborFlow.Infrastructure;
-using HarborFlow.Infrastructure.DTOs.AisStream;
+using HarborFlow.Core.DTOs.AisStream;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

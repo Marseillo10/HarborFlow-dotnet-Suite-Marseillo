@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:latest
+    container_name: harborflow-postgres
+    environment:
+      POSTGRES_USER: marseillosatrian
+      POSTGRES_PASSWORD: bizero11
+      POSTGRES_DB: harborflow.db
+    ports:
+            - "5433:5432"
+    volumes:
+            - ./.db-data:/var/lib/postgresql
