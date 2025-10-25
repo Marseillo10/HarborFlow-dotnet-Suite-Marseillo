@@ -90,6 +90,35 @@ The project leverages several key open-source libraries to accelerate developmen
 -   **`Microsoft.Xaml.Behaviors.Wpf`**: A utility library that allows for the creation of more interactive and decoupled UI behaviors in WPF.
 -   **Testing Stack (`xunit`, `Moq`, `FluentAssertions`)**: The project relies on `xunit` as the test runner, `Moq` for creating mock objects to isolate dependencies, and `FluentAssertions` for writing more readable and expressive test assertions.
 
+### 3.4 Core Data Models
+
+The domain layer of the application is built around a set of core entities that represent the key concepts in the port management system.
+
+-   **`User`**: Represents an individual who can log in to the system.
+    -   **Key Properties**: `UserId`, `Username`, `PasswordHash`, `Email`, `Role`.
+    -   **Description**: Stores user credentials, personal information, and their assigned role (e.g., Administrator, PortOfficer), which dictates their permissions within the application.
+
+-   **`Vessel`**: Represents a single maritime vessel.
+    -   **Key Properties**: `IMO` (Primary Key), `Mmsi`, `Name`, `VesselType`.
+    -   **Description**: Contains static details about a vessel, such as its unique identifiers, name, and type (e.g., Cargo, Tanker).
+
+-   **`VesselPosition`**: Represents a single, time-stamped geographical position of a vessel.
+    -   **Key Properties**: `VesselImo` (Foreign Key), `Latitude`, `Longitude`, `PositionTimestamp`, `SpeedOverGround`.
+    -   **Description**: This entity is used to store the historical and real-time track of a vessel. It has a many-to-one relationship with the `Vessel` entity.
+
+-   **`ServiceRequest`**: Represents a request for a port service (e.g., pilotage, bunkering).
+    -   **Key Properties**: `RequestId`, `VesselImo`, `RequestedBy` (UserId), `ServiceType`, `Status`.
+    -   **Description**: This is a central entity for the service workflow, tracking the type of service needed, for which vessel, by whom it was requested, and its current status in the approval process.
+
+-   **`MapBookmark`**: Represents a user-saved geographical area on the map.
+    -   **Key Properties**: `Name`, `UserId`, `North`, `South`, `East`, `West`.
+    -   **Description**: Allows authenticated users to save and quickly return to specific regions on the map. Each bookmark is tied to a specific user.
+
+-   **`NewsArticle`**: A transient model (not stored in the database) used to represent a single article fetched from an RSS feed.
+    -   **Key Properties**: `Title`, `Link`, `Description`, `PublishDate`.
+
+-   **Supporting Enums**: The models are supported by various enums like `UserRole`, `VesselType`, `ServiceType`, and `RequestStatus` to provide clear, predefined options for specific fields.
+
 ## 4. Feature Implementation Details
 
 ### 4.1. Guest Mode & Authentication Flow
