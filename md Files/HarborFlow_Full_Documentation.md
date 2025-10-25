@@ -138,6 +138,19 @@ To support the Model-View-ViewModel (MVVM) pattern effectively, the `HarborFlow.
     -   **`BooleanToVisibilityConverter`**: A common WPF converter that translates a `true`/`false` value into `Visibility.Visible`/`Visibility.Collapsed`, used to easily show or hide UI elements based on a condition in the `ViewModel`.
     -   **`CountToVisibilityConverter`**: Similar to the above, but it shows an element only if a collection's count is greater than zero.
 
+### 3.6 Configuration Management (`appsettings.json`)
+
+The application uses a central `appsettings.json` file to manage external configurations like connection strings and API keys. This allows settings to be changed without modifying the source code. The file is located in the `HarborFlow.Wpf` project.
+
+-   **`ConnectionStrings`**:
+    -   **`DefaultConnection`**: This string is used by Entity Framework Core to connect to the PostgreSQL database. It specifies the host, port, database name, and credentials.
+
+-   **`ApiKeys`**:
+    -   **`AisStream`**: This key is required for the `AisStreamService` to connect to the real-time vessel tracking WebSocket stream.
+
+-   **`RssFeeds`**:
+    -   This is a JSON array of strings, where each string is a URL to a maritime news RSS feed. The `RssService` reads this list to aggregate articles for the News feature.
+
 ## 4. Feature Implementation Details
 
 ### 4.1. Guest Mode & Authentication Flow
