@@ -4,6 +4,7 @@ using HarborFlow.Wpf.Commands;
 using HarborFlow.Wpf.Interfaces;
 using HarborFlow.Wpf.Validators;
 using HarborFlow.Wpf.ViewModels;
+using Microsoft.Extensions.Logging;
 using Moq;
 using System.Threading.Tasks;
 using Xunit;
@@ -15,6 +16,7 @@ namespace HarborFlow.Tests.ViewModels
         private readonly Mock<IAuthService> _authServiceMock;
         private readonly Mock<IWindowManager> _windowManagerMock;
         private readonly Mock<INotificationService> _notificationServiceMock;
+        private readonly Mock<ILogger<RegisterViewModel>> _loggerMock;
         private readonly RegisterViewModelValidator _validator;
         private readonly RegisterViewModel _viewModel;
 
@@ -23,8 +25,9 @@ namespace HarborFlow.Tests.ViewModels
             _authServiceMock = new Mock<IAuthService>();
             _windowManagerMock = new Mock<IWindowManager>();
             _notificationServiceMock = new Mock<INotificationService>();
+            _loggerMock = new Mock<ILogger<RegisterViewModel>>();
             _validator = new RegisterViewModelValidator();
-            _viewModel = new RegisterViewModel(_authServiceMock.Object, _validator, _notificationServiceMock.Object, _windowManagerMock.Object);
+            _viewModel = new RegisterViewModel(_authServiceMock.Object, _validator, _notificationServiceMock.Object, _windowManagerMock.Object, _loggerMock.Object);
         }
 
         [Fact]

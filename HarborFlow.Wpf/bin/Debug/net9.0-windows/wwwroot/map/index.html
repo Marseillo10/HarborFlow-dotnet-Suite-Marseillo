@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HarborFlow Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <style>
         body, html {
             margin: 0;
@@ -24,19 +26,34 @@
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script>
         let map;
-        let vesselLayer = L.layerGroup();
+        let vesselLayer = L.markerClusterGroup();
+        let historyLayer = L.layerGroup();
+        let baseLayers = {};
 
         function initializeMap() {
             map = L.map('map').setView([-2.548926, 118.015776], 5); // Center on Indonesia
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            }).addTo(map);
+            baseLayers = {
+                "Street": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                }),
+                "Satellite": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19,
+                    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                }),
+                "Nautical": L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: 'Map data: &copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors'
+                })
+            };
 
+            baseLayers["Street"].addTo(map);
             vesselLayer.addTo(map);
+            historyLayer.addTo(map);
         }
 
         function getVesselColor(vessel) {
@@ -68,9 +85,12 @@
 
                     const marker = L.marker([vessel.Latitude, vessel.Longitude], { icon: icon });
                     
-                    let popupContent = `<b>${vessel.Name}</b><br>IMO: ${vessel.IMO}`;
+                    let popupContent = `<b>${vessel.Name}</b><br>IMO: ${vessel.IMO}<br>Type: ${vessel.VesselType}`;
                     if (vessel.Course) {
                         popupContent += `<br>Course: ${vessel.Course}°`;
+                    }
+                    if (vessel.Speed) {
+                        popupContent += `<br>Speed: ${vessel.Speed} knots`;
                     }
                     marker.bindPopup(popupContent);
 
@@ -83,6 +103,38 @@
         function centerOnVessel(lat, lon) {
             if (map) {
                 map.setView([lat, lon], 12);
+            }
+        }
+
+        // Called from C# to open a popup for a specific vessel
+        function openVesselPopup(lat, lon) {
+            vesselLayer.eachLayer(function (layer) {
+                if (layer.getLatLng().lat == lat && layer.getLatLng().lng == lon) {
+                    layer.openPopup();
+                }
+            });
+        }
+
+        // Called from C# to draw the historical track of a vessel
+        function drawHistoryTrack(trackDataJson) {
+            historyLayer.clearLayers();
+            const track = JSON.parse(trackDataJson);
+            if (track.length > 1) {
+                const latlngs = track.map(p => [p.Latitude, p.Longitude]);
+                const polyline = L.polyline(latlngs, { color: 'red' }).addTo(historyLayer);
+                map.fitBounds(polyline.getBounds());
+            }
+        }
+
+        // Called from C# to set the map layer
+        function setMapLayer(layerName) {
+            for (const key in baseLayers) {
+                if (map.hasLayer(baseLayers[key])) {
+                    map.removeLayer(baseLayers[key]);
+                }
+            }
+            if (baseLayers[layerName]) {
+                baseLayers[layerName].addTo(map);
             }
         }
 

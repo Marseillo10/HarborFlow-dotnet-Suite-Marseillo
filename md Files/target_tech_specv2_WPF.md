@@ -10,7 +10,7 @@
 
 /blueprint:implement
 
-/blueprint:test
+/blueprint:test sebisa kamu lakukan di sistem macos
 
 /blueprint:refine Lihat lah dari file berikut sebagai referensi @/Users/marseillosatrian/Downloads/HarborFflow_WPF/md Files/target_tech_specv2_WPF.md dan progres proyek sekarang, buatlah lagi perencaan pengembangan proyek sekarang!
 

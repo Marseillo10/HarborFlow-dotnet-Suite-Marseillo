@@ -5,6 +5,7 @@ using HarborFlow.Wpf.Commands;
 using HarborFlow.Wpf.Interfaces;
 using HarborFlow.Wpf.Services;
 using HarborFlow.Wpf.ViewModels;
+using Microsoft.Extensions.Logging;
 using Moq;
 using System.Threading.Tasks;
 using Xunit;
@@ -16,6 +17,7 @@ namespace HarborFlow.Tests.ViewModels
         private readonly Mock<IAuthService> _authServiceMock;
         private readonly Mock<IWindowManager> _windowManagerMock;
         private readonly Mock<INotificationService> _notificationServiceMock;
+        private readonly Mock<ILogger<LoginViewModel>> _loggerMock;
         private readonly SessionContext _sessionContext;
         private readonly Mock<MainWindowViewModel> _mainWindowViewModelMock;
         private readonly LoginViewModel _viewModel;
@@ -25,9 +27,10 @@ namespace HarborFlow.Tests.ViewModels
             _authServiceMock = new Mock<IAuthService>();
             _windowManagerMock = new Mock<IWindowManager>();
             _notificationServiceMock = new Mock<INotificationService>();
+            _loggerMock = new Mock<ILogger<LoginViewModel>>();
             _sessionContext = new SessionContext();
             _mainWindowViewModelMock = new Mock<MainWindowViewModel>();
-            _viewModel = new LoginViewModel(_authServiceMock.Object, _windowManagerMock.Object, _sessionContext, _notificationServiceMock.Object, _mainWindowViewModelMock.Object);
+            _viewModel = new LoginViewModel(_authServiceMock.Object, _windowManagerMock.Object, _sessionContext, _notificationServiceMock.Object, _loggerMock.Object, _mainWindowViewModelMock.Object);
         }
 
         [Fact]
@@ -86,7 +89,7 @@ namespace HarborFlow.Tests.ViewModels
             var user = new User();
             _viewModel.Username = "test";
             _viewModel.Password = "password";
-            _authServiceMock.Setup(s => s.LoginAsync("test", "password"))
+            _authServiceMock.Setup(s => s.AuthenticateAsync("test", "password"))
                 .ReturnsAsync(user);
 
             // Act
@@ -103,7 +106,7 @@ namespace HarborFlow.Tests.ViewModels
             // Arrange
             _viewModel.Username = "test";
             _viewModel.Password = "password";
-            _authServiceMock.Setup(s => s.LoginAsync(It.IsAny<string>(), It.IsAny<string>()))
+            _authServiceMock.Setup(s => s.AuthenticateAsync(It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync((User)null);
 
             // Act
@@ -119,7 +122,7 @@ namespace HarborFlow.Tests.ViewModels
             // Arrange
             _viewModel.Username = "test";
             _viewModel.Password = "wrongpassword";
-            _authServiceMock.Setup(s => s.LoginAsync("test", "wrongpassword"))
+            _authServiceMock.Setup(s => s.AuthenticateAsync("test", "wrongpassword"))
                 .ReturnsAsync((User)null);
 
             // Act

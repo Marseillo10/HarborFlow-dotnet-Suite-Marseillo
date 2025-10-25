@@ -60,6 +60,9 @@ namespace HarborFlow.Wpf
                     services.AddTransient<ServiceRequestViewModel>();
                     services.AddTransient<ServiceRequestView>();
 
+                    services.AddTransient<UserProfileViewModel>();
+                    services.AddTransient<UserProfileView>();
+
                     services.AddSingleton<IAuthService, AuthService>();
                     services.AddTransient<LoginViewModel>();
                     services.AddTransient<LoginView>();

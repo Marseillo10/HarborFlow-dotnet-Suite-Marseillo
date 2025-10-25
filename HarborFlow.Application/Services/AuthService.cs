@@ -19,7 +19,7 @@ namespace HarborFlow.Application.Services
             _logger = logger;
         }
 
-        public async Task<User?> LoginAsync(string username, string password)
+        public async Task<User?> AuthenticateAsync(string username, string password)
         {
             try
             {
@@ -70,6 +70,55 @@ namespace HarborFlow.Application.Services
             {
                 _logger.LogError(ex, "An error occurred during registration for user {Username}.", username);
                 throw;
+            }
+        }
+
+        public async Task<bool> UpdateUserAsync(User userUpdate)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userUpdate.UserId);
+                if (user == null) return false;
+
+                user.Username = userUpdate.Username;
+                user.Email = userUpdate.Email;
+                user.UpdatedAt = DateTime.UtcNow;
+
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("User {UserId} updated successfully.", user.UserId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating user {UserId}.", userUpdate.UserId);
+                return false;
+            }
+        }
+
+        public async Task<bool> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+                if (user == null || !BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
+                {
+                    _logger.LogWarning("Password change failed for user {UserId}.", userId);
+                    return false;
+                }
+
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+                user.UpdatedAt = DateTime.UtcNow;
+
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Password for user {UserId} changed successfully.", userId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error changing password for user {UserId}.", userId);
+                return false;
             }
         }
 

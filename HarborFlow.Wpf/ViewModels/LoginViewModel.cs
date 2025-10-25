@@ -66,7 +66,7 @@ namespace HarborFlow.Wpf.ViewModels
             _notificationService = notificationService;
             _logger = logger;
             _mainWindowViewModel = mainWindowViewModel;
-            LoginCommand = new AsyncRelayCommand(LoginAsync, CanLogin);
+            LoginCommand = new AsyncRelayCommand(Login, CanLogin);
             OpenRegisterWindowCommand = new RelayCommand(_ => _windowManager.ShowRegisterWindow());
         }
 
@@ -75,7 +75,7 @@ namespace HarborFlow.Wpf.ViewModels
             return !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(Password) && !_mainWindowViewModel.IsLoading;
         }
 
-        private async Task LoginAsync(object? parameter)
+        private async Task Login(object? parameter)
         {
             _mainWindowViewModel.IsLoading = true;
             (LoginCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
@@ -83,7 +83,7 @@ namespace HarborFlow.Wpf.ViewModels
 
             try
             {
-                var user = await _authService.LoginAsync(Username, Password);
+                var user = await _authService.AuthenticateAsync(Username, Password);
                 if (user != null)
                 {
                     _sessionContext.CurrentUser = user;

@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET9_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NET9_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 /Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Wpf/App.xaml
-11506162201
-4-302175397
-371574459400
+121315352465
+5-1059379370
+39-1925064884
 244-1155699137
-MainWindow.xaml;Themes/DarkTheme.xaml;Themes/LightTheme.xaml;Views/DashboardView.xaml;Views/LoginView.xaml;Views/MapView.xaml;Views/RegisterView.xaml;Views/ServiceRequestEditorView.xaml;Views/ServiceRequestView.xaml;Views/VesselEditorView.xaml;Views/VesselManagementView.xaml;
+MainWindow.xaml;Themes/DarkTheme.xaml;Themes/LightTheme.xaml;Views/DashboardView.xaml;Views/LoginView.xaml;Views/MapView.xaml;Views/RegisterView.xaml;Views/ServiceRequestEditorView.xaml;Views/ServiceRequestView.xaml;Views/UserProfileView.xaml;Views/VesselEditorView.xaml;Views/VesselManagementView.xaml;
 
 False
 

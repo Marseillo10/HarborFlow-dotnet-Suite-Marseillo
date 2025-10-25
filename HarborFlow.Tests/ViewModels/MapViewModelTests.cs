@@ -4,6 +4,7 @@ using HarborFlow.Core.Models;
 using HarborFlow.Wpf.Commands;
 using HarborFlow.Wpf.Interfaces;
 using HarborFlow.Wpf.ViewModels;
+using Microsoft.Extensions.Logging;
 using Moq;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -17,14 +18,16 @@ namespace HarborFlow.Tests.ViewModels
     {
         private readonly Mock<IVesselTrackingService> _vesselTrackingServiceMock;
         private readonly Mock<INotificationService> _notificationServiceMock;
+        private readonly Mock<ILogger<MapViewModel>> _loggerMock;
         private readonly MapViewModel _viewModel;
 
         public MapViewModelTests()
         {
             _vesselTrackingServiceMock = new Mock<IVesselTrackingService>();
             _notificationServiceMock = new Mock<INotificationService>();
+            _loggerMock = new Mock<ILogger<MapViewModel>>();
             _vesselTrackingServiceMock.Setup(s => s.TrackedVessels).Returns(new ObservableCollection<Vessel>());
-            _viewModel = new MapViewModel(_vesselTrackingServiceMock.Object, _notificationServiceMock.Object);
+            _viewModel = new MapViewModel(_vesselTrackingServiceMock.Object, _notificationServiceMock.Object, _loggerMock.Object);
         }
 
         [Fact]

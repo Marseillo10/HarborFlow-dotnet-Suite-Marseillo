@@ -50,6 +50,21 @@ namespace HarborFlow.Wpf.Services
             registerView.ShowDialog();
         }
 
+        public void ShowUserProfileDialog()
+        {
+            var userProfileView = _serviceProvider.GetRequiredService<UserProfileView>();
+            var window = new Window
+            {
+                Title = "User Profile",
+                Content = userProfileView,
+                Width = 400,
+                Height = 500,
+                Owner = _mainWindow,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+            window.ShowDialog();
+        }
+
         public void CloseLoginWindow()
         {
             _loginWindow?.Close();

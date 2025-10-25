@@ -9,6 +9,7 @@
 /Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Infrastructure/obj/Debug/net9.0/HarborFlow.Infrastructure.AssemblyInfoInputs.cache
 /Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Infrastructure/obj/Debug/net9.0/HarborFlow.Infrastructure.AssemblyInfo.cs
 /Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Infrastructure/obj/Debug/net9.0/HarborFlow.Infrastructure.csproj.CoreCompileInputs.cache
+/Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Infrastructure/obj/Debug/net9.0/HarborFlow.Infrastructure.sourcelink.json
 /Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Infrastructure/obj/Debug/net9.0/HarborFl.DC426592.Up2Date
 /Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Infrastructure/obj/Debug/net9.0/HarborFlow.Infrastructure.dll
 /Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Infrastructure/obj/Debug/net9.0/refint/HarborFlow.Infrastructure.dll

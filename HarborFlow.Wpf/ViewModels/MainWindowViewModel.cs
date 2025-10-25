@@ -101,6 +101,7 @@ namespace HarborFlow.Wpf.ViewModels
         public ICommand NavigateToMapCommand { get; }
         public ICommand NavigateToServiceRequestCommand { get; }
         public ICommand NavigateToVesselManagementCommand { get; }
+        public ICommand ShowUserProfileCommand { get; }
         public ObservableCollection<NavigationItem> NavigationItems { get; }
 
         private NavigationItem _selectedNavigationItem;
@@ -178,6 +179,7 @@ namespace HarborFlow.Wpf.ViewModels
             NavigateToMapCommand = new RelayCommand(_ => CurrentViewModel = _mapViewModel);
             NavigateToServiceRequestCommand = new RelayCommand(_ => CurrentViewModel = _serviceRequestViewModel);
             NavigateToVesselManagementCommand = new RelayCommand(_ => CurrentViewModel = _vesselManagementViewModel);
+            ShowUserProfileCommand = new RelayCommand(_ => _windowManager.ShowUserProfileDialog());
 
             NavigationItems = new ObservableCollection<NavigationItem>
             {

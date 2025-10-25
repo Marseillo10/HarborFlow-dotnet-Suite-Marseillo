@@ -14,7 +14,10 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="Dashboard" FontSize="28" FontWeight="Bold" VerticalAlignment="Center"/>
-                <Button Grid.Column="1" Content="Refresh" Command="{Binding RefreshCommand}" Style="{StaticResource PrimaryButtonStyle}" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="User Profile" Command="{Binding ShowUserProfileCommand}" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <Button Content="Refresh" Command="{Binding RefreshCommand}" Style="{StaticResource PrimaryButtonStyle}" VerticalAlignment="Center"/>
+                </StackPanel>
             </Grid>
             
             <UniformGrid Columns="2" Margin="10">

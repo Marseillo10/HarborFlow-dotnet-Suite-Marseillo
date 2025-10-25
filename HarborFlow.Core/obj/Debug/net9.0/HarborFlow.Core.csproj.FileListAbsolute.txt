@@ -6,6 +6,7 @@
 /Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Core/obj/Debug/net9.0/HarborFlow.Core.AssemblyInfoInputs.cache
 /Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Core/obj/Debug/net9.0/HarborFlow.Core.AssemblyInfo.cs
 /Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Core/obj/Debug/net9.0/HarborFlow.Core.csproj.CoreCompileInputs.cache
+/Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Core/obj/Debug/net9.0/HarborFlow.Core.sourcelink.json
 /Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Core/obj/Debug/net9.0/HarborFlow.Core.dll
 /Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Core/obj/Debug/net9.0/refint/HarborFlow.Core.dll
 /Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Core/obj/Debug/net9.0/HarborFlow.Core.pdb

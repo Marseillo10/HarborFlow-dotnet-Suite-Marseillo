@@ -22,6 +22,7 @@ namespace HarborFlow.Wpf.ViewModels
         private readonly INotificationService _notificationService;
         private readonly ILogger<DashboardViewModel> _logger;
         private readonly MainWindowViewModel _mainWindowViewModel;
+        private readonly IWindowManager _windowManager;
 
         private int _vesselCount;
         public int VesselCount
@@ -52,8 +53,9 @@ namespace HarborFlow.Wpf.ViewModels
         }
 
         public ICommand RefreshCommand { get; }
+        public ICommand ShowUserProfileCommand { get; }
 
-        public DashboardViewModel(IPortServiceManager portServiceManager, IVesselTrackingService vesselTrackingService, SessionContext sessionContext, INotificationService notificationService, ILogger<DashboardViewModel> logger, MainWindowViewModel mainWindowViewModel)
+        public DashboardViewModel(IPortServiceManager portServiceManager, IVesselTrackingService vesselTrackingService, SessionContext sessionContext, INotificationService notificationService, ILogger<DashboardViewModel> logger, MainWindowViewModel mainWindowViewModel, IWindowManager windowManager)
         {
             _portServiceManager = portServiceManager;
             _vesselTrackingService = vesselTrackingService;
@@ -61,8 +63,15 @@ namespace HarborFlow.Wpf.ViewModels
             _notificationService = notificationService;
             _logger = logger;
             _mainWindowViewModel = mainWindowViewModel;
+            _windowManager = windowManager;
 
             RefreshCommand = new AsyncRelayCommand(_ => LoadDataAsync());
+            ShowUserProfileCommand = new RelayCommand(_ => ShowUserProfile());
+        }
+
+        private void ShowUserProfile()
+        {
+            _windowManager.ShowUserProfileDialog();
         }
 
         public async Task LoadDataAsync()

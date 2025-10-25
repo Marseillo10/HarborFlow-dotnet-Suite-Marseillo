@@ -1,8 +1,10 @@
 using HarborFlow.Core.Interfaces;
 using HarborFlow.Core.Models;
 using HarborFlow.Infrastructure;
+using HarborFlow.Infrastructure.Services; // Assuming OfflineChange is here
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace HarborFlow.Application.Services
 {
@@ -10,11 +12,14 @@ namespace HarborFlow.Application.Services
     {
         private readonly HarborFlowDbContext _context;
         private readonly ILogger<PortServiceManager> _logger;
+        private readonly ISynchronizationService _syncService;
+        private bool _isOnline = true; // This should be managed by a network detection service
 
-        public PortServiceManager(HarborFlowDbContext context, ILogger<PortServiceManager> logger)
+        public PortServiceManager(HarborFlowDbContext context, ILogger<PortServiceManager> logger, ISynchronizationService syncService)
         {
             _context = context;
             _logger = logger;
+            _syncService = syncService;
         }
 
         public async Task<ServiceRequest?> GetServiceRequestByIdAsync(Guid requestId)
@@ -49,6 +54,19 @@ namespace HarborFlow.Application.Services
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
+
+            if (!_isOnline)
+            {
+                var change = new OfflineChange
+                {
+                    ChangeType = ChangeType.Add,
+                    EntityType = nameof(ServiceRequest),
+                    DataJson = JsonSerializer.Serialize(request)
+                };
+                await _syncService.AddChangeToQueueAsync(change);
+                _logger.LogInformation("Service request {RequestId} queued for submission.", request.RequestId);
+                return request; // Return the request as is, it will be processed later
+            }
 
             try
             {
@@ -167,6 +185,19 @@ namespace HarborFlow.Application.Services
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
+            if (!_isOnline)
+            {
+                var change = new OfflineChange
+                {
+                    ChangeType = ChangeType.Update,
+                    EntityType = nameof(ServiceRequest),
+                    DataJson = JsonSerializer.Serialize(request)
+                };
+                await _syncService.AddChangeToQueueAsync(change);
+                _logger.LogInformation("Service request {RequestId} queued for update.", request.RequestId);
+                return request;
+            }
+
             try
             {
                 var existingRequest = await _context.ServiceRequests.FindAsync(request.RequestId);
@@ -193,6 +224,19 @@ namespace HarborFlow.Application.Services
 
         public async Task DeleteServiceRequestAsync(Guid requestId)
         {
+            if (!_isOnline)
+            {
+                var change = new OfflineChange
+                {
+                    ChangeType = ChangeType.Delete,
+                    EntityType = nameof(ServiceRequest),
+                    DataJson = JsonSerializer.Serialize(new { RequestId = requestId })
+                };
+                await _syncService.AddChangeToQueueAsync(change);
+                _logger.LogInformation("Service request {RequestId} queued for deletion.", requestId);
+                return;
+            }
+
             try
             {
                 var request = await _context.ServiceRequests.FindAsync(requestId);

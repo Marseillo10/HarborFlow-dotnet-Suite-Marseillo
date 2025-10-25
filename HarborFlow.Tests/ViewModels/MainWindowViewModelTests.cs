@@ -3,6 +3,7 @@ using HarborFlow.Core.Interfaces;
 using HarborFlow.Wpf.Interfaces;
 using HarborFlow.Wpf.Services;
 using HarborFlow.Wpf.ViewModels;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -32,11 +33,15 @@ namespace HarborFlow.Tests.ViewModels
             _sessionContext = new SessionContext();
             
             var mainWindowViewModelMock = new Mock<MainWindowViewModel>();
+            var loggerDashboardMock = new Mock<ILogger<DashboardViewModel>>();
+            var loggerMapMock = new Mock<ILogger<MapViewModel>>();
+            var loggerServiceRequestMock = new Mock<ILogger<ServiceRequestViewModel>>();
+            var loggerVesselManagementMock = new Mock<ILogger<VesselManagementViewModel>>();
 
-            _mapViewModel = new MapViewModel(_vesselTrackingServiceMock.Object, _notificationServiceMock.Object);
-            _dashboardViewModel = new DashboardViewModel(_portServiceManagerMock.Object, _vesselTrackingServiceMock.Object, _sessionContext, _notificationServiceMock.Object, mainWindowViewModelMock.Object);
-            _serviceRequestViewModel = new ServiceRequestViewModel(_portServiceManagerMock.Object, _windowManagerMock.Object, _notificationServiceMock.Object, _sessionContext, mainWindowViewModelMock.Object);
-            _vesselManagementViewModel = new VesselManagementViewModel(_vesselTrackingServiceMock.Object, _windowManagerMock.Object, _notificationServiceMock.Object, _sessionContext, mainWindowViewModelMock.Object);
+            _mapViewModel = new MapViewModel(_vesselTrackingServiceMock.Object, _notificationServiceMock.Object, loggerMapMock.Object);
+            _dashboardViewModel = new DashboardViewModel(_portServiceManagerMock.Object, _vesselTrackingServiceMock.Object, _sessionContext, _notificationServiceMock.Object, loggerDashboardMock.Object, mainWindowViewModelMock.Object, _windowManagerMock.Object);
+            _serviceRequestViewModel = new ServiceRequestViewModel(_portServiceManagerMock.Object, _windowManagerMock.Object, _notificationServiceMock.Object, loggerServiceRequestMock.Object, _sessionContext, mainWindowViewModelMock.Object);
+            _vesselManagementViewModel = new VesselManagementViewModel(_vesselTrackingServiceMock.Object, _windowManagerMock.Object, _notificationServiceMock.Object, loggerVesselManagementMock.Object, _sessionContext, mainWindowViewModelMock.Object);
 
             _viewModel = new MainWindowViewModel(
                 _sessionContext,

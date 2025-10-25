@@ -5,6 +5,7 @@ using HarborFlow.Wpf.Commands;
 using HarborFlow.Wpf.Interfaces;
 using HarborFlow.Wpf.Services;
 using HarborFlow.Wpf.ViewModels;
+using Microsoft.Extensions.Logging;
 using Moq;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,7 @@ namespace HarborFlow.Tests.ViewModels
         private readonly Mock<IVesselTrackingService> _vesselServiceMock;
         private readonly Mock<IWindowManager> _windowManagerMock;
         private readonly Mock<INotificationService> _notificationServiceMock;
+        private readonly Mock<ILogger<VesselManagementViewModel>> _loggerMock;
         private readonly SessionContext _sessionContext;
         private readonly Mock<MainWindowViewModel> _mainWindowViewModelMock;
         private readonly VesselManagementViewModel _viewModel;
@@ -27,9 +29,10 @@ namespace HarborFlow.Tests.ViewModels
             _vesselServiceMock = new Mock<IVesselTrackingService>();
             _windowManagerMock = new Mock<IWindowManager>();
             _notificationServiceMock = new Mock<INotificationService>();
+            _loggerMock = new Mock<ILogger<VesselManagementViewModel>>();
             _sessionContext = new SessionContext { CurrentUser = new User { Role = UserRole.Administrator } };
             _mainWindowViewModelMock = new Mock<MainWindowViewModel>();
-            _viewModel = new VesselManagementViewModel(_vesselServiceMock.Object, _windowManagerMock.Object, _notificationServiceMock.Object, _sessionContext, _mainWindowViewModelMock.Object);
+            _viewModel = new VesselManagementViewModel(_vesselServiceMock.Object, _windowManagerMock.Object, _notificationServiceMock.Object, _loggerMock.Object, _sessionContext, _mainWindowViewModelMock.Object);
         }
 
         [Fact]

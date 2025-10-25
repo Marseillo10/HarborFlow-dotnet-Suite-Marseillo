@@ -1,8 +1,9 @@
 
-using HarborFlow.Infrastructure;
 using HarborFlow.Application.Services;
-using HarborFlow.Core.Interfaces;
+using HarborFlow.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -20,12 +21,17 @@ namespace HarborFlow.Tests.Services
             return context;
         }
 
+        private ILogger<AuthService> GetLogger()
+        {
+            return new Mock<ILogger<AuthService>>().Object;
+        }
+
         [Fact]
         public async Task RegisterAsync_ShouldCreateNewUser()
         {
             // Arrange
             var context = GetDbContext();
-            var authService = new AuthService(context);
+            var authService = new AuthService(context, GetLogger());
             var username = "testuser";
             var password = "password123";
             var email = "test@example.com";
@@ -44,17 +50,17 @@ namespace HarborFlow.Tests.Services
         }
 
         [Fact]
-        public async Task LoginAsync_WithValidCredentials_ShouldReturnUser()
+        public async Task AuthenticateAsync_WithValidCredentials_ShouldReturnUser()
         {
             // Arrange
             var context = GetDbContext();
-            var authService = new AuthService(context);
+            var authService = new AuthService(context, GetLogger());
             var username = "testuser";
             var password = "password123";
             await authService.RegisterAsync(username, password, "test@example.com", "Test User");
 
             // Act
-            var result = await authService.LoginAsync(username, password);
+            var result = await authService.AuthenticateAsync(username, password);
 
             // Assert
             Assert.NotNull(result);
@@ -62,31 +68,31 @@ namespace HarborFlow.Tests.Services
         }
 
         [Fact]
-        public async Task LoginAsync_WithInvalidPassword_ShouldReturnNull()
+        public async Task AuthenticateAsync_WithInvalidPassword_ShouldReturnNull()
         {
             // Arrange
             var context = GetDbContext();
-            var authService = new AuthService(context);
+            var authService = new AuthService(context, GetLogger());
             var username = "testuser";
             var password = "password123";
             await authService.RegisterAsync(username, password, "test@example.com", "Test User");
 
             // Act
-            var result = await authService.LoginAsync(username, "wrongpassword");
+            var result = await authService.AuthenticateAsync(username, "wrongpassword");
 
             // Assert
             Assert.Null(result);
         }
 
         [Fact]
-        public async Task LoginAsync_WithNonExistentUser_ShouldReturnNull()
+        public async Task AuthenticateAsync_WithNonExistentUser_ShouldReturnNull()
         {
             // Arrange
             var context = GetDbContext();
-            var authService = new AuthService(context);
+            var authService = new AuthService(context, GetLogger());
 
             // Act
-            var result = await authService.LoginAsync("nonexistentuser", "password");
+            var result = await authService.AuthenticateAsync("nonexistentuser", "password");
 
             // Assert
             Assert.Null(result);
@@ -97,7 +103,7 @@ namespace HarborFlow.Tests.Services
         {
             // Arrange
             var context = GetDbContext();
-            var authService = new AuthService(context);
+            var authService = new AuthService(context, GetLogger());
             var username = "testuser";
             await authService.RegisterAsync(username, "password123", "test@example.com", "Test User");
 
@@ -113,7 +119,7 @@ namespace HarborFlow.Tests.Services
         {
             // Arrange
             var context = GetDbContext();
-            var authService = new AuthService(context);
+            var authService = new AuthService(context, GetLogger());
 
             // Act
             var result = await authService.UserExistsAsync("nonexistentuser");
