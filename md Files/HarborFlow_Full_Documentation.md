@@ -79,6 +79,17 @@ HarborFlow is built on **Clean Architecture** principles, creating a separation 
 - **Dependency Injection (DI):** The application uses the built-in .NET DI container to manage dependencies, promoting loose coupling and testability. All services are registered in `App.xaml.cs`.
 - **Centralized Notification Hub:** A custom `INotificationHub` service acts as a central event bus. Business logic sends notifications to this hub, and the UI subscribes to it to display messages, decoupling the backend from UI-specific notification logic.
 
+### 3.3. Key Third-Party Libraries
+
+The project leverages several key open-source libraries to accelerate development and provide essential functionality.
+
+-   **`BCrypt.Net-Next`**: Used for password hashing. It securely hashes user passwords before they are stored in the database, which is a critical security practice.
+-   **`FluentValidation`**: Provides a clear and powerful way to build validation rules for business objects. This ensures data integrity throughout the application.
+-   **`LiveCharts.Wpf`**: The core library used for creating the interactive charts in the Analytics Dashboard.
+-   **`Microsoft.Web.WebView2`**: Enables the WPF application to host web content. This is crucial for rendering the Leaflet.js interactive map within the desktop UI.
+-   **`Microsoft.Xaml.Behaviors.Wpf`**: A utility library that allows for the creation of more interactive and decoupled UI behaviors in WPF.
+-   **Testing Stack (`xunit`, `Moq`, `FluentAssertions`)**: The project relies on `xunit` as the test runner, `Moq` for creating mock objects to isolate dependencies, and `FluentAssertions` for writing more readable and expressive test assertions.
+
 ## 4. Feature Implementation Details
 
 ### 4.1. Guest Mode & Authentication Flow
