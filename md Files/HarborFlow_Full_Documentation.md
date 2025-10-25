@@ -111,6 +111,19 @@ HarborFlow is built on **Clean Architecture** principles, creating a separation 
     2.  **User Search Filter:** A search box in the UI allows users to further filter the displayed articles in real-time.
 - **UI:** The `NewsView` displays articles in a modern, card-based layout.
 
+### 4.5. Interactive Map & Data Layers
+
+The application provides an interactive map for real-time vessel tracking, built using a combination of web technologies integrated into both the WPF and Web platforms.
+
+-   **Core Technology:** The map is powered by the **Leaflet.js** library, a popular open-source solution for mobile-friendly interactive maps.
+-   **Data Layers:** To provide rich visual context, the map uses several tile layers that users can switch between:
+    -   **Street View (Default):** This layer is provided by **OpenStreetMap**, offering a detailed and free-to-use street map. It is the default view for the application.
+    -   **Satellite View:** Provided by **Esri World Imagery**, this layer shows high-resolution satellite imagery.
+    -   **Nautical View:** Provided by **OpenSeaMap**, this layer overlays nautical charts and maritime-specific information, which is essential for port operations.
+-   **Implementation:**
+    -   In the **WPF application**, the map is rendered inside a `WebView2` control, loading a local HTML file (`wwwroot/map/index.html`) that contains the Leaflet.js setup.
+    -   In the **Blazor Web application**, the `ST.Blazor.Leaflet` component is used to integrate the map directly into the Razor page (`Pages/MapView.razor`).
+
 ## 5. Future Development Roadmap
 
 - **Phase 2: Advanced Map Features**

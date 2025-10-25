@@ -32,6 +32,8 @@
             _mapInitialized = true;
             await Task.Delay(500); // Delay to ensure JS interop is ready
 
+            // Configure the map to use OpenStreetMap tiles.
+            // This provides the visual map layer.
             _map.AddLayer(new TileLayer
             {
                 UrlTemplate = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
