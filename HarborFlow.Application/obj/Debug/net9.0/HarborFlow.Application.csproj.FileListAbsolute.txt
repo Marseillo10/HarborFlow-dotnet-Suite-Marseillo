@@ -1,0 +1,6 @@
+/Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Application/obj/Debug/net9.0/HarborFlow.Application.csproj.AssemblyReference.cache
+/Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Application/obj/Debug/net9.0/HarborFlow.Application.GeneratedMSBuildEditorConfig.editorconfig
+/Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Application/obj/Debug/net9.0/HarborFlow.Application.AssemblyInfoInputs.cache
+/Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Application/obj/Debug/net9.0/HarborFlow.Application.AssemblyInfo.cs
+/Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Application/obj/Debug/net9.0/HarborFlow.Application.csproj.CoreCompileInputs.cache
+/Users/marseillosatrian/Downloads/HarborFflow_WPF/HarborFlow.Application/obj/Debug/net9.0/HarborFlow.Application.sourcelink.json

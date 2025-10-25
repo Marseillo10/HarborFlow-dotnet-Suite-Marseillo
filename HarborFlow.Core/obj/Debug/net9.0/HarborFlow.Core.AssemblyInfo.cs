@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HarborFlow.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c0da15ca15418cebe538d75736708259f78dcdc3")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f1312d09ca150182beadcb175eefbd53e9e183f0")]
 [assembly: System.Reflection.AssemblyProductAttribute("HarborFlow.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HarborFlow.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,17 +1,12 @@
 using HarborFlow.Core.Interfaces;
 using HarborFlow.Core.Models;
 using HarborFlow.Infrastructure;
-using HarborFlow.Core.DTOs.AisStream;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Net.WebSockets;
-using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,144 +15,53 @@ namespace HarborFlow.Application.Services
     public class VesselTrackingService : IVesselTrackingService, IDisposable
     {
         private readonly HarborFlowDbContext _context;
-        private readonly IConfiguration _configuration;
         private readonly ILogger<VesselTrackingService> _logger;
+        private readonly IAisStreamService _aisStreamService;
         private readonly SynchronizationContext? _syncContext;
-        private ClientWebSocket? _webSocket;
-        private CancellationTokenSource? _cancellationTokenSource;
 
         public ObservableCollection<Vessel> TrackedVessels { get; } = new ObservableCollection<Vessel>();
 
-        public VesselTrackingService(HarborFlowDbContext context, IConfiguration configuration, ILogger<VesselTrackingService> logger)
+        public VesselTrackingService(HarborFlowDbContext context, ILogger<VesselTrackingService> logger, IAisStreamService aisStreamService)
         {
             _context = context;
-            _configuration = configuration;
             _logger = logger;
+            _aisStreamService = aisStreamService;
             _syncContext = SynchronizationContext.Current;
+
+            _aisStreamService.PositionReceived += AisStreamService_PositionReceived;
         }
 
-        public async Task StartTracking(double[][] boundingBoxes)
+        private void AisStreamService_PositionReceived(VesselPosition position)
         {
-            var apiKey = _configuration["ApiKeys:AisStream"];
-            if (string.IsNullOrEmpty(apiKey) || apiKey.Contains("YOUR_API_KEY"))
+            if (position == null) return;
+
+            _syncContext?.Post(_ =>
             {
-                _logger.LogWarning("AisStream API key is not configured. Cannot start tracking.");
-                return;
-            }
-
-            if (_webSocket?.State == WebSocketState.Open) return;
-
-            _webSocket = new ClientWebSocket();
-            _cancellationTokenSource = new CancellationTokenSource();
-            var uri = new Uri("wss://stream.aisstream.io/v0/stream");
-
-            try
-            {
-                await _webSocket.ConnectAsync(uri, _cancellationTokenSource.Token);
-                _logger.LogInformation("WebSocket connection established.");
-
-                var subscriptionMessage = new
+                var vessel = TrackedVessels.FirstOrDefault(v => v.IMO == position.VesselImo);
+                if (vessel != null)
                 {
-                    APIKey = apiKey,
-                    BoundingBoxes = new[] { boundingBoxes }
-                };
-
-                var messageBuffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(subscriptionMessage)));
-                await _webSocket.SendAsync(messageBuffer, WebSocketMessageType.Text, true, _cancellationTokenSource.Token);
-                _logger.LogInformation("Subscription message sent.");
-
-                _ = Task.Run(() => ListenForMessages(_cancellationTokenSource.Token));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to start vessel tracking.");
-            }
+                    vessel.Positions.Add(position);
+                    vessel.UpdatedAt = DateTime.UtcNow;
+                }
+                else
+                {
+                    _logger.LogInformation("Received position for untracked vessel with IMO {Imo}.", position.VesselImo);
+                }
+            }, null);
         }
 
-        private async Task ListenForMessages(CancellationToken token)
+        public Task StartTracking(double[][] boundingBoxes)
         {
-            var buffer = new byte[1024 * 4];
-            while (_webSocket?.State == WebSocketState.Open && !token.IsCancellationRequested)
-            {
-                try
-                {
-                    var result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), token);
-                    if (result.MessageType == WebSocketMessageType.Close)
-                    {
-                        await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, token);
-                        break;
-                    }
-
-                    var messageString = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    var aisMessage = JsonSerializer.Deserialize<AisStreamMessage>(messageString);
-
-                    if (aisMessage?.MessageType == "PositionReport")
-                    {
-                        _syncContext?.Post(_ => 
-                        {
-                            var vessel = TrackedVessels.FirstOrDefault(v => v.Mmsi == aisMessage.MetaData.Mmsi.ToString());
-                            if (vessel != null)
-                            {
-                                // Update existing vessel
-                                vessel.Positions.Add(new VesselPosition
-                                {
-                                    Latitude = (decimal)aisMessage.Message.Latitude,
-                                    Longitude = (decimal)aisMessage.Message.Longitude,
-                                    PositionTimestamp = DateTime.UtcNow,
-                                    SpeedOverGround = (decimal)aisMessage.Message.SpeedOverGround,
-                                    CourseOverGround = (decimal)aisMessage.Message.CourseOverGround
-                                });
-                                vessel.UpdatedAt = DateTime.UtcNow;
-                            }
-                            else
-                            {
-                                // Add new vessel
-                                var newVessel = new Vessel
-                                {
-                                    IMO = aisMessage.MetaData.Imo.ToString(),
-                                    Mmsi = aisMessage.MetaData.Mmsi.ToString(),
-                                    Name = aisMessage.MetaData.Name,
-                                    VesselType = ConvertNavStatToVesselType(aisMessage.Message.NavigationalStatus),
-                                    FlagState = aisMessage.MetaData.Flag,
-                                    CreatedAt = DateTime.UtcNow,
-                                    UpdatedAt = DateTime.UtcNow,
-                                    Positions = new List<VesselPosition>
-                                    {
-                                        new VesselPosition
-                                        {
-                                            Latitude = (decimal)aisMessage.Message.Latitude,
-                                            Longitude = (decimal)aisMessage.Message.Longitude,
-                                            PositionTimestamp = DateTime.UtcNow,
-                                            SpeedOverGround = (decimal)aisMessage.Message.SpeedOverGround,
-                                            CourseOverGround = (decimal)aisMessage.Message.CourseOverGround
-                                        }
-                                    }
-                                };
-                                TrackedVessels.Add(newVessel);
-                            }
-                        }, null);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error while listening for WebSocket messages.");
-                }
-            }
+            _logger.LogInformation("Starting vessel tracking stream.");
+            _aisStreamService.Start();
+            return Task.CompletedTask;
         }
 
-        public async Task StopTracking()
+        public Task StopTracking()
         {
-            if (_webSocket != null)
-            {
-                _cancellationTokenSource?.Cancel();
-                if (_webSocket.State == WebSocketState.Open)
-                {
-                    await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Client stopping", CancellationToken.None);
-                }
-                _webSocket.Dispose();
-                _webSocket = null;
-                _logger.LogInformation("WebSocket connection closed.");
-            }
+            _logger.LogInformation("Stopping vessel tracking stream.");
+            _aisStreamService.Stop();
+            return Task.CompletedTask;
         }
 
         private VesselType ConvertNavStatToVesselType(int navstat)
@@ -166,7 +70,7 @@ namespace HarborFlow.Application.Services
             {
                 7 => VesselType.Fishing,
                 8 => VesselType.Sailing,
-                _ => VesselType.Other, // Simplified mapping
+                _ => VesselType.Other,
             };
         }
 
@@ -204,9 +108,9 @@ namespace HarborFlow.Application.Services
 
             try
             {
-                // This now searches the in-memory collection for simplicity with streaming data
-                return await Task.FromResult(TrackedVessels
-                    .Where(v => v.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) || v.IMO.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)));
+                return await _context.Vessels
+                    .Where(v => v.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) || v.IMO.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                    .ToListAsync();
             }
             catch (Exception ex)
             {
@@ -235,7 +139,6 @@ namespace HarborFlow.Application.Services
 
             try
             {
-                // IMO is the primary key, so it must be provided.
                 if (string.IsNullOrWhiteSpace(vessel.IMO))
                     throw new ArgumentException("Vessel IMO cannot be empty.", nameof(vessel.IMO));
 
@@ -278,7 +181,6 @@ namespace HarborFlow.Application.Services
                 existingVessel.GrossTonnage = vessel.GrossTonnage;
                 existingVessel.UpdatedAt = DateTime.UtcNow;
                 
-                // No need to call _context.Vessels.Update(existingVessel); EF Core tracks changes.
                 await _context.SaveChangesAsync();
                 _logger.LogInformation("Vessel {Imo} updated successfully.", vessel.IMO);
                 return existingVessel;
@@ -311,8 +213,8 @@ namespace HarborFlow.Application.Services
 
         public void Dispose()
         {
-            StopTracking().Wait();
-            _cancellationTokenSource?.Dispose();
+            _aisStreamService.PositionReceived -= AisStreamService_PositionReceived;
+            _aisStreamService.Stop();
         }
     }
 }

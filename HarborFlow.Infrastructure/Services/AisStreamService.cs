@@ -1,4 +1,3 @@
-
 using System;
 using System.Net.WebSockets;
 using System.Text;
@@ -6,14 +5,15 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using HarborFlow.Core.Interfaces;
-using HarborFlow.Core.DTOs.AisStream;
+using HarborFlow.Core.Models;
+using HarborFlow.Infrastructure.DTOs.AisStream;
 using Microsoft.Extensions.Configuration;
 
 namespace HarborFlow.Infrastructure.Services
 {
     public class AisStreamService : IAisStreamService
     {
-        public event Action<AisStreamMessage> MessageReceived;
+        public event Action<VesselPosition> PositionReceived;
 
         private readonly ClientWebSocket _webSocket = new ClientWebSocket();
         private readonly IConfiguration _configuration;
@@ -63,8 +63,22 @@ namespace HarborFlow.Infrastructure.Services
                 if (result.MessageType == WebSocketMessageType.Text)
                 {
                     var messageJson = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    var message = JsonSerializer.Deserialize<AisStreamMessage>(messageJson);
-                    MessageReceived?.Invoke(message);
+                    var aisMessage = JsonSerializer.Deserialize<AisStreamMessage>(messageJson);
+
+                    if (aisMessage != null && aisMessage.MessageType == "PositionReport")
+                    {
+                        var vesselPosition = new VesselPosition
+                        {
+                            VesselImo = aisMessage.MetaData.Imo.ToString(),
+                            Latitude = (decimal)aisMessage.Message.Latitude,
+                            Longitude = (decimal)aisMessage.Message.Longitude,
+                            PositionTimestamp = DateTime.UtcNow,
+                            SpeedOverGround = (decimal)aisMessage.Message.SpeedOverGround,
+                            CourseOverGround = (decimal)aisMessage.Message.CourseOverGround
+                        };
+
+                        PositionReceived?.Invoke(vesselPosition);
+                    }
                 }
             }
         }
