@@ -1,61 +1,78 @@
-# Windows-Specific Development Tasks for HarborFlow
+# Windows-Specific & Cross-Platform Development Guide
 
-This document outlines development tasks that are specific to the Windows environment due to the project's use of Windows Presentation Foundation (WPF).
+This document outlines development tasks and limitations for both Windows and non-Windows (macOS, Linux) environments.
 
 ## Background
 
-While the majority of the codebase (.NET Class Libraries for Core, Application, and Infrastructure) is cross-platform, the user interface (`HarborFlow.Wpf`) is a WPF application. This creates some limitations for developers not using Windows.
+While the majority of the codebase (.NET Class Libraries for `Core`, `Application`, and `Infrastructure`) is cross-platform, the user interface (`HarborFlow.Wpf`) and the main test project (`HarborFlow.Tests`) are Windows-dependent. This guide clarifies what can and cannot be done on each platform.
 
-## Why Windows is Required for Full Testing
+## Development Workflow on macOS/Linux
+
+Developers on non-Windows systems can fully contribute to the core backend logic of the application. Here is the recommended workflow.
+
+### 1. Initial Setup
+
+Ensure you have the following installed:
+- **.NET 9 SDK**: The core software development kit.
+- **Docker Desktop**: To run the PostgreSQL database container.
+
+### 2. Database Setup
+
+The database environment is managed by Docker, making it consistent across all platforms.
+
+- **Start the database container:**
+  ```shell
+  docker-compose up -d
+  ```
+- **Apply database migrations (first time only):**
+  ```shell
+  dotnet ef database update --project HarborFlow.Infrastructure
+  ```
+
+### 3. Core Development Cycle
+
+Your day-to-day development will focus on the backend projects:
+
+- **Write & Modify Code**: You can freely create and edit features in `HarborFlow.Core`, `HarborFlow.Application`, and `HarborFlow.Infrastructure`.
+- **Build the Solution**: After making changes, always run a build to check for compilation errors in the backend projects.
+  ```shell
+  dotnet build HarborFlow.sln
+  ```
+
+### 4. Important Limitations on macOS/Linux
+
+- **You CANNOT run the WPF application**: The UI cannot be launched or debugged visually.
+- **You CANNOT run the `HarborFlow.Tests` project**: The main test project is Windows-only because it references the WPF framework (`Microsoft.WindowsDesktop.App.WPF`). This is necessary to test UI-related components like ViewModels but prevents the tests from running on macOS or Linux.
+
+## Windows-Only Tasks
+
+Any work that requires visual validation or running the existing test suite must be done on a Windows machine.
 
 ### 1. Running and Debugging the UI
 
-The main `HarborFlow.Wpf` application can **only** be run and debugged on a Windows operating system. This is the only way to visually verify that the UI, including all new features and layouts, functions as expected.
+This is the only way to visually verify that the UI functions as expected.
 
-**Steps on Windows:**
-- Open the solution file (`HarborFlow.sln`) in Visual Studio.
-- Set `HarborFlow.Wpf` as the "Startup Project".
-- Run the application by pressing `F5` or the "Start" button.
+- **Steps**: Open `HarborFlow.sln` in Visual Studio, set `HarborFlow.Wpf` as the startup project, and run.
 
-### 2. Running Unit & UI Tests
+### 2. Running the Test Suite
 
-Executing the tests in the `HarborFlow.Tests` project requires the .NET Desktop Runtime (`Microsoft.WindowsDesktop.App`), which is only available on Windows. Running these tests is critical for validating ViewModel logic and preventing regressions.
-
-**Steps on Windows:**
-- Open a terminal (Command Prompt or PowerShell) in the project's root directory.
-- Run the command:
-  ```shell
-  dotnet test
-  ```
-- Alternatively, run the tests via the **Test Explorer** in Visual Studio.
+- **Steps**: Open a terminal in the project root and run `dotnet test`.
 
 ### 3. Verifying API Integrations
 
-Since the application's UI can only be run on Windows, verifying that new API integrations are working correctly is also a Windows-specific task. For example, to verify the Global Fishing Watch API:
+Testing integrations that require UI interaction must be done on Windows.
 
-1.  **Jalankan Aplikasi**: Buka terminal di direktori proyek dan jalankan perintah:
-    ```shell
-    dotnet run --project HarborFlow.Wpf
-    ```
-2.  **Amati Konsol**: Perhatikan jendela terminal tempat Anda menjalankan perintah tersebut. Di sinilah log aplikasi akan muncul.
-3.  **Cari Detail Kapal**: Di dalam aplikasi, lakukan aksi yang akan memicu pencarian detail kapal (misalnya, mengklik kapal di peta atau menggunakan fitur pencarian).
-4.  **Periksa Log**:
-    *   Jika berhasil, Anda akan melihat detail kapal (nama, tipe, dll.) muncul di UI.
-    *   Jika gagal (misalnya, kunci API salah atau tidak ditemukan), sebuah pesan *error* atau *warning* akan tercetak di terminal, seperti `Global Fishing Watch API key is not configured` atau `HTTP request to Global Fishing Watch API failed`.
+1.  **Jalankan Aplikasi**: `dotnet run --project HarborFlow.Wpf`
+2.  **Amati Konsol**: Perhatikan log aplikasi di terminal.
+3.  **Lakukan Aksi di UI**: Lakukan aksi yang memicu panggilan API (misalnya, mencari detail kapal).
+4.  **Periksa Log**: Lihat output di konsol untuk pesan sukses atau error dari API.
 
-## Cross-Platform Contributions (macOS/Linux)
+## Recommendation for Improved Cross-Platform Testing
 
-Developers on non-Windows systems can fully contribute to the core logic of the application. The setup process for the database is now seamless on any platform thanks to Docker.
+To enable backend testing on macOS/Linux, it is highly recommended to **create a new, separate test project** (e.g., `HarborFlow.Backend.Tests`). This new project would target `net9.0` (not `net9.0-windows`) and would only reference the `Core`, `Application`, and `Infrastructure` projects. 
 
-**What you CAN do on macOS/Linux:**
-- **Set up the database:** Run `docker-compose up -d` and `dotnet ef database update`.
-- **Build the solution:** Run `dotnet build` to check for compilation errors in the core projects.
-- **Develop features:** Write and modify code in the `HarborFlow.Core`, `HarborFlow.Application`, and `HarborFlow.Infrastructure` projects.
-
-**What you CANNOT do on macOS/Linux:**
-- Run the `HarborFlow.Wpf` application to see the UI.
-- Run the tests in the `HarborFlow.Tests` project.
+This would allow developers on any platform to write and run unit tests for all backend logic, significantly improving the cross-platform development workflow.
 
 ## Conclusion
 
-Any work that touches the UI (`HarborFlow.Wpf`) or requires validation through tests (`HarborFlow.Tests`) **must** ultimately be validated on a Windows environment before being considered complete. However, the core backend development is fully cross-platform.
+Core backend development is fully cross-platform. However, any work that touches the UI (`HarborFlow.Wpf`) or requires validation through the main test suite (`HarborFlow.Tests`) **must** ultimately be validated on a Windows environment.
