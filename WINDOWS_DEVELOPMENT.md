@@ -29,6 +29,20 @@ Executing the tests in the `HarborFlow.Tests` project requires the .NET Desktop 
   ```
 - Alternatively, run the tests via the **Test Explorer** in Visual Studio.
 
+### 3. Verifying API Integrations
+
+Since the application's UI can only be run on Windows, verifying that new API integrations are working correctly is also a Windows-specific task. For example, to verify the Global Fishing Watch API:
+
+1.  **Jalankan Aplikasi**: Buka terminal di direktori proyek dan jalankan perintah:
+    ```shell
+    dotnet run --project HarborFlow.Wpf
+    ```
+2.  **Amati Konsol**: Perhatikan jendela terminal tempat Anda menjalankan perintah tersebut. Di sinilah log aplikasi akan muncul.
+3.  **Cari Detail Kapal**: Di dalam aplikasi, lakukan aksi yang akan memicu pencarian detail kapal (misalnya, mengklik kapal di peta atau menggunakan fitur pencarian).
+4.  **Periksa Log**:
+    *   Jika berhasil, Anda akan melihat detail kapal (nama, tipe, dll.) muncul di UI.
+    *   Jika gagal (misalnya, kunci API salah atau tidak ditemukan), sebuah pesan *error* atau *warning* akan tercetak di terminal, seperti `Global Fishing Watch API key is not configured` atau `HTTP request to Global Fishing Watch API failed`.
+
 ## Cross-Platform Contributions (macOS/Linux)
 
 Developers on non-Windows systems can fully contribute to the core logic of the application. The setup process for the database is now seamless on any platform thanks to Docker.
