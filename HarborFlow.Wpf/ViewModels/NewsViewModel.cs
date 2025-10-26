@@ -94,23 +94,41 @@ namespace HarborFlow.Wpf.ViewModels
             IsLoading = false;
         }
 
-        private void FilterAndDisplayArticles()
-        {
-            Articles.Clear();
-            IEnumerable<NewsArticle> filteredArticles = _allLoadedArticles;
+                        private void FilterAndDisplayArticles()
 
-            if (!string.IsNullOrWhiteSpace(SearchText))
-            {
-                filteredArticles = filteredArticles.Where(a => 
-                    a.Title.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                    (a.Description != null && a.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
-                );
-            }
+                        {
 
-            foreach (var article in filteredArticles.Take(50))
-            {
-                Articles.Add(article);
-            }
-        }
-    }
+                            Articles.Clear();
+
+                            IEnumerable<NewsArticle> filteredArticles = _allLoadedArticles;
+
+                
+
+                            if (!string.IsNullOrWhiteSpace(SearchText))
+
+                            {
+
+                                filteredArticles = filteredArticles.Where(a => {
+
+                                    bool titleMatch = a.Title != null && a.Title.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
+
+                                    bool descriptionMatch = a.Description != null && a.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
+
+                                    return titleMatch || descriptionMatch;
+
+                                });
+
+                            }
+
+                
+
+                            foreach (var article in filteredArticles.Take(50))
+
+                            {
+
+                                Articles.Add(article);
+
+                            }
+
+                        }    }
 }

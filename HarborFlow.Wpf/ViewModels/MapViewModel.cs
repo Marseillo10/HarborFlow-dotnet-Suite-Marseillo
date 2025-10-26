@@ -188,7 +188,7 @@ namespace HarborFlow.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to add bookmark.");
-                
+                _notificationService.ShowNotification("Error adding bookmark. Please try again.", NotificationType.Error);
             }
         }
 
@@ -208,7 +208,7 @@ namespace HarborFlow.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to delete bookmark.");
-                
+                _notificationService.ShowNotification("Error deleting bookmark. Please try again.", NotificationType.Error);
             }
         }
 
@@ -293,7 +293,7 @@ namespace HarborFlow.Wpf.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to perform vessel search.");
-                
+                _notificationService.ShowNotification("An error occurred while searching for vessels.", NotificationType.Error);
             }
         }
 

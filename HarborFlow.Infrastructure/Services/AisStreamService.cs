@@ -13,11 +13,11 @@ namespace HarborFlow.Infrastructure.Services
 {
     public class AisStreamService : IAisStreamService
     {
-        public event Action<VesselPosition> PositionReceived;
+        public event Action<VesselPosition>? PositionReceived;
 
         private readonly ClientWebSocket _webSocket = new ClientWebSocket();
         private readonly IConfiguration _configuration;
-        private CancellationTokenSource _cancellationTokenSource;
+        private CancellationTokenSource? _cancellationTokenSource;
 
         public AisStreamService(IConfiguration configuration)
         {

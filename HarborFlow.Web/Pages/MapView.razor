@@ -2,7 +2,8 @@
 @page "/map"
 @using ST.Blazor.Leaflet
 @using ST.Blazor.Leaflet.Models
-@using HarborFlow.Core.Services
+@using HarborFlow.Core.Interfaces
+@using HarborFlow.Core.Models
 @inject IVesselTrackingService VesselTrackingService
 @inject Microsoft.JSInterop.IJSRuntime JSRuntime
 
@@ -40,14 +41,18 @@
                 Attribution = "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
             });
 
-            var positions = await VesselTrackingService.GetVesselPositionsAsync();
-            foreach (var pos in positions)
+            var vessels = await VesselTrackingService.GetAllVesselsAsync();
+            foreach (var vessel in vessels)
             {
-                _map.AddLayer(new Marker(new LatLng((float)pos.Latitude, (float)pos.Longitude))
+                var lastPosition = vessel.Positions.OrderByDescending(p => p.PositionTimestamp).FirstOrDefault();
+                if (lastPosition != null)
                 {
-                    Tooltip = new Tooltip { Content = pos.VesselImo },
-                    Popup = new Popup { Content = $"IMO: {pos.VesselImo}<br/>Speed: {pos.SpeedOverGround} knots" }
-                });
+                    _map.AddLayer(new Marker(new LatLng((float)lastPosition.Latitude, (float)lastPosition.Longitude))
+                    {
+                        Tooltip = new Tooltip { Content = vessel.Name },
+                        Popup = new Popup { Content = $"IMO: {vessel.IMO}<br/>Name: {vessel.Name}<br/>Speed: {lastPosition.SpeedOverGround} knots" }
+                    });
+                }
             }
             StateHasChanged();
         }

@@ -1,5 +1,6 @@
 
-using HarborFlow.Application.Interfaces;
+using HarborFlow.Core.Interfaces;
+using HarborFlow.Application.Services;
 using HarborFlow.Infrastructure;
 using HarborFlow.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -40,3 +41,5 @@ app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
 app.Run();
+
+public partial class Program { }

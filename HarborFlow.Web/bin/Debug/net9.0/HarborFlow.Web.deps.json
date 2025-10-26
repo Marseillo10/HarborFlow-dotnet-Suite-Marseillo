@@ -8,12 +8,29 @@
     ".NETCoreApp,Version=v9.0": {
       "HarborFlow.Web/1.0.0": {
         "dependencies": {
+          "HarborFlow.Application": "1.0.0",
           "HarborFlow.Core": "1.0.0",
           "HarborFlow.Infrastructure": "1.0.0",
           "ST.Blazor.Leaflet": "8.194.3"
         },
         "runtime": {
           "HarborFlow.Web.dll": {}
+        }
+      },
+      "BCrypt.Net-Next/4.0.3": {
+        "runtime": {
+          "lib/net6.0/BCrypt.Net-Next.dll": {
+            "assemblyVersion": "4.0.3.0",
+            "fileVersion": "4.0.3.0"
+          }
+        }
+      },
+      "FluentValidation/11.9.0": {
+        "runtime": {
+          "lib/net8.0/FluentValidation.dll": {
+            "assemblyVersion": "11.0.0.0",
+            "fileVersion": "11.9.0.0"
+          }
         }
       },
       "Microsoft.AspNetCore.Authorization/8.0.17": {
@@ -533,16 +550,32 @@
         }
       },
       "System.IO.Pipelines/8.0.0": {},
-      "System.Text.Json/9.0.10": {
+      "System.ServiceModel.Syndication/9.0.10": {
         "runtime": {
-          "lib/net9.0/System.Text.Json.dll": {
-            "assemblyVersion": "9.0.0.0",
+          "lib/net9.0/System.ServiceModel.Syndication.dll": {
+            "assemblyVersion": "9.0.0.10",
             "fileVersion": "9.0.1025.47515"
+          }
+        }
+      },
+      "System.Text.Json/9.0.10": {},
+      "HarborFlow.Application/1.0.0": {
+        "dependencies": {
+          "HarborFlow.Core": "1.0.0",
+          "HarborFlow.Infrastructure": "1.0.0",
+          "Microsoft.EntityFrameworkCore": "9.0.0",
+          "System.ServiceModel.Syndication": "9.0.10"
+        },
+        "runtime": {
+          "HarborFlow.Application.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
           }
         }
       },
       "HarborFlow.Core/1.0.0": {
         "dependencies": {
+          "FluentValidation": "11.9.0",
           "Microsoft.Extensions.Configuration": "9.0.10",
           "Microsoft.Extensions.Configuration.Json": "9.0.10",
           "Microsoft.Extensions.DependencyInjection": "9.0.10",
@@ -560,8 +593,10 @@
       },
       "HarborFlow.Infrastructure/1.0.0": {
         "dependencies": {
+          "BCrypt.Net-Next": "4.0.3",
           "HarborFlow.Core": "1.0.0",
-          "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.0"
+          "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.0",
+          "System.ServiceModel.Syndication": "9.0.10"
         },
         "runtime": {
           "HarborFlow.Infrastructure.dll": {
@@ -577,6 +612,20 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "BCrypt.Net-Next/4.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-W+U9WvmZQgi5cX6FS5GDtDoPzUCV4LkBLkywq/kRZhuDwcbavOzcDAr3LXJFqHUi952Yj3LEYoWW0jbEUQChsA==",
+      "path": "bcrypt.net-next/4.0.3",
+      "hashPath": "bcrypt.net-next.4.0.3.nupkg.sha512"
+    },
+    "FluentValidation/11.9.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-VneVlTvwYDkfHV5av3QrQ0amALgrLX6LV94wlYyEsh0B/klJBW7C8y2eAtj5tOZ3jH6CAVpr4s1ZGgew/QWyig==",
+      "path": "fluentvalidation/11.9.0",
+      "hashPath": "fluentvalidation.11.9.0.nupkg.sha512"
     },
     "Microsoft.AspNetCore.Authorization/8.0.17": {
       "type": "package",
@@ -900,12 +949,24 @@
       "path": "system.io.pipelines/8.0.0",
       "hashPath": "system.io.pipelines.8.0.0.nupkg.sha512"
     },
+    "System.ServiceModel.Syndication/9.0.10": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-jWOXgKi51ULlPDi+YIWsZglIYUYC1DixAs2j6xdy8fzhuxvXO82yUEXv4wFziqzoG1FmTAV/uv5psxb+3MqB7w==",
+      "path": "system.servicemodel.syndication/9.0.10",
+      "hashPath": "system.servicemodel.syndication.9.0.10.nupkg.sha512"
+    },
     "System.Text.Json/9.0.10": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-XM02ZBnzxk7Ti6l9YRy8Bp639wANqJzJzw4W4VYiCh+HXY9hBOWkGB4k89OLP/s/RxgM02P4a/mWcJTgFiLf1Q==",
       "path": "system.text.json/9.0.10",
       "hashPath": "system.text.json.9.0.10.nupkg.sha512"
+    },
+    "HarborFlow.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
     },
     "HarborFlow.Core/1.0.0": {
       "type": "project",
