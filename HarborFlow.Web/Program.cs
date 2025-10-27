@@ -20,6 +20,14 @@ builder.Services.AddHttpClient();
 // Register application services
 builder.Services.AddScoped<IVesselTrackingService, VesselTrackingService>();
 builder.Services.AddScoped<IPortServiceManager, PortServiceManager>();
+builder.Services.AddScoped<IAisStreamService, AisStreamService>();
+builder.Services.AddScoped<ISynchronizationService, SynchronizationService>();
+builder.Services.AddScoped<INotificationHub, NotificationHub>();
+builder.Services.AddScoped<IRssService, RssService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<SessionContext>();
+builder.Services.AddAuthentication("Cookies").AddCookie();
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -36,6 +44,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");

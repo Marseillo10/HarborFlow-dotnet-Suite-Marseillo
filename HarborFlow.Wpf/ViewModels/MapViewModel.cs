@@ -35,6 +35,7 @@ namespace HarborFlow.Wpf.ViewModels
         public event EventHandler<IEnumerable<VesselPosition>>? HistoryTrackRequested;
         public event EventHandler<string>? MapLayerChanged;
         public event EventHandler<MapBookmark>? BookmarkNavigationRequested;
+        public event EventHandler<Vessel>? CenterMapOnVesselRequested;
 
         public string SearchTerm
         {
@@ -124,9 +125,11 @@ namespace HarborFlow.Wpf.ViewModels
             {
                 _selectedVessel = value;
                 OnPropertyChanged(nameof(SelectedVessel));
+                OnPropertyChanged(nameof(IsVesselSelected));
                 if (_selectedVessel != null)
                 {
                     VesselSelected?.Invoke(this, _selectedVessel);
+                    CenterMapOnVesselRequested?.Invoke(this, _selectedVessel);
                     if (IsHistoryVisible)
                     {
                         ShowHistoryTrack();
@@ -134,6 +137,8 @@ namespace HarborFlow.Wpf.ViewModels
                 }
             }
         }
+
+        public bool IsVesselSelected => SelectedVessel != null;
 
         public ObservableCollection<Vessel> FilteredVesselsOnMap { get; } = new ObservableCollection<Vessel>();
 

@@ -4,13 +4,15 @@ This document outlines development tasks and limitations for both Windows and no
 
 ## Background
 
-While the majority of the codebase (.NET Class Libraries for `Core`, `Application`, and `Infrastructure`) is cross-platform, the main user interface (`HarborFlow.Wpf`) is a Windows-only technology using WPF. 
+While the majority of the codebase (.NET Class Libraries for `Core`, `Application`, and `Infrastructure`) is cross-platform, the project includes two user interfaces:
+- **`HarborFlow.Wpf`**: A Windows-only desktop application using WPF.
+- **`HarborFlow.Web`**: A cross-platform web application using Blazor.
 
 This guide clarifies what can be done on each platform.
 
-## Development Workflow on macOS/Linux (Backend)
+## Cross-Platform Development (macOS, Linux, Windows)
 
-Developers on non-Windows systems can fully contribute to the core backend logic of the application. The backend has been functionally analyzed and has a dedicated cross-platform test suite.
+Developers on any platform can run the web application and contribute to the core backend logic.
 
 ### 1. Initial Setup
 
@@ -28,10 +30,19 @@ The database environment is managed by Docker, making it consistent across all p
   ```
 - **Apply database migrations (first time only):**
   ```shell
-  dotnet ef database update --project HarborFlow.Infrastructure
+  dotnet ef database update --startup-project HarborFlow.Web --project HarborFlow.Infrastructure
   ```
 
-### 3. Backend Development Cycle
+### 3. Running the Web Application
+
+The Blazor web application is the primary way to run and test the application on any platform.
+
+- **Run the web app:**
+  ```shell
+  dotnet run --project HarborFlow.Web
+  ```
+
+### 4. Backend Development Cycle
 
 Your day-to-day development will focus on the backend projects:
 
@@ -40,18 +51,18 @@ Your day-to-day development will focus on the backend projects:
   ```shell
   dotnet build HarborFlow.sln
   ```
-- **Run Backend Tests**: Use the dedicated backend test project to verify your changes. This is the primary method for ensuring backend functionality on a non-Windows machine.
+- **Run Backend Tests**: Use the dedicated backend test project to verify your changes.
   ```shell
   dotnet test HarborFlow.Backend.Tests/
   ```
 
-## Windows-Only Tasks (UI & Full System)
+## Windows-Only Tasks (WPF UI)
 
-Any work that requires visual validation of the UI must be done on a Windows machine.
+Any work that requires visual validation of the WPF UI must be done on a Windows machine.
 
-### 1. Running and Debugging the UI
+### 1. Running and Debugging the WPF UI
 
-This is the only way to visually verify that the UI functions as expected.
+This is the only way to visually verify that the WPF UI functions as expected.
 
 - **Steps**: Open `HarborFlow.sln` in Visual Studio, set `HarborFlow.Wpf` as the startup project, and run. Alternatively, use the command line:
   ```shell

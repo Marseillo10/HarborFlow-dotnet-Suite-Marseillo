@@ -1,0 +1,35 @@
+@page "/news"
+@using HarborFlow.Core.Interfaces
+@using HarborFlow.Core.Models
+@inject IRssService RssService
+
+<h3>Maritime News</h3>
+
+@if (articles == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var article in articles)
+        {
+            <a href="@article.Link" target="_blank" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">@article.Title</h5>
+                    <small>@article.PublishDate.ToString("yyyy-MM-dd")</small>
+                </div>
+                <p class="mb-1">@article.Description</p>
+            </a>
+        }
+    </div>
+}
+
+@code {
+    private IEnumerable<NewsArticle>? articles;
+
+    protected override async Task OnInitializedAsync()
+    {
+        articles = await RssService.FetchNewsAsync("https://www.maritime-executive.com/rss"); // Example RSS feed
+    }
+}

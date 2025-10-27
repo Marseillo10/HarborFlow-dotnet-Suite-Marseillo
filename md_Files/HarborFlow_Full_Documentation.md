@@ -2,7 +2,7 @@
 
 ## 1. Project Overview
 
-HarborFlow is a modern Smart Port Management System designed to digitize and streamline operational workflows. Built with .NET 9, this project uses a WPF desktop application for the user interface and follows Clean Architecture principles to ensure a scalable and maintainable codebase.
+HarborFlow is a modern Smart Port Management System designed to digitize and streamline operational workflows. Built with .NET 9, this project includes a WPF desktop application for Windows and a Blazor web application for cross-platform accessibility. It follows Clean Architecture principles to ensure a scalable and maintainable codebase.
 
 ### 1.1. Core Mission
 
@@ -24,8 +24,10 @@ HarborFlow is built on a foundation of modern software design principles to ensu
 ### 2.1. Architectural Principles
 
 - **Clean Architecture:** The project follows this principle to create a separation of concerns. Dependencies flow inwards: UI and Infrastructure depend on the Application and Core layers, not the other way around.
-- **Model-View-ViewModel (MVVM) Pattern:** The WPF UI is built using the MVVM pattern, which separates the user interface (View) from the business logic and data (ViewModel).
-- **Dependency Injection (DI):** The application uses the built-in .NET DI container to manage dependencies, promoting loose coupling and testability. All services are registered in `App.xaml.cs`.
+- **UI Patterns:**
+    - **Model-View-ViewModel (MVVM) Pattern:** The WPF UI is built using the MVVM pattern, which separates the user interface (View) from the business logic and data (ViewModel).
+    - **Model-View-Update (MVU) Pattern:** The Blazor web application follows the MVU pattern, where the UI is a function of the application state.
+- **Dependency Injection (DI):** The application uses the built-in .NET DI container to manage dependencies, promoting loose coupling and testability.
 - **Centralized Notification Hub:** A custom `INotificationHub` service acts as a central event bus for displaying user-facing messages, decoupling business logic from UI notifications.
 
 ### 2.2. Project Layers
@@ -33,7 +35,8 @@ HarborFlow is built on a foundation of modern software design principles to ensu
 - **`HarborFlow.Core` (Domain):** The heart of the application. Contains all business models (entities) and application-specific interfaces (contracts). It has zero dependencies on other layers.
 - **`HarborFlow.Application` (Application):** Contains the application-specific business logic. It orchestrates the domain models to perform tasks and implements the interfaces defined in Core.
 - **`HarborFlow.Infrastructure` (Infrastructure):** Handles all external concerns: database access (Entity Framework), communication with third-party APIs (AIS data, RSS feeds), etc.
-- **`HarborFlow.Wpf` (Presentation):** The user interface layer, built with WPF and the MVVM pattern.
+- **`HarborFlow.Wpf` (Presentation):** The user interface layer for Windows, built with WPF and the MVVM pattern.
+- **`HarborFlow.Web` (Presentation):** The user interface layer for cross-platform access, built with Blazor.
 
 ### 2.3. Core Data Models
 
@@ -84,39 +87,56 @@ This project is configured to use Docker for the PostgreSQL database for a consi
 
 3.  **Apply Database Migrations (First Time Only):**
     ```bash
-    dotnet ef database update --project HarborFlow.Infrastructure
+    dotnet ef database update --startup-project HarborFlow.Web --project HarborFlow.Infrastructure
     ```
 
-4.  **Run the Application (Windows Only):**
-    ```bash
-    dotnet run --project HarborFlow.Wpf
-    ```
+4.  **Run the Application:**
+
+    - **Web Application (Cross-platform):**
+        ```bash
+        dotnet run --project HarborFlow.Web
+        ```
+
+    - **WPF Application (Windows only):**
+        ```bash
+        dotnet run --project HarborFlow.Wpf
+        ```
 
 ### 3.3. Platform-Specific Development
 
-While the UI is Windows-only, the core logic is cross-platform. Developers on **macOS or Linux** can build, test, and contribute to the `HarborFlow.Core`, `HarborFlow.Application`, and `HarborFlow.Infrastructure` projects. For more details, see the [WINDOWS_DEVELOPMENT.md](WINDOWS_DEVELOPMENT.md) file.
+While the WPF UI is Windows-only, the web application and the core logic are cross-platform. Developers on **macOS or Linux** can build, test, and contribute to all projects except `HarborFlow.Wpf`. For more details, see the [WINDOWS_DEVELOPMENT.md](WINDOWS_DEVELOPMENT.md) file.
 
 ## 4. Implementation Details
 
-This section covers the technical "how-to" of the codebase, including configuration, specific WPF patterns, and external service integrations.
+This section covers the technical \"how-to\" of the codebase, including configuration, specific UI patterns, and external service integrations.
 
 ### 4.1. Configuration Management (`appsettings.json`)
 
 The application uses a central `appsettings.json` file to manage external configurations. This allows settings to be changed without modifying the source code.
 
 -   **`ConnectionStrings`**: Contains the `DefaultConnection` string for the PostgreSQL database.
--   **`ApiKeys`**:
+-   **`ApiKeys`**:\
     -   `AisStream`: The key for the real-time position streaming service.
     -   `GlobalFishingWatch`: The key for the vessel detail and identity service.
 -   **`RssFeeds`**: A list of URLs for the maritime news aggregator.
 
-### 4.2. WPF Presentation Layer (MVVM)
+### 4.2. Presentation Layers
+
+#### 4.2.1. WPF (MVVM)
 
 To support the MVVM pattern effectively, the `HarborFlow.Wpf` project includes several key helper components:
 
 -   **Commands (`RelayCommand` & `AsyncRelayCommand`)**: These classes bridge the UI (e.g., a button click) and the logic in the `ViewModel`. `RelayCommand` is for synchronous actions, while `AsyncRelayCommand` handles asynchronous operations and prevents duplicate executions.
 -   **Custom UI Services**: Services like `IWindowManager` (to manage windows and dialogs), `ISettingsService` (to handle user themes), and `IFileService` (for file operations) are used to abstract UI-specific logic out of the ViewModels, making them more testable.
 -   **Value Converters**: Small helper classes like `BooleanToVisibilityConverter` are used in XAML to translate data (e.g., a `bool`) into a UI property (e.g., `Visibility.Visible`), keeping presentation logic out of the ViewModel.
+
+#### 4.2.2. Blazor (MVU)
+
+The `HarborFlow.Web` project uses Blazor to create a cross-platform web UI.
+
+-   **Components:** The UI is built as a series of `.razor` components, which combine HTML markup and C# code.
+-   **Dependency Injection:** Services are injected into components using the `@inject` directive.
+-   **JavaScript Interop:** The application uses JavaScript interop to interact with JavaScript libraries like Leaflet.js for the interactive map.
 
 ### 4.3. External API Integration (AIS Data)
 
@@ -128,8 +148,8 @@ The application uses a dual-service approach to handle vessel data: one for real
 
 -   **`AisDataService` (Vessel Details):**
     -   **Provider:** Global Fishing Watch (`api.globalfishingwatch.org`)
-    -   **Implementation:** This service replaces the previous placeholder data. When details for a specific vessel are needed, it makes a REST API call to the Global Fishing Watch `v2/vessels` endpoint, authenticated with a Bearer Token. It searches for the vessel by its IMO number and maps the resulting data (name, type, flag, etc.) to the application's `Vessel` model.
-    -   **Note:** This integration is free for non-commercial use, which aligns with this project's academic purpose.
+    -   **Implementation:** This service replaces the previous placeholder data. When details for a specific vessel are needed, it makes a REST API call to the Global Fishing Watch `v2/vessels` endpoint, authenticated with a Bearer Token. It searches for the vessel by its IMO number and maps the resulting data (name, type, flag, etc.) to the application\'s `Vessel` model.
+    -   **Note:** This integration is free for non-commercial use, which aligns with this project\'s academic purpose.
 
 ### 4.4. Key Third-Party Libraries
 
@@ -137,21 +157,22 @@ The project leverages several key open-source libraries:
 
 -   **`BCrypt.Net-Next`**: Used for securely hashing user passwords.
 -   **`FluentValidation`**: Provides a clear way to build validation rules for business objects.
--   **`LiveCharts.Wpf`**: The core library used for creating the interactive charts in the Analytics Dashboard.
+-   **`LiveCharts.Wpf`**: The core library used for creating the interactive charts in the Analytics Dashboard (WPF only).
 -   **`Microsoft.Web.WebView2`**: Enables the WPF application to host web content, which is crucial for rendering the Leaflet.js interactive map.
+-   **`Leaflet.js`**: Used in the Blazor web application to render the interactive map.
 -   **Testing Stack (`xunit`, `Moq`, `FluentAssertions`)**: The project relies on a standard, robust stack for unit and integration testing.
 
 ## 5. Feature Breakdown
 
 ### 5.1. Guest Mode & Authentication
 
-- The application starts in a "Guest" state, allowing exploration of public features.
-- UI elements are dynamically shown or hidden based on the user's login status (`IsLoggedIn` property).
-- The `SessionContext` service manages the current user's state and fires a `UserChanged` event on login/logout to refresh the UI.
+- The application starts in a \"Guest\" state, allowing exploration of public features.
+- UI elements are dynamically shown or hidden based on the user\'s login status.
+- The `SessionContext` service manages the current user\'s state and fires a `UserChanged` event on login/logout to refresh the UI.
 
 ### 5.2. Analytics Dashboard
 
-- The dashboard uses the `LiveCharts.Wpf` library to display a pie chart of service requests by status and a column chart of vessels by type.
+- The dashboard uses the `LiveCharts.Wpf` library to display a pie chart of service requests by status and a column chart of vessels by type (WPF only). The web application has a placeholder for the dashboard.
 
 ### 5.3. Map Bookmarks
 
@@ -160,12 +181,13 @@ The project leverages several key open-source libraries:
 ### 5.4. Maritime News Feed
 
 - The `RssService` fetches articles from a list of URLs in `appsettings.json`.
-- The `NewsViewModel` filters articles first by maritime keywords and then by user search input.
+- The `NewsViewModel` (WPF) and `NewsView.razor` (Web) filter articles.
 
 ### 5.5. Interactive Map & Data Layers
 
-- The map is powered by **Leaflet.js** and rendered in a `WebView2` control in WPF.
-- It features switchable tile layers: **OpenStreetMap** (default), **Esri World Imagery** (satellite), and **OpenSeaMap** (nautical).
+- **WPF:** The map is powered by **Leaflet.js** and rendered in a `WebView2` control.
+- **Web:** The map is powered by **Leaflet.js** and rendered directly in the Blazor component.
+- Both maps feature switchable tile layers: **OpenStreetMap** (default), **Esri World Imagery** (satellite), and **OpenSeaMap** (nautical).
 
 ## 6. Future Development Roadmap
 

@@ -14,10 +14,10 @@
     <link href="HarborFlow.Web.styles.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="icon" type="image/png" href="favicon.png"/>
-    <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
+    <component type="typeof(HeadOutlet)" render-mode="Server" />
 </head>
 <body>
-    <component type="typeof(App)" render-mode="ServerPrerendered" />
+    <component type="typeof(App)" render-mode="Server" />
 
     <div id="blazor-error-ui">
         <environment include="Staging,Production">
@@ -30,8 +30,26 @@
         <a class="dismiss">🗙</a>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="_content/ST.Blazor.Leaflet/leafletBlazorInterops.js"></script>
     <script src="_framework/blazor.server.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        var map;
+        function initMap(options) {
+            map = L.map('map').setView([options.lat, options.lng], options.zoom);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+        }
+
+        function addVesselMarkers(vessels) {
+            if (!map) return;
+            vessels.forEach(vessel => {
+                if (vessel.lat && vessel.lng) {
+                    var marker = L.marker([vessel.lat, vessel.lng]).addTo(map);
+                    marker.bindPopup(`<b>${vessel.name}</b><br>IMO: ${vessel.imo}<br>Speed: ${vessel.speed} knots`);
+                }
+            });
+        }
+    </script>
 </body>
 </html>

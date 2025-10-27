@@ -1,51 +1,61 @@
-HarborFlow Application
+HarborFlow Application - Web & WPF
+
+This document outlines the user flow for both the WPF and Web applications.
+
+[Web App Status: In Development - Core navigation and guest features are implemented. Authentication and role-based features are in progress.]
+
 │
 ├─── 🚀 Aplikasi Dimulai
-│    └─── 🏠 Jendela Utama (MainWindow) Ditampilkan
+│    └─── 🏠 Jendela Utama (MainWindow / Web App) Ditampilkan
 │         │
 │         ├─── 👤 Mode Pengguna: Tamu (Default)
 │         │    │
 │         │    ├─── 🗺️ Navigasi -> Peta Kapal (MapView)
-│         │    │    └─── Fitur: Lacak kapal secara real-time. [Backend Terverifikasi]
+│         │    │    └─── Fitur: Lacak kapal secara real-time. [Backend Terverifikasi] [Web Implementasi]
 │         │    │
 │         │    ├─── 📰 Navigasi -> Berita Maritim (NewsView)
-│         │    │    ├─── Fitur: Lihat berita maritim terkini. [Backend Terverifikasi]
+│         │    │    ├─── Fitur: Lihat berita maritim terkini. [Backend Terverifikasi] [Web Implementasi]
 │         │    │    └─── Fitur: Filter berita dengan kata kunci. [Backend Terverifikasi]
 │         │    │
 │         │    ├─── 🔐 Header -> Tombol "Login"
-│         │    │    └─── Aksi: Membuka dialog Login. [Backend Terverifikasi]
+│         │    │    └─── Aksi: Membuka halaman Login. [Web Implementasi]
 │         │    │
 │         │    └─── ➕ Header -> Tombol "Register"
-│         │         └─── Aksi: Membuka dialog Registrasi. [Backend Terverifikasi]
+│         │         └─── Aksi: Membuka halaman Registrasi. [Web Implementasi]
 │
 └─── 🔑 Pengguna Melakukan Login
      │
      └─── 👤 Mode Pengguna: Terotentikasi
           │
           ├─── 📊 Navigasi -> Dasbor (DashboardView)
-          │    ├─── Fitur: Lihat grafik status permintaan layanan. [Backend Terverifikasi]
-          │    └─── Fitur: Lihat grafik jumlah kapal per tipe. [Backend Terverifikasi]
+          │    ├─── Fitur: Lihat grafik status permintaan layanan. [Backend Terverifikasi] [Web Kerangka]
+          │    └─── Fitur: Lihat grafik jumlah kapal per tipe. [Backend Terverifikasi] [Web Kerangka]
           │
           ├─── 🗺️ Navigasi -> Peta Kapal (MapView)
-          │    ├─── Fitur: Lacak kapal secara real-time. [Backend Terverifikasi]
+          │    ├─── Fitur: Lacak kapal secara real-time. [Backend Terverifikasi] [Web Implementasi]
           │    └─── ⭐ Fitur Login: Panel Bookmark
           │         ├─── Aksi: Tambah bookmark dari tampilan peta saat ini. [Backend Terverifikasi]
           │         ├─── Aksi: Pilih bookmark untuk navigasi cepat. [Backend Terverifikasi]
           │         └─── Aksi: Hapus bookmark yang tersimpan. [Backend Terverifikasi]
           │
           ├─── 📰 Navigasi -> Berita Maritim (NewsView)
-          │    ├─── Fitur: Lihat berita maritim terkini. [Backend Terverifikasi]
+          │    ├─── Fitur: Lihat berita maritim terkini. [Backend Terverifikasi] [Web Implementasi]
           │    └─── Fitur: Filter berita dengan kata kunci. [Backend Terverifikasi]
           │
           ├─── 🚢 Navigasi -> Manajemen Kapal (VesselManagementView)
           │    │    (Hanya terlihat oleh Admin)
-          │    ├─── Fitur: Tambah, Edit, Hapus data kapal. [Backend Terverifikasi]
-          │    └─── Fitur: Lihat daftar semua kapal di database. [Backend Terverifikasi]
+          │    ├─── Fitur: Tambah, Edit, Hapus data kapal. [Backend Terverifikasi] [Web Kerangka]
+          │    └─── Fitur: Lihat daftar semua kapal di database. [Backend Terverifikasi] [Web Kerangka]
           │
           ├─── 📋 Navigasi -> Permintaan Layanan (ServiceRequestView)
           │    │    (Hanya terlihat oleh Petugas & Admin)
-          │    ├─── Fitur: Lihat semua permintaan layanan. [Backend Terverifikasi]
-          │    └─── Fitur: Setujui atau Tolak permintaan. [Backend Terverifikasi]
+          │    ├─── Fitur: Lihat semua permintaan layanan. [Backend Terverifikasi] [Web Kerangka]
+          │    └─── Fitur: Setujui atau Tolak permintaan. [Backend Terverifikasi] [Web Kerangka]
           │
           └─── 🚪 Header -> Tombol "Logout"
-               └─── Aksi: Kembali ke Mode Tamu. [Backend Terverifikasi]
+               └─── Aksi: Kembali ke Mode Tamu. [Web Implementasi]
+
+Legenda:
+- [Backend Terverifikasi]: Fungsionalitas backend telah dianalisis dan diuji.
+- [Web Implementasi]: Fitur ini telah diimplementasikan di aplikasi web Blazor.
+- [Web Kerangka]: Kerangka dasar untuk fitur ini ada di aplikasi web, tetapi implementasi penuh mungkin masih dalam proses.
