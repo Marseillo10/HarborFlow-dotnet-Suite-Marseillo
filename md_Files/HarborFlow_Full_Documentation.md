@@ -164,30 +164,30 @@ The project leverages several key open-source libraries:
 
 ## 5. Feature Breakdown
 
-### 5.1. Guest Mode & Authentication
+### 5.1. Web Application - Current Status (October 2025)
 
-- The application starts in a \"Guest\" state, allowing exploration of public features.
-- UI elements are dynamically shown or hidden based on the user\'s login status.
-- The `SessionContext` service manages the current user\'s state and fires a `UserChanged` event on login/logout to refresh the UI.
+The Blazor web application is the primary focus of development. Here is the current status of its features:
 
-### 5.2. Analytics Dashboard
+- **Real-Time Map (`MapView`):** Fully functional. Displays real-time vessel positions via WebSocket and includes interactive map layer controls.
+- **Advanced News Feed (`NewsView`):** Fully functional. Features categorization, intelligent keyword filtering, and interactive date filters.
+- **Analytics Dashboard (`DashboardView`):** Implemented for logged-in users. Guest access is not currently available.
+- **Map Bookmarking (`MapView`):** This feature is currently under development. The goal is to allow users to save and manage important map locations.
+- **Service Request Management (`ServiceRequestView`):** The web interface for this feature is currently under development.
 
-- The dashboard uses the `LiveCharts.Wpf` library to display a pie chart of service requests by status and a column chart of vessels by type (WPF only). The web application has a placeholder for the dashboard.
+### 5.2. Guest Mode & Authentication
 
-### 5.3. Map Bookmarks
+- The application supports both guest and registered user modes.
+- Core informational features (Live Map, News Feed) are available to guests.
+- Data management features (Vessel Management, Service Requests, Dashboard) and account-specific features (Bookmarks) are restricted to authenticated users.
+- The `SessionContext` service manages the user's state and UI updates on login/logout.
 
-- Logged-in users can save, delete, and navigate to geographic bookmarks. The bookmark controls are only visible when a user is authenticated.
+### 5.3. Platform-Specific Implementations
 
-### 5.4. Maritime News Feed
-
-- The `RssService` fetches articles from a list of URLs in `appsettings.json`.
-- The `NewsViewModel` (WPF) and `NewsView.razor` (Web) filter articles.
-
-### 5.5. Interactive Map & Data Layers
-
-- **WPF:** The map is powered by **Leaflet.js** and rendered in a `WebView2` control.
-- **Web:** The map is powered by **Leaflet.js** and rendered directly in the Blazor component.
-- Both maps feature switchable tile layers: **OpenStreetMap** (default), **Esri World Imagery** (satellite), and **OpenSeaMap** (nautical).
+- **WPF Dashboard:** Uses the `LiveCharts.Wpf` library.
+- **Map Rendering:**
+    - **WPF:** Uses **Leaflet.js** rendered in a `WebView2` control.
+    - **Web:** Uses **Leaflet.js** rendered directly in a Blazor component.
+- **Map Layers:** Both platforms support **OpenStreetMap**, **Esri World Imagery**, and **OpenSeaMap**.
 
 ## 6. Future Development Roadmap
 

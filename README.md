@@ -7,24 +7,33 @@ For detailed technical information, system architecture, and feature breakdowns,
 ## Project Status (October 2025)
 
 - **Build:** The entire solution builds cleanly on the .NET 9 SDK.
-- **Backend:** The core backend logic (services, data access, API integration) has undergone a comprehensive functional analysis. All key services have been verified with automated tests and are considered functionally stable.
+- **Backend:** The core backend logic, services, and API integrations are functionally complete and stable.
 - **Frontend:**
-    - **WPF App:** The WPF user interface code has been analyzed and is correctly structured, but has not been visually or manually tested.
-    - **Web App:** A Blazor web application has been added to provide cross-platform access to the core features. It is partially functional and under active development.
+    - **WPF App:** The original user interface, correctly structured but not the focus of recent development.
+    - **Web App:** The Blazor web application is now **fully functional**, providing a modern, cross-platform interface for all core features of the project.
 
 ## Key Features
 
-- **Live Map:** Real-time vessel tracking on an interactive map.
-- **Maritime News:** An integrated news feed with articles from leading maritime sources.
-- **Service Workflow:** A complete system for submitting, approving, and managing port service requests (requires login).
-- **Map Bookmarks:** Save and quickly navigate to important map areas (requires login).
-- **Guest Mode:** Explore public features like the map and news feed without needing an account.
+- **Live Map:** Real-time vessel tracking on an interactive map with multiple layer options (Street, Satellite, Nautical).
+- **Advanced Maritime News Feed:**
+    - Aggregates news from dozens of international, national, and official sources.
+    - Intelligent keyword filtering to ensure maritime relevance.
+    - Categorized views (International, National, Official, All Feeds).
+    - Interactive date filters (24h, 7d, 30d, All Time) with auto-scrolling.
+- **Service & Vessel Workflow:**
+    - **Analytics Dashboard:** Visual charts for service request statuses and vessel types. This feature is currently available only for logged-in users.
+    - **Vessel Management:** Full CRUD (Create, Read, Update, Delete) functionality for vessel data.
+    - **Service Request Management:** This feature is currently under development for the web application.
+- **User Experience:**
+    - **Access Modes:** The application supports both guest and registered user modes. Core features like the live map and news feed are available to all. Full data management capabilities are restricted to logged-in users.
+    - **Map Bookmarking:** This feature is currently under development. The goal is to allow users to save and manage map locations.
 
 ## Tech Stack
 
-- **Frontend:** .NET 9 WPF, Blazor
+- **Frontend:** .NET 9 WPF, Blazor Server
 - **Backend:** .NET 9 Class Libraries
 - **Database:** PostgreSQL (managed via Docker)
+- **UI Libraries:** ChartJs.Blazor, Leaflet.js
 - **Testing:** xUnit, Moq, FluentAssertions
 - **Architecture:** Clean Architecture, MVVM Pattern (WPF), MVU Pattern (Blazor)
 
@@ -57,10 +66,11 @@ This project uses Docker to provide a consistent and easy-to-use database enviro
 
 4.  **Run the application:**
 
-    - **Web Application (Cross-platform):**
+    - **Web Application (Recommended):**
         ```bash
         dotnet run --project HarborFlow.Web
         ```
+        Then open `http://localhost:5275` in your browser.
 
     - **WPF Application (Windows only):**
         ```bash
@@ -82,4 +92,4 @@ To run the cross-platform backend tests from the root directory:
 dotnet test HarborFlow.Backend.Tests/
 ```
 
-> **Note for macOS/Linux users:** You can build, test, and contribute to all non-UI projects. The Blazor web application is the recommended way to run the application on non-Windows systems. See [WINDOWS_DEVELOPMENT.md](WINDOWS_DEVELOPMENT.md) for more details.
+> **Note for macOS/Linux users:** You can build, test, and contribute to all non-UI projects. The Blazor web application is the recommended way to run and interact with the application on non-Windows systems. See [WINDOWS_DEVELOPMENT.md](WINDOWS_DEVELOPMENT.md) for more details.
