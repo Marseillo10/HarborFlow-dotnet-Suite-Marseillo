@@ -13,7 +13,7 @@ builder.Services.AddServerSideBlazor();
 
 // Configure DbContext
 builder.Services.AddDbContext<HarborFlowDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("HarborFlowDb")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddHttpClient();
 
@@ -25,6 +25,7 @@ builder.Services.AddScoped<ISynchronizationService, SynchronizationService>();
 builder.Services.AddScoped<INotificationHub, NotificationHub>();
 builder.Services.AddScoped<IRssService, RssService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IBookmarkService, BookmarkService>();
 builder.Services.AddScoped<SessionContext>();
 builder.Services.AddAuthentication("Cookies").AddCookie();
 builder.Services.AddAuthorization();

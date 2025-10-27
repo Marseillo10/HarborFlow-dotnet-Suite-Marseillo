@@ -1,6 +1,81 @@
 @page "/service-requests"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,Staff")]
+
+@inject IPortServiceManager PortServiceManager
+@inject IVesselTrackingService VesselTrackingService
+@inject SessionContext SessionContext
 
 <h3>Service Requests</h3>
 
-<p>Here you can manage service requests.</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Request ID</th>
+            <th>Vessel Name</th>
+            <th>Service Type</th>
+            <th>Status</th>
+            <th>Requested On</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var request in _serviceRequests)
+        {
+            <tr>
+                <td>@request.RequestId</td>
+                <td>@(_vesselNames.ContainsKey(request.VesselImo) ? _vesselNames[request.VesselImo] : "Loading...")</td>
+                <td>@request.ServiceType</td>
+                <td>@request.Status</td>
+                <td>@request.RequestDate.ToString("g")</td>
+                <td>
+                    @if (request.Status == RequestStatus.Submitted)
+                    {
+                        <button class="btn btn-sm btn-success" @onclick="() => UpdateRequestStatus(request.RequestId, RequestStatus.Approved)" disabled="@(SessionContext.CurrentUser == null)">Approve</button>
+                        <button class="btn btn-sm btn-warning" @onclick="() => UpdateRequestStatus(request.RequestId, RequestStatus.Rejected)" disabled="@(SessionContext.CurrentUser == null)">Deny</button>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<ServiceRequest> _serviceRequests = new List<ServiceRequest>();
+    private Dictionary<string, string> _vesselNames = new Dictionary<string, string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadServiceRequests();
+    }
+
+    private async Task LoadServiceRequests()
+    {
+        _serviceRequests = (await PortServiceManager.GetAllServiceRequestsAsync(SessionContext.CurrentUser)).ToList();
+        
+        var imos = _serviceRequests.Select(r => r.VesselImo).Distinct();
+        foreach (var imo in imos)
+        {
+            if (!_vesselNames.ContainsKey(imo))
+            {
+                var vessel = await VesselTrackingService.GetVesselByImoAsync(imo);
+                _vesselNames[imo] = vessel?.Name ?? "Unknown Vessel";
+            }
+        }
+        StateHasChanged();
+    }
+
+    private async Task UpdateRequestStatus(Guid requestId, RequestStatus newStatus)
+    {
+        if (SessionContext.CurrentUser == null) return;
+
+        if (newStatus == RequestStatus.Approved)
+        {
+            await PortServiceManager.ApproveServiceRequestAsync(requestId, SessionContext.CurrentUser.UserId);
+        }
+        else if (newStatus == RequestStatus.Rejected)
+        {
+            await PortServiceManager.RejectServiceRequestAsync(requestId, SessionContext.CurrentUser.UserId, "Rejected via web UI");
+        }
+        
+        await LoadServiceRequests();
+    }
+}

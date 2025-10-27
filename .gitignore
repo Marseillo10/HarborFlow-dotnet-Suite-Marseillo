@@ -13,3 +13,17 @@
 *.sln.iml
 *.suo
 *.user
+
+# Visual Studio
+.vs/
+
+# User-specific files
+*.userosscache
+*.sln.docstates
+
+# Local data & logs
+.db-data/
+firebase-debug.log
+
+# macOS
+.DS_Store

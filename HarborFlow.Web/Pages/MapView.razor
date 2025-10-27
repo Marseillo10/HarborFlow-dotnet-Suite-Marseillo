@@ -1,16 +1,70 @@
-
 @page "/"
-@using HarborFlow.Core.Interfaces
-@using HarborFlow.Core.Models
+
 @inject IVesselTrackingService VesselTrackingService
+@inject IBookmarkService BookmarkService
+@inject SessionContext SessionContext
 @inject Microsoft.JSInterop.IJSRuntime JSRuntime
+@implements IDisposable
 
 <h3>Vessel Map</h3>
+
+<div class="mb-3 d-flex align-items-center gap-2">
+    <select class="form-select" @onchange="OnBookmarkSelected">
+        <option value="">Select a bookmark...</option>
+        @if (_bookmarks.Any())
+        {
+            @foreach (var bookmark in _bookmarks)
+            {
+                <option value="@bookmark.Id">@bookmark.Name</option>
+            }
+        }
+    </select>
+    <input type="text" class="form-control" placeholder="New bookmark name" @bind="_newBookmarkName" />
+    <button class="btn btn-primary" @onclick="SaveBookmark" disabled="@string.IsNullOrWhiteSpace(_newBookmarkName)">Save</button>
+    <button class="btn btn-danger" @onclick="DeleteBookmark" disabled="@(_selectedBookmarkId == Guid.Empty)">Delete</button>
+</div>
+
+<div class="mb-2">
+    <span>Map Layers:</span>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="tileLayer" id="osm" value="OpenStreetMap" checked @onchange="ChangeMapLayer" />
+        <label class="form-check-label" for="osm">Street</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="tileLayer" id="esri" value="EsriWorldImagery" @onchange="ChangeMapLayer" />
+        <label class="form-check-label" for="esri">Satellite</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="tileLayer" id="noaa" value="NOAA" @onchange="ChangeMapLayer" />
+        <label class="form-check-label" for="noaa">Nautical</label>
+    </div>
+</div>
 
 <div id="map" style="height: 600px; width: 100%;"></div>
 
 @code {
     private bool _mapInitialized;
+    private List<MapBookmark> _bookmarks = new List<MapBookmark>();
+    private string? _newBookmarkName;
+    private Guid _selectedBookmarkId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        SessionContext.UserChanged += OnUserChanged;
+        VesselTrackingService.PositionReceived += OnPositionReceived;
+        await LoadBookmarks();
+    }
+
+    private async void OnUserChanged()
+    {
+        await LoadBookmarks();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async void OnPositionReceived(VesselPosition position)
+    {
+        await JSRuntime.InvokeVoidAsync("updateVesselPosition", position);
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -24,7 +78,7 @@
             {
                 var lastPosition = vessel.Positions.OrderByDescending(p => p.PositionTimestamp).FirstOrDefault();
                 return new
-                {                   
+                {
                     name = vessel.Name,
                     imo = vessel.IMO,
                     lat = lastPosition?.Latitude,
@@ -34,6 +88,109 @@
             }).Where(v => v.lat.HasValue && v.lng.HasValue).ToList();
 
             await JSRuntime.InvokeVoidAsync("addVesselMarkers", vesselData);
+            
+            await VesselTrackingService.StartTracking(new double[0][]);
         }
+    }
+
+    private async Task LoadBookmarks()
+    {
+        _bookmarks.Clear();
+        if (SessionContext.CurrentUser != null)
+        {
+            _bookmarks = (await BookmarkService.GetBookmarksForUserAsync(SessionContext.CurrentUser.UserId)).ToList();
+        }
+        else
+        {
+            _bookmarks = await JSRuntime.InvokeAsync<List<MapBookmark>>("getGuestBookmarks");
+        }
+        StateHasChanged();
+    }
+
+    private async void OnBookmarkSelected(ChangeEventArgs e)
+    {
+        if (Guid.TryParse(e.Value?.ToString(), out var bookmarkId) && bookmarkId != Guid.Empty)
+        {
+            _selectedBookmarkId = bookmarkId;
+            var bookmark = _bookmarks.FirstOrDefault(b => b.Id == bookmarkId);
+            if (bookmark != null)
+            {
+                await JSRuntime.InvokeVoidAsync("flyToBookmark", new { North = bookmark.North, South = bookmark.South, East = bookmark.East, West = bookmark.West });
+            }
+        }
+        else
+        {
+            _selectedBookmarkId = Guid.Empty;
+        }
+    }
+
+    private async Task SaveBookmark()
+    {
+        if (string.IsNullOrWhiteSpace(_newBookmarkName)) return;
+
+        var bounds = await JSRuntime.InvokeAsync<Dictionary<string, double>>("getMapBounds");
+        var newBookmark = new MapBookmark
+        {
+            Id = Guid.NewGuid(),
+            Name = _newBookmarkName,
+            North = bounds["_northEast.lat"],
+            South = bounds["_southWest.lat"],
+            East = bounds["_northEast.lng"],
+            West = bounds["_southWest.lng"],
+        };
+
+        if (SessionContext.CurrentUser != null)
+        {
+            newBookmark.UserId = SessionContext.CurrentUser.UserId;
+            await BookmarkService.AddBookmarkAsync(newBookmark);
+        }
+        else
+        {
+            var guestBookmarks = await JSRuntime.InvokeAsync<List<MapBookmark>>("getGuestBookmarks");
+            guestBookmarks.Add(newBookmark);
+            await JSRuntime.InvokeVoidAsync("saveGuestBookmarks", guestBookmarks);
+        }
+
+        _newBookmarkName = string.Empty;
+        await LoadBookmarks();
+        StateHasChanged();
+    }
+
+    private async Task DeleteBookmark()
+    {
+        if (_selectedBookmarkId == Guid.Empty) return;
+
+        if (SessionContext.CurrentUser != null)
+        {
+            await BookmarkService.DeleteBookmarkAsync(_selectedBookmarkId, SessionContext.CurrentUser.UserId);
+        }
+        else
+        {
+            var guestBookmarks = await JSRuntime.InvokeAsync<List<MapBookmark>>("getGuestBookmarks");
+            var bookmarkToRemove = guestBookmarks.FirstOrDefault(b => b.Id == _selectedBookmarkId);
+            if (bookmarkToRemove != null)
+            {
+                guestBookmarks.Remove(bookmarkToRemove);
+                await JSRuntime.InvokeVoidAsync("saveGuestBookmarks", guestBookmarks);
+            }
+        }
+
+        _selectedBookmarkId = Guid.Empty;
+        await LoadBookmarks();
+        StateHasChanged();
+    }
+
+    private async Task ChangeMapLayer(ChangeEventArgs e)
+    {
+        var layerName = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(layerName)){
+            await JSRuntime.InvokeVoidAsync("setTileLayer", layerName);
+        }
+    }
+
+    public void Dispose()
+    {
+        SessionContext.UserChanged -= OnUserChanged;
+        VesselTrackingService.PositionReceived -= OnPositionReceived;
     }
 }

@@ -106,9 +106,73 @@
                                 <lvc:Axis Title="Count" LabelFormatter="{Binding Formatter}"/>
                             </lvc:CartesianChart.AxisY>
                         </lvc:CartesianChart>
-                    </StackPanel>
+                </Border>
+
+                <!-- Vessels by Country Chart -->
+                <Border Grid.Column="2" Style="{StaticResource DashboardCardStyle}">
+                     <StackPanel>
+                        <TextBlock Text="Vessels by Country" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                        <lvc:CartesianChart Series="{Binding VesselCountrySeries}" LegendLocation="Bottom" Height="250">
+                            <lvc:CartesianChart.AxisX>
+                                <lvc:Axis Title="Country" Labels="{Binding VesselCountryLabels}"/>
+                            </lvc:CartesianChart.AxisX>
+                            <lvc:CartesianChart.AxisY>
+                                <lvc:Axis Title="Count" LabelFormatter="{Binding Formatter}"/>
+                            </lvc:CartesianChart.AxisY>
+                        </lvc:CartesianChart>
                 </Border>
             </Grid>
+
+            <!-- Service Requests per Vessel Chart -->
+            <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource DashboardCardStyle}" Margin="10,0,10,10">
+                <StackPanel>
+                    <TextBlock Text="Service Requests per Vessel" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                    <lvc:CartesianChart Series="{Binding ServiceRequestVesselSeries}" LegendLocation="Bottom" Height="250">
+                        <lvc:CartesianChart.AxisX>
+                            <lvc:Axis Title="Vessel" Labels="{Binding ServiceRequestVesselLabels}"/>
+                        </lvc:CartesianChart.AxisX>
+                        <lvc:CartesianChart.AxisY>
+                            <lvc:Axis Title="Count" LabelFormatter="{Binding Formatter}"/>
+                        </lvc:CartesianChart.AxisY>
+                    </lvc:CartesianChart>
+                </StackPanel>
+            </Border>
+
+            <!-- Service Requests per Month Chart -->
+            <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource DashboardCardStyle}" Margin="10,0,10,10">
+                <StackPanel>
+                    <TextBlock Text="Service Requests per Month" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                    <lvc:CartesianChart Series="{Binding ServiceRequestMonthSeries}" LegendLocation="Bottom" Height="250">
+                        <lvc:CartesianChart.AxisX>
+                            <lvc:Axis Title="Month" Labels="{Binding ServiceRequestMonthLabels}"/>
+                        </lvc:CartesianChart.AxisX>
+                        <lvc:CartesianChart.AxisY>
+                            <lvc:Axis Title="Count" LabelFormatter="{Binding Formatter}"/>
+                        </lvc:CartesianChart.AxisY>
+                    </lvc:CartesianChart>
+                </StackPanel>
+            </Border>
+
+            <!-- Latest News Section -->
+            <Border Grid.Row="2" Style="{StaticResource DashboardCardStyle}" Margin="10,0,10,10">
+                <StackPanel>
+                    <TextBlock Text="Latest Maritime News" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                    <ItemsControl ItemsSource="{Binding LatestNews}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,5,0,5">
+                                    <TextBlock Text="{Binding Title}" FontWeight="Bold"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Source}" Foreground="Gray"/>
+                                        <TextBlock Text=" - " Foreground="Gray"/>
+                                        <TextBlock Text="{Binding PublishDate, StringFormat='g'}" Foreground="Gray"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
         </StackPanel>
     </Grid>
 </UserControl>

@@ -150,25 +150,23 @@ namespace HarborFlow.Application.Services
             }
         }
 
-        public async Task<IEnumerable<ServiceRequest>> GetAllServiceRequestsAsync(User currentUser)
+        public async Task<IEnumerable<ServiceRequest>> GetAllServiceRequestsAsync(User? currentUser = null)
         {
-            if (currentUser == null) 
-                return Enumerable.Empty<ServiceRequest>();
-
             try
             {
                 IQueryable<ServiceRequest> query = _context.ServiceRequests;
 
-                if (currentUser.Role == UserRole.MaritimeAgent || currentUser.Role == UserRole.VesselOperator)
+                if (currentUser != null && (currentUser.Role == UserRole.MaritimeAgent || currentUser.Role == UserRole.VesselOperator))
                 {
                     query = query.Where(r => r.RequestedBy == currentUser.UserId);
                 }
+                // If currentUser is null (guest) or an Admin/PortOfficer, they see all requests.
 
                 return await query.OrderByDescending(r => r.RequestDate).ToListAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while getting all service requests for user {UserId}.", currentUser.UserId);
+                _logger.LogError(ex, "An error occurred while getting all service requests.");
                 throw;
             }
         }

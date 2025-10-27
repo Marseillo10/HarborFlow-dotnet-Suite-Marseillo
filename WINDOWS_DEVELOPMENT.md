@@ -58,7 +58,27 @@ Your day-to-day development will focus on the backend projects:
 
 ## Windows-Only Tasks (WPF UI)
 
-Any work that requires visual validation of the WPF UI must be done on a Windows machine.
+## Development on Windows
+
+While the core projects (`Core`, `Application`, `Infrastructure`, `Backend.Tests`) and the `HarborFlow.Web` project are cross-platform, the `HarborFlow.Wpf` and `HarborFlow.Tests` projects are specific to Windows due to their dependency on the Windows Presentation Foundation (WPF) framework.
+
+> **Note:** The current focus of active development and feature implementation is on the **Blazor web application (`HarborFlow.Web`)**, which is the recommended way to run the application across all platforms.
+
+### Running the WPF Application
+
+To run the WPF application, you must be on a Windows machine with the .NET Desktop Development workload installed via Visual Studio. You can run it from Visual Studio or via the command line:
+
+```bash
+dotnet run --project HarborFlow.Wpf
+```
+
+### Running WPF-Specific Tests
+
+The `HarborFlow.Tests` project contains tests for ViewModels and other UI-adjacent components that depend on WPF libraries. To run these tests, use the Visual Studio Test Explorer or the following command on Windows:
+
+```bash
+dotnet test HarborFlow.Tests/
+```
 
 ### 1. Running and Debugging the WPF UI
 

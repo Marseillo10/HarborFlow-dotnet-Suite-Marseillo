@@ -35,7 +35,7 @@ namespace HarborFlow.Infrastructure.Services
                 await _webSocket.ConnectAsync(uri, _cancellationTokenSource.Token);
                 var subscriptionMessage = new
                 {
-                    APIkey = apiKey,
+                    ApiKey = apiKey,
                     BoundingBoxes = new[] { new[] { new[] { -90, -180 }, new[] { 90, 180 } } }
                 };
                 var messageBuffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(subscriptionMessage)));

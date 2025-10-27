@@ -1,0 +1,30 @@
+@using HarborFlow.Application.Services
+@using HarborFlow.Core.Models
+@inject SessionContext SessionContext
+@inject NavigationManager NavigationManager
+
+<div class="d-flex align-items-center">
+    @if (SessionContext.CurrentUser == null)
+    {
+        <a href="login" class="nav-link">Login</a>
+        <a href="register" class="nav-link">Register</a>
+    }
+    else
+    {
+        <span class="nav-link">Welcome, @SessionContext.CurrentUser.FullName</span>
+        <button class="nav-link btn btn-link" @onclick="Logout">Logout</button>
+    }
+</div>
+
+@code {
+    private void Logout()
+    {
+        SessionContext.Logout();
+        NavigationManager.NavigateTo("/");
+    }
+
+    protected override void OnInitialized()
+    {
+        SessionContext.UserChanged += () => StateHasChanged();
+    }
+}

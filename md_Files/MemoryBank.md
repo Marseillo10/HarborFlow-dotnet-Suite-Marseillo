@@ -2,6 +2,19 @@
 
 This document serves as a log of key architectural decisions, refactoring efforts, and feature implementations made during the development of HarborFlow.
 
+## Web Application Development (October 2025)
+
+- **Decision:** A fully functional Blazor Server web application was built out to serve as the primary, cross-platform front-end.
+- **Reasoning:** To provide modern, web-based access to all core features, complementing the existing WPF application.
+- **Key Implementations & Decisions:**
+    - **Full Feature Parity:** All major features from the WPF application were implemented, including the Dashboard, Vessel Management, Service Requests, and an enhanced News Feed.
+    - **Real-Time Map:** The map was made fully interactive and live. It now subscribes to the backend `AisStreamService` and uses JS Interop to create and move vessel markers in real-time as new data arrives.
+    - **Advanced News Feed:** The news feature was completely overhauled with multi-category tabs, interactive date filters, auto-scrolling, a 3-column card layout, and a much more robust backend keyword filter to ensure content relevance.
+    - **Guest Access Model:** The application was refactored to allow full public access to all pages. Functionality requiring a user account (saving, editing, approving) is now dynamically disabled on the UI for guest users, preventing runtime errors.
+    - **Guest Bookmarking:** To provide a better UX for guests, a separate bookmarking system was implemented using the browser's `localStorage`, completely distinct from the database-backed system used by logged-in users.
+    - **Debugging & Stability:** A significant portion of the session was dedicated to a deep debugging process, resolving dozens of build and runtime errors related to dependency injection, configuration, incorrect method/property names, and Blazor component lifecycle issues.
+
+
 ## Major Refinements & Decisions
 
 ### 1. Database Environment: Dockerization

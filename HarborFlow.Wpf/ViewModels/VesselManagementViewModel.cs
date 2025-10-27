@@ -23,6 +23,19 @@ namespace HarborFlow.Wpf.ViewModels
         private readonly MainWindowViewModel _mainWindowViewModel;
 
         public ObservableCollection<Vessel> Vessels { get; } = new ObservableCollection<Vessel>();
+        public ObservableCollection<Vessel> FilteredVessels { get; } = new ObservableCollection<Vessel>();
+
+        private string _searchText = string.Empty;
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                _searchText = value;
+                OnPropertyChanged();
+                FilterVessels();
+            }
+        }
 
         private Vessel? _selectedVessel;
         public Vessel? SelectedVessel
@@ -71,6 +84,7 @@ namespace HarborFlow.Wpf.ViewModels
                 {
                     Vessels.Add(vessel);
                 }
+                FilterVessels();
             }
             catch (Exception ex)
             {
@@ -80,6 +94,25 @@ namespace HarborFlow.Wpf.ViewModels
             finally
             {
                 _mainWindowViewModel.IsLoading = false;
+            }
+        }
+
+        private void FilterVessels()
+        {
+            FilteredVessels.Clear();
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                foreach (var vessel in Vessels)
+                {
+                    FilteredVessels.Add(vessel);
+                }
+            }
+            else
+            {
+                foreach (var vessel in Vessels.Where(v => v.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)))
+                {
+                    FilteredVessels.Add(vessel);
+                }
             }
         }
 

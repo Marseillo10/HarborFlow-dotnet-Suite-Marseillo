@@ -24,10 +24,11 @@
             <Button Content="Delete" Command="{Binding DeleteServiceRequestCommand}" Margin="10,0,0,0}" Visibility="{Binding CanDeleteServiceRequest, Converter={StaticResource BoolToVis}}"/>
             <Button Content="Approve" Command="{Binding ApproveServiceRequestCommand}" Margin="10,0,0,0}" Visibility="{Binding CanUserApproveOrReject, Converter={StaticResource BoolToVis}}"/>
             <Button Content="Reject" Command="{Binding RejectServiceRequestCommand}" Margin="10,0,0,0}" Visibility="{Binding CanUserApproveOrReject, Converter={StaticResource BoolToVis}}"/>
+            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Width="150" Margin="20,0,0,0" />
         </StackPanel>
 
         <DataGrid Grid.Row="1" 
-                  ItemsSource="{Binding ServiceRequests}" 
+                  ItemsSource="{Binding FilteredServiceRequests}" 
                   SelectedItem="{Binding SelectedServiceRequest}"
                   AutoGenerateColumns="False"
                   IsReadOnly="True">

@@ -16,5 +16,7 @@ namespace HarborFlow.Core.Interfaces
         Task<Vessel> UpdateVesselAsync(Vessel vessel);
         Task DeleteVesselAsync(string imo);
         Task<IEnumerable<VesselPosition>> GetVesselHistoryAsync(string imo);
+
+        event Action<VesselPosition> PositionReceived;
     }
 }

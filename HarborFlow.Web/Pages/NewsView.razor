@@ -1,35 +1,194 @@
 @page "/news"
-@using HarborFlow.Core.Interfaces
-@using HarborFlow.Core.Models
+
 @inject IRssService RssService
+@inject IJSRuntime JSRuntime
+@using System.Text.RegularExpressions
 
 <h3>Maritime News</h3>
 
-@if (articles == null)
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link @(IsCategoryActive("All"))" href="#" @onclick='() => SelectCategory("All")' @onclick:preventDefault>All Feeds (This Week)</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(IsCategoryActive("International"))" href="#" @onclick='() => SelectCategory("International")' @onclick:preventDefault>International</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(IsCategoryActive("National"))" href="#" @onclick='() => SelectCategory("National")' @onclick:preventDefault>National (Indonesia)</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(IsCategoryActive("Official"))" href="#" @onclick='() => SelectCategory("Official")' @onclick:preventDefault>Official</a>
+    </li>
+</ul>
+
+<div class="row mb-3">
+    <div class="col-md-8">
+        <input type="text" class="form-control" placeholder="Filter by keyword..." @bind="FilterKeyword" @bind:event="oninput" />
+    </div>
+    <div class="col-md-4">
+        <div class="btn-group w-100">
+            <button type="button" class="btn @(IsDateFilterActive("24h"))" @onclick='() => ScrollToGroup("24h")'>24 Hours</button>
+            <button type="button" class="btn @(IsDateFilterActive("7d"))" @onclick='() => ScrollToGroup("7d")'>7 Days</button>
+            @if (_selectedCategory != "All")
+            {
+                <button type="button" class="btn @(IsDateFilterActive("30d"))" @onclick='() => ScrollToGroup("30d")'>30 Days</button>
+                <button type="button" class="btn @(IsDateFilterActive("All"))" @onclick='() => ScrollToGroup("All")'>All Time</button>
+            }
+        </div>
+    </div>
+</div>
+
+@if (_isLoading)
 {
-    <p><em>Loading...</em></p>
+    <p><em>Loading news for @(_selectedCategory)...</em></p>
+}
+else if (_groupedArticles.Any())
+{
+    @foreach (var group in _groupedArticles)
+    {
+        <h4 id="@GetGroupId(group.Key)" class="mt-4">@group.Key</h4>
+        <hr />
+        <div class="row">
+            @foreach (var article in group.Value)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <a href="@article.Link" target="_blank" style="text-decoration: none; color: inherit;">
+                            @{ var imageUrl = ExtractImageUrl(article.Description); }
+                            @if (!string.IsNullOrEmpty(imageUrl))
+                            {
+                                <img src="@imageUrl" class="card-img-top" alt="@article.Title" style="object-fit: cover; height: 200px;">
+                            }
+                            <div class="card-body">
+                                <h5 class="card-title">@article.Title</h5>
+                                <p class="card-text"><small class="text-muted">@article.PublishDate.ToString("dd MMMM yyyy") | @article.Source</small></p>
+                                <p class="card-text">@StripHtml(article.Description)</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    }
 }
 else
 {
-    <div class="list-group">
-        @foreach (var article in articles)
-        {
-            <a href="@article.Link" target="_blank" class="list-group-item list-group-item-action">
-                <div class="d-flex w-100 justify-content-between">
-                    <h5 class="mb-1">@article.Title</h5>
-                    <small>@article.PublishDate.ToString("yyyy-MM-dd")</small>
-                </div>
-                <p class="mb-1">@article.Description</p>
-            </a>
-        }
-    </div>
+    <p><em>No articles found matching the current filters.</em></p>
 }
 
 @code {
-    private IEnumerable<NewsArticle>? articles;
+    private List<NewsArticle> _allArticles = new List<NewsArticle>();
+    private Dictionary<string, List<NewsArticle>> _groupedArticles = new Dictionary<string, List<NewsArticle>>();
+    
+    private string _filterKeyword = string.Empty;
+    private string _selectedCategory = "All";
+    private string _activeDateButton = "7d"; // To highlight the button
+    private bool _isLoading = true;
+
+    private string FilterKeyword
+    {
+        get => _filterKeyword;
+        set
+        {
+            _filterKeyword = value;
+            ApplyKeywordFilterAndGroup();
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        articles = await RssService.FetchNewsAsync("https://www.maritime-executive.com/rss"); // Example RSS feed
+        await LoadNewsForCategory(_selectedCategory);
     }
+
+    private async Task SelectCategory(string category)
+    {
+        if (_selectedCategory == category) return;
+        _selectedCategory = category;
+        _filterKeyword = string.Empty;
+        _activeDateButton = category == "All" ? "7d" : "24h";
+        await LoadNewsForCategory(category);
+    }
+
+    private async Task ScrollToGroup(string dateFilter)
+    {
+        _activeDateButton = dateFilter;
+        string groupKey = dateFilter switch
+        {
+            "24h" => "Today",
+            "7d" => "This Week",
+            "30d" => "This Month",
+            _ => "Older"
+        };
+
+        if (_groupedArticles.ContainsKey(groupKey))
+        {
+            await JSRuntime.InvokeVoidAsync("scrollToElement", GetGroupId(groupKey));
+        }
+    }
+
+    private async Task LoadNewsForCategory(string category)
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        _allArticles = (await RssService.GetNewsByCategoryAsync(category))?.ToList() ?? new List<NewsArticle>();
+        ApplyKeywordFilterAndGroup();
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    private void ApplyKeywordFilterAndGroup()
+    {
+        IEnumerable<NewsArticle> keywordFilteredArticles;
+        if (!string.IsNullOrWhiteSpace(_filterKeyword))
+        {
+            keywordFilteredArticles = _allArticles
+                .Where(a => (a.Title != null && a.Title.Contains(_filterKeyword, StringComparison.OrdinalIgnoreCase)) || 
+                            (a.Description != null && a.Description.Contains(_filterKeyword, StringComparison.OrdinalIgnoreCase)));
+        }
+        else
+        {
+            keywordFilteredArticles = _allArticles;
+        }
+        
+        GroupArticles(keywordFilteredArticles.ToList());
+        StateHasChanged();
+    }
+
+    private void GroupArticles(List<NewsArticle> articles)
+    {
+        _groupedArticles.Clear();
+        var now = DateTime.UtcNow;
+
+        var today = articles.Where(a => a.PublishDate.Date == now.Date).ToList();
+        var thisWeek = articles.Where(a => a.PublishDate.Date < now.Date && a.PublishDate >= now.AddDays(-7)).ToList();
+        var thisMonth = articles.Where(a => a.PublishDate < now.AddDays(-7) && a.PublishDate >= now.AddMonths(-1)).ToList();
+        var older = articles.Where(a => a.PublishDate < now.AddMonths(-1)).ToList();
+
+        if (today.Any()) _groupedArticles["Today"] = today;
+        if (thisWeek.Any()) _groupedArticles["This Week"] = thisWeek;
+        if (thisMonth.Any()) _groupedArticles["This Month"] = thisMonth;
+        if (older.Any()) _groupedArticles["Older"] = older;
+    }
+
+    private string GetGroupId(string groupKey) => "group-" + groupKey.ToLower().Replace(" ", "-");
+
+    private string? ExtractImageUrl(string? description)
+    {
+        if (string.IsNullOrEmpty(description)) return null;
+        var match = Regex.Match(description, @"<img.*?src=[""'](.*?)[""']");
+        return match.Success ? match.Groups[1].Value : null;
+    }
+
+    private string StripHtml(string? description)
+    {
+        if (string.IsNullOrEmpty(description)) return string.Empty;
+        var textOnly = Regex.Replace(description, "<[^>]*>", string.Empty).Trim();
+        textOnly = System.Net.WebUtility.HtmlDecode(textOnly);
+        return textOnly.Length > 150 ? textOnly.Substring(0, 150) + "..." : textOnly;
+    }
+
+    private string IsCategoryActive(string category) => _selectedCategory == category ? "active" : string.Empty;
+    private string IsDateFilterActive(string dateFilter) => _activeDateButton == dateFilter ? "btn-primary" : "btn-outline-primary";
 }

@@ -1,7 +1,8 @@
-﻿@using HarborFlow.Application.Services
+@using HarborFlow.Application.Services
 @using HarborFlow.Core.Models
 @inject SessionContext SessionContext
 @inject NavigationManager NavigationManager
+@implements IDisposable
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -14,68 +15,36 @@
 
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="flex-column">
-        @if (SessionContext.CurrentUser == null)
-        {
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                    <span class="oi oi-map" aria-hidden="true"></span> Map View
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="news">
-                    <span class="oi oi-list-rich" aria-hidden="true"></span> Maritime News
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="login">
-                    <span class="oi oi-account-login" aria-hidden="true"></span> Login
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="register">
-                    <span class="oi oi-person" aria-hidden="true"></span> Register
-                </NavLink>
-            </div>
-        }
-        else
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-map" aria-hidden="true"></span> Map View
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="news">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Maritime News
+            </NavLink>
+        </div>
+
+        @if (SessionContext.CurrentUser != null)
         {
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="dashboard">
                     <span class="oi oi-dashboard" aria-hidden="true"></span> Dashboard
                 </NavLink>
             </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="">
-                    <span class="oi oi-map" aria-hidden="true"></span> Map View
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="news">
-                    <span class="oi oi-list-rich" aria-hidden="true"></span> Maritime News
-                </NavLink>
-            </div>
-            @if (SessionContext.CurrentUser.Role == UserRole.Administrator)
-            {
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="vessel-management">
-                        <span class="oi oi-boat" aria-hidden="true"></span> Vessel Management
-                    </NavLink>
-                </div>
-            }
-            @if (SessionContext.CurrentUser.Role == UserRole.Administrator || SessionContext.CurrentUser.Role == UserRole.PortOfficer)
-            {
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="service-requests">
-                        <span class="oi oi-briefcase" aria-hidden="true"></span> Service Requests
-                    </NavLink>
-                </div>
-            }
-            <div class="nav-item px-3">
-                <button class="nav-link btn btn-link" @onclick="Logout">
-                    <span class="oi oi-account-logout" aria-hidden="true"></span> Logout
-                </button>
-            </div>
         }
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="vessel-management">
+                <span class="oi oi-boat" aria-hidden="true"></span> Vessel Management
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="service-requests">
+                <span class="oi oi-briefcase" aria-hidden="true"></span> Service Requests
+            </NavLink>
+        </div>
     </nav>
 </div>
 
@@ -89,14 +58,18 @@
         collapseNavMenu = !collapseNavMenu;
     }
 
-    private void Logout()
-    {
-        SessionContext.Logout();
-        NavigationManager.NavigateTo("/");
-    }
-
     protected override void OnInitialized()
     {
-        SessionContext.UserChanged += () => StateHasChanged();
+        SessionContext.UserChanged += OnUserChanged;
+    }
+
+    private void OnUserChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        SessionContext.UserChanged -= OnUserChanged;
     }
 }

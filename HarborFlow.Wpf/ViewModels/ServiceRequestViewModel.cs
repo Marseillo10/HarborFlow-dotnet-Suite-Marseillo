@@ -24,6 +24,19 @@ namespace HarborFlow.Wpf.ViewModels
         private readonly MainWindowViewModel _mainWindowViewModel;
 
         public ObservableCollection<ServiceRequest> ServiceRequests { get; } = new ObservableCollection<ServiceRequest>();
+        public ObservableCollection<ServiceRequest> FilteredServiceRequests { get; } = new ObservableCollection<ServiceRequest>();
+
+        private string _searchText = string.Empty;
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                _searchText = value;
+                OnPropertyChanged();
+                FilterServiceRequests();
+            }
+        }
 
         private ServiceRequest? _selectedServiceRequest;
         public ServiceRequest? SelectedServiceRequest
@@ -91,6 +104,7 @@ namespace HarborFlow.Wpf.ViewModels
                 {
                     ServiceRequests.Add(request);
                 }
+                FilterServiceRequests();
             }
             catch (Exception ex)
             {
@@ -99,6 +113,25 @@ namespace HarborFlow.Wpf.ViewModels
             finally
             {
                 _mainWindowViewModel.IsLoading = false;
+            }
+        }
+
+        private void FilterServiceRequests()
+        {
+            FilteredServiceRequests.Clear();
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                foreach (var request in ServiceRequests)
+                {
+                    FilteredServiceRequests.Add(request);
+                }
+            }
+            else
+            {
+                foreach (var request in ServiceRequests.Where(r => r.ServiceType.ToString().Contains(SearchText, StringComparison.OrdinalIgnoreCase)))
+                {
+                    FilteredServiceRequests.Add(request);
+                }
             }
         }
 

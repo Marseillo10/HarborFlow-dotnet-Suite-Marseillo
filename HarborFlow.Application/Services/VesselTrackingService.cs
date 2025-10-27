@@ -31,9 +31,14 @@ namespace HarborFlow.Application.Services
             _aisStreamService.PositionReceived += AisStreamService_PositionReceived;
         }
 
+        public event Action<VesselPosition> PositionReceived = delegate { };
+
         private void AisStreamService_PositionReceived(VesselPosition position)
         {
             if (position == null) return;
+
+            // Invoke the event for real-time updates
+            PositionReceived?.Invoke(position);
 
             _syncContext?.Post(_ =>
             {
@@ -123,7 +128,7 @@ namespace HarborFlow.Application.Services
         {
             try
             {
-                return await _context.Vessels.ToListAsync();
+                return await _context.Vessels.Include(v => v.Positions).ToListAsync();
             }
             catch (Exception ex)
             {

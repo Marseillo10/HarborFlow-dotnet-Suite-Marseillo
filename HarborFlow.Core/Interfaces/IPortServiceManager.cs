@@ -10,7 +10,7 @@ namespace HarborFlow.Core.Interfaces
         Task<ServiceRequest> RejectServiceRequestAsync(Guid requestId, Guid rejectorId, string reason);
         Task<IEnumerable<ServiceRequest>> GetServiceRequestsByStatusAsync(RequestStatus status);
         Task<ServiceRequest?> GetServiceRequestByIdAsync(Guid requestId);
-        Task<IEnumerable<ServiceRequest>> GetAllServiceRequestsAsync(User currentUser);
+        Task<IEnumerable<ServiceRequest>> GetAllServiceRequestsAsync(User? currentUser = null);
         Task<ServiceRequest> UpdateServiceRequestAsync(ServiceRequest request);
         Task DeleteServiceRequestAsync(Guid requestId);
     }

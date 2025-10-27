@@ -1,6 +1,105 @@
 @page "/vessel-management"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+
+@inject IVesselTrackingService VesselTrackingService
 
 <h3>Vessel Management</h3>
 
-<p>Here you can manage vessels.</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>IMO</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var vessel in _vessels)
+        {
+            <tr>
+                <td>@vessel.IMO</td>
+                <td>@vessel.Name</td>
+                <td>@vessel.VesselType</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" @onclick="() => EditVessel(vessel)">Edit</button>
+                    <button class="btn btn-sm btn-danger" @onclick="() => DeleteVessel(vessel.IMO)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<hr />
+
+<h5>@(_isEditing ? "Edit Vessel" : "Add Vessel")</h5>
+<div class="card">
+    <div class="card-body">
+        <div class="mb-3">
+            <label for="imo" class="form-label">IMO</label>
+            <input id="imo" class="form-control" @bind="_editableVessel.IMO" disabled="@_isEditing" />
+        </div>
+        <div class="mb-3">
+            <label for="name" class="form-label">Name</label>
+            <input id="name" class="form-control" @bind="_editableVessel.Name" />
+        </div>
+        <div class="mb-3">
+            <label for="type" class="form-label">Type</label>
+            <input id="type" class="form-control" @bind="_editableVessel.VesselType" />
+        </div>
+        <button class="btn btn-success" @onclick="SaveChanges">@(_isEditing ? "Update" : "Add")</button>
+        @if (_isEditing)
+        {
+            <button class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Vessel> _vessels = new List<Vessel>();
+    private Vessel _editableVessel = new Vessel { Metadata = "{}" };
+    private bool _isEditing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadVessels();
+    }
+
+    private async Task LoadVessels()
+    {
+        _vessels = (await VesselTrackingService.GetAllVesselsAsync()).ToList();
+        StateHasChanged();
+    }
+
+    private void EditVessel(Vessel vessel)
+    {
+        _editableVessel = new Vessel { IMO = vessel.IMO, Name = vessel.Name, VesselType = vessel.VesselType };
+        _isEditing = true;
+    }
+
+    private void CancelEdit()
+    {
+        _editableVessel = new Vessel();
+        _isEditing = false;
+    }
+
+    private async Task SaveChanges()
+    {
+        if (_isEditing)
+        {
+            await VesselTrackingService.UpdateVesselAsync(_editableVessel);
+        }
+        else
+        {
+            await VesselTrackingService.AddVesselAsync(_editableVessel);
+        }
+        CancelEdit();
+        await LoadVessels();
+    }
+
+    private async Task DeleteVessel(string imo)
+    {
+        // In a real app, you'd want a confirmation dialog here.
+        await VesselTrackingService.DeleteVesselAsync(imo);
+        await LoadVessels();
+    }
+}

@@ -1,5 +1,137 @@
 @page "/dashboard"
 
+@inject IPortServiceManager PortServiceManager
+@inject IVesselTrackingService VesselTrackingService
+@inject SessionContext SessionContext
+
 <h3>Dashboard</h3>
 
-<p>Welcome to your dashboard.</p>
+<div class="row">
+    <div class="col-md-6">
+        <h5>Service Requests by Status</h5>
+        @if (_pieConfig != null)
+        {
+            <Chart Config="_pieConfig"></Chart>
+        }
+        else
+        {
+            <p><em>Login to see service request data.</em></p>
+        }
+    </div>
+    <div class="col-md-6">
+        <h5>Vessels by Type</h5>
+        @if (_barConfig != null)
+        {
+            <Chart Config="_barConfig"></Chart>
+        }
+        else
+        {
+            <p><em>Loading vessel data...</em></p>
+        }
+    </div>
+</div>
+
+@code {
+    private PieConfig? _pieConfig;
+    private BarConfig? _barConfig;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        var vessels = await VesselTrackingService.GetAllVesselsAsync();
+        if (vessels != null)
+        {
+            SetupBarChart(vessels);
+        }
+
+        if (SessionContext.CurrentUser != null)
+        {
+            var serviceRequests = await PortServiceManager.GetAllServiceRequestsAsync(SessionContext.CurrentUser);
+            if (serviceRequests != null)
+            {
+                SetupPieChart(serviceRequests);
+            }
+        }
+    }
+
+    private void SetupPieChart(IEnumerable<ServiceRequest> serviceRequests)
+    {
+        _pieConfig = new PieConfig
+        {
+            Options = new PieOptions
+            {
+                Responsive = true,
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = "Service Request Status"
+                }
+            }
+        };
+
+        var statusCounts = serviceRequests
+            .GroupBy(r => r.Status)
+            .ToDictionary(g => g.Key.ToString(), g => g.Count());
+
+        foreach (var label in statusCounts.Keys)
+        {
+            _pieConfig.Data.Labels.Add(label);
+        }
+
+        var pieDataset = new PieDataset<int>(statusCounts.Values)
+        {
+            BackgroundColor = new[]
+            {
+                "rgba(255, 99, 132, 0.5)",
+                "rgba(54, 162, 235, 0.5)",
+                "rgba(75, 192, 192, 0.5)",
+                "rgba(255, 206, 86, 0.5)",
+                "rgba(153, 102, 255, 0.5)",
+                "rgba(255, 159, 64, 0.5)"
+            }
+        };
+
+        _pieConfig.Data.Datasets.Add(pieDataset);
+    }
+
+    private void SetupBarChart(IEnumerable<Vessel> vessels)
+    {
+        _barConfig = new BarConfig
+        {
+            Options = new BarOptions
+            {
+                Responsive = true,
+                Scales = new BarScales
+                {
+                    YAxes = new List<CartesianAxis>
+                    {
+                        new LinearCartesianAxis { Ticks = new LinearCartesianTicks { BeginAtZero = true } }
+                    }
+                },
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = "Vessel Count by Type"
+                }
+            }
+        };
+
+        var vesselTypeCounts = vessels
+            .GroupBy(v => v.VesselType.ToString() ?? "Unknown")
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        foreach (var label in vesselTypeCounts.Keys)
+        {
+            _barConfig.Data.Labels.Add(label);
+        }
+
+        var barDataset = new BarDataset<int>(vesselTypeCounts.Values)
+        {
+            Label = "Number of Vessels",
+            BackgroundColor = "rgba(54, 162, 235, 0.5)"
+        };
+
+        _barConfig.Data.Datasets.Add(barDataset);
+    }
+}

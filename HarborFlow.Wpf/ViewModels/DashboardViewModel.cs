@@ -30,12 +30,16 @@ namespace HarborFlow.Wpf.ViewModels
         private readonly IWindowManager _windowManager;
         private readonly DispatcherTimer _onlineStatusTimer;
 
+        private readonly NewsViewModel _newsViewModel;
+
         private int _vesselCount;
         public int VesselCount
         {
             get => _vesselCount;
             set { _vesselCount = value; OnPropertyChanged(); }
         }
+
+        public ObservableCollection<NewsArticle> LatestNews { get; } = new();
 
         private int _activeServiceRequestCount;
         public int ActiveServiceRequestCount
@@ -61,11 +65,17 @@ namespace HarborFlow.Wpf.ViewModels
         public SeriesCollection ServiceRequestStatusSeries { get; private set; }
         public SeriesCollection VesselTypeSeries { get; private set; }
         public string[] VesselTypeLabels { get; private set; }
+        public SeriesCollection VesselCountrySeries { get; private set; }
+        public string[] VesselCountryLabels { get; private set; }
+        public SeriesCollection ServiceRequestVesselSeries { get; private set; }
+        public string[] ServiceRequestVesselLabels { get; private set; }
+        public SeriesCollection ServiceRequestMonthSeries { get; private set; }
+        public string[] ServiceRequestMonthLabels { get; private set; }
 
         public ICommand RefreshCommand { get; }
         public ICommand ShowUserProfileCommand { get; }
 
-        public DashboardViewModel(IPortServiceManager portServiceManager, IVesselTrackingService vesselTrackingService, SessionContext sessionContext, INotificationService notificationService, ILogger<DashboardViewModel> logger, MainWindowViewModel mainWindowViewModel, IWindowManager windowManager)
+        public DashboardViewModel(IPortServiceManager portServiceManager, IVesselTrackingService vesselTrackingService, SessionContext sessionContext, INotificationService notificationService, ILogger<DashboardViewModel> logger, MainWindowViewModel mainWindowViewModel, IWindowManager windowManager, NewsViewModel newsViewModel)
         {
             _portServiceManager = portServiceManager;
             _vesselTrackingService = vesselTrackingService;
@@ -74,10 +84,17 @@ namespace HarborFlow.Wpf.ViewModels
             _logger = logger;
             _mainWindowViewModel = mainWindowViewModel;
             _windowManager = windowManager;
+            _newsViewModel = newsViewModel;
 
             ServiceRequestStatusSeries = new SeriesCollection();
             VesselTypeSeries = new SeriesCollection();
             VesselTypeLabels = Array.Empty<string>();
+            VesselCountrySeries = new SeriesCollection();
+            VesselCountryLabels = Array.Empty<string>();
+            ServiceRequestVesselSeries = new SeriesCollection();
+            ServiceRequestVesselLabels = Array.Empty<string>();
+            ServiceRequestMonthSeries = new SeriesCollection();
+            ServiceRequestMonthLabels = Array.Empty<string>();
 
             RefreshCommand = new AsyncRelayCommand(_ => LoadDataAsync());
             ShowUserProfileCommand = new RelayCommand(_ => ShowUserProfile());
@@ -117,12 +134,22 @@ namespace HarborFlow.Wpf.ViewModels
                 var vessels = await _vesselTrackingService.GetAllVesselsAsync();
                 VesselCount = vessels.Count();
                 UpdateVesselTypeChart(vessels);
+                UpdateVesselCountryChart(vessels);
 
                 if (_sessionContext.CurrentUser != null)
                 {
                     var serviceRequests = await _portServiceManager.GetAllServiceRequestsAsync(_sessionContext.CurrentUser);
                     ActiveServiceRequestCount = serviceRequests.Count(sr => sr.Status != RequestStatus.Completed && sr.Status != RequestStatus.Rejected && sr.Status != RequestStatus.Cancelled);
                     UpdateServiceRequestChart(serviceRequests);
+                    UpdateServiceRequestVesselChart(serviceRequests, vessels);
+                    UpdateServiceRequestMonthChart(serviceRequests);
+                }
+
+                await _newsViewModel.LoadNewsCommand.ExecuteAsync(null);
+                LatestNews.Clear();
+                foreach (var article in _newsViewModel.Articles.Take(5))
+                {
+                    LatestNews.Add(article);
                 }
             }
             catch (Exception ex)
@@ -174,6 +201,75 @@ namespace HarborFlow.Wpf.ViewModels
 
             OnPropertyChanged(nameof(VesselTypeLabels));
             OnPropertyChanged(nameof(VesselTypeSeries));
+        }
+
+        private void UpdateVesselCountryChart(IEnumerable<Vessel> vessels)
+        {
+            var countryGroups = vessels
+                .GroupBy(v => v.FlagState)
+                .Select(g => new { Country = g.Key, Count = g.Count() })
+                .OrderBy(g => g.Country)
+                .ToList();
+
+            VesselCountryLabels = countryGroups.Select(g => g.Country).ToArray();
+            VesselCountrySeries.Clear();
+            VesselCountrySeries.Add(new ColumnSeries
+            {
+                Title = "Vessels",
+                Values = new ChartValues<int>(countryGroups.Select(g => g.Count))
+            });
+
+            OnPropertyChanged(nameof(VesselCountryLabels));
+            OnPropertyChanged(nameof(VesselCountrySeries));
+        }
+
+        private void UpdateServiceRequestVesselChart(IEnumerable<ServiceRequest> serviceRequests, IEnumerable<Vessel> vessels)
+        {
+            var vesselGroups = serviceRequests
+                .GroupBy(sr => sr.VesselImo)
+                .Select(g => new
+                {
+                    VesselName = vessels.FirstOrDefault(v => v.IMO == g.Key)?.Name ?? g.Key.ToString(),
+                    Count = g.Count()
+                })
+                .OrderBy(g => g.VesselName)
+                .ToList();
+
+            ServiceRequestVesselLabels = vesselGroups.Select(g => g.VesselName).ToArray();
+            ServiceRequestVesselSeries.Clear();
+            ServiceRequestVesselSeries.Add(new ColumnSeries
+            {
+                Title = "Service Requests",
+                Values = new ChartValues<int>(vesselGroups.Select(g => g.Count))
+            });
+
+            OnPropertyChanged(nameof(ServiceRequestVesselLabels));
+            OnPropertyChanged(nameof(ServiceRequestVesselSeries));
+        }
+
+        private void UpdateServiceRequestMonthChart(IEnumerable<ServiceRequest> serviceRequests)
+        {
+            var monthGroups = serviceRequests
+                .GroupBy(sr => new { sr.RequestDate.Year, sr.RequestDate.Month })
+                .Select(g => new
+                {
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
+                    Count = g.Count()
+                })
+                .OrderBy(g => g.Year).ThenBy(g => g.Month)
+                .ToList();
+
+            ServiceRequestMonthLabels = monthGroups.Select(g => new DateTime(g.Year, g.Month, 1).ToString("MMM yyyy")).ToArray();
+            ServiceRequestMonthSeries.Clear();
+            ServiceRequestMonthSeries.Add(new ColumnSeries
+            {
+                Title = "Service Requests",
+                Values = new ChartValues<int>(monthGroups.Select(g => g.Count))
+            });
+
+            OnPropertyChanged(nameof(ServiceRequestMonthLabels));
+            OnPropertyChanged(nameof(ServiceRequestMonthSeries));
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

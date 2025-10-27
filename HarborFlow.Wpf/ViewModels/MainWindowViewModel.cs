@@ -192,14 +192,7 @@ namespace HarborFlow.Wpf.ViewModels
             NavigateToNewsCommand = new RelayCommand(_ => CurrentViewModel = _newsViewModel);
             ShowUserProfileCommand = new RelayCommand(_ => _windowManager.ShowUserProfileDialog());
 
-            NavigationItems = new ObservableCollection<NavigationItem>
-            {
-                new NavigationItem { DisplayName = "Dashboard", Command = NavigateToDashboardCommand },
-                new NavigationItem { DisplayName = "Map View", Command = NavigateToMapCommand },
-                new NavigationItem { DisplayName = "Maritime News", Command = NavigateToNewsCommand },
-                new NavigationItem { DisplayName = "Vessel Management", Command = NavigateToVesselManagementCommand },
-                new NavigationItem { DisplayName = "Service Request", Command = NavigateToServiceRequestCommand }
-            };
+            NavigationItems = new ObservableCollection<NavigationItem>();
 
             _notificationTimer = new DispatcherTimer
             {
@@ -215,10 +208,8 @@ namespace HarborFlow.Wpf.ViewModels
             _onlineStatusTimer.Start();
 
             // Set initial view and state
-            CurrentViewModel = _dashboardViewModel;
-            _selectedNavigationItem = NavigationItems[0];
+            UpdateNavigation();
             UpdateThemeIcon(App.Theme);
-            SessionContext_UserChanged(); // Initial UI state setup
         }
 
         private void SessionContext_UserChanged()
@@ -226,18 +217,42 @@ namespace HarborFlow.Wpf.ViewModels
             OnPropertyChanged(nameof(IsLoggedIn));
             OnPropertyChanged(nameof(IsGuest));
             OnPropertyChanged(nameof(CurrentUserName));
+            UpdateNavigation();
+        }
 
-            // Update navigation visibility based on the new user state
-            foreach (var item in NavigationItems)
+        private void UpdateNavigation()
+        {
+            NavigationItems.Clear();
+
+            if (IsGuest)
             {
-                if (item.DisplayName == "Vessel Management")
+                NavigationItems.Add(new NavigationItem { DisplayName = "Map View", Command = NavigateToMapCommand });
+                NavigationItems.Add(new NavigationItem { DisplayName = "Maritime News", Command = NavigateToNewsCommand });
+                NavigationItems.Add(new NavigationItem { DisplayName = "Login", Command = LoginCommand });
+                NavigationItems.Add(new NavigationItem { DisplayName = "Register", Command = RegisterCommand });
+                CurrentViewModel = _mapViewModel; // Default view for guests
+            }
+            else
+            {
+                NavigationItems.Add(new NavigationItem { DisplayName = "Dashboard", Command = NavigateToDashboardCommand });
+                NavigationItems.Add(new NavigationItem { DisplayName = "Map View", Command = NavigateToMapCommand });
+                NavigationItems.Add(new NavigationItem { DisplayName = "Maritime News", Command = NavigateToNewsCommand });
+
+                if (_sessionContext.CurrentUser?.Role == UserRole.Administrator)
                 {
-                    item.IsVisible = _sessionContext.CurrentUser?.Role == UserRole.Administrator;
+                    NavigationItems.Add(new NavigationItem { DisplayName = "Vessel Management", Command = NavigateToVesselManagementCommand });
                 }
-                else if (item.DisplayName == "Service Request")
+                if (_sessionContext.CurrentUser?.Role == UserRole.Administrator || _sessionContext.CurrentUser?.Role == UserRole.PortOfficer)
                 {
-                    item.IsVisible = _sessionContext.CurrentUser?.Role == UserRole.PortOfficer || _sessionContext.CurrentUser?.Role == UserRole.Administrator;
+                    NavigationItems.Add(new NavigationItem { DisplayName = "Service Requests", Command = NavigateToServiceRequestCommand });
                 }
+                NavigationItems.Add(new NavigationItem { DisplayName = "Logout", Command = LogoutCommand });
+                CurrentViewModel = _dashboardViewModel; // Default view for logged in users
+            }
+
+            if (NavigationItems.Any())
+            {
+                SelectedNavigationItem = NavigationItems.First();
             }
         }
 

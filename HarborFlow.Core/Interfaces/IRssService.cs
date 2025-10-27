@@ -6,6 +6,6 @@ namespace HarborFlow.Core.Interfaces
 {
     public interface IRssService
     {
-        Task<IEnumerable<NewsArticle>> FetchNewsAsync(string feedUrl);
+        Task<IEnumerable<NewsArticle>> GetNewsByCategoryAsync(string category);
     }
 }
