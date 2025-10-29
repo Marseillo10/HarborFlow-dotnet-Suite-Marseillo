@@ -14,7 +14,7 @@ For detailed technical information, system architecture, and feature breakdowns,
 
 ## Key Features
 
-- **Live Map:** Real-time vessel tracking on an interactive map with multiple layer options (Street, Satellite, Nautical).
+- **Live Map:** Real-time vessel tracking on an interactive map with vessel-specific icons based on type (e.g., Cargo, Tanker). Multiple layer options are available (Street, Satellite, Nautical).
 - **Advanced Maritime News Feed:**
     - Aggregates news from dozens of international, national, and official sources.
     - Intelligent keyword filtering to ensure maritime relevance.
@@ -23,10 +23,10 @@ For detailed technical information, system architecture, and feature breakdowns,
 - **Service & Vessel Workflow:**
     - **Analytics Dashboard:** Visual charts for service request statuses and vessel types. This feature is currently available only for logged-in users.
     - **Vessel Management:** Full CRUD (Create, Read, Update, Delete) functionality for vessel data.
-    - **Service Request Management:** This feature is currently under development for the web application.
+    - **Service Request Management:** Functionally complete. Logged-in users can manage requests, while guest users have read-only access.
 - **User Experience:**
     - **Access Modes:** The application supports both guest and registered user modes. Core features like the live map and news feed are available to all. Full data management capabilities are restricted to logged-in users.
-    - **Map Bookmarking:** This feature is currently under development. The goal is to allow users to save and manage map locations.
+    - **Map Bookmarking:** Functionally complete for logged-in users, allowing them to save and manage map locations. This feature is not available for guest users.
 
 ## Tech Stack
 

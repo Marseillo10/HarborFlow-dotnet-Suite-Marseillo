@@ -11,10 +11,10 @@ To provide a centralized, intuitive, and efficient digital platform for all port
 ### 1.2. Key Features
 
 - **Guest & Registered User Modes:** Users can immediately explore public features, with more advanced capabilities available after login.
-- **Interactive Real-time Map:** Track vessel positions using live AIS data.
-- **Map Bookmarks:** Logged-in users can save and quickly navigate to important custom map locations.
+- **Interactive Real-time Map:** Track vessel positions using live AIS data, with vessel-specific icons based on type.
+- **Map Bookmarks:** Logged-in users can save and quickly navigate to important custom map locations. This feature is not available for guests.
 - **Maritime News Feed:** An integrated news aggregator with keyword filtering, pulling from curated maritime RSS feeds.
-- **Digital Service Workflow:** A complete system for submitting, approving, and managing port service requests for registered users.
+- **Digital Service Workflow:** A complete system for submitting, approving, and managing port service requests. Logged-in users have full access, while guests have read-only view.
 - **Analytics Dashboard:** Visual charts displaying key port metrics like vessel distribution and service request statuses.
 
 ## 2. System Architecture
@@ -168,11 +168,11 @@ The project leverages several key open-source libraries:
 
 The Blazor web application is the primary focus of development. Here is the current status of its features:
 
-- **Real-Time Map (`MapView`):** Fully functional. Displays real-time vessel positions via WebSocket and includes interactive map layer controls.
+- **Real-Time Map (`MapView`):** Fully functional. Displays real-time vessel positions with vessel-specific icons and includes interactive map layer controls.
 - **Advanced News Feed (`NewsView`):** Fully functional. Features categorization, intelligent keyword filtering, and interactive date filters.
 - **Analytics Dashboard (`DashboardView`):** Implemented for logged-in users. Guest access is not currently available.
-- **Map Bookmarking (`MapView`):** This feature is currently under development. The goal is to allow users to save and manage important map locations.
-- **Service Request Management (`ServiceRequestView`):** The web interface for this feature is currently under development.
+- **Map Bookmarking (`MapView`):** Functionally complete for logged-in users. This feature is not available for guest users.
+- **Service Request Management (`ServiceRequestView`):** Functionally complete. Logged-in users can manage requests, while guest users have read-only access.
 
 ### 5.2. Guest Mode & Authentication
 

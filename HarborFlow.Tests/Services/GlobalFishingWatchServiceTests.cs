@@ -1,4 +1,4 @@
-using HarborFlow.Application.Services;
+using HarborFlow.Infrastructure.Services;
 using Moq;
 using Moq.Protected;
 using System;
@@ -8,32 +8,56 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
+using HarborFlow.Core.Models;
+using System.Text.Json;
+using HarborFlow.Infrastructure.DTOs.GlobalFishingWatch;
 
 namespace HarborFlow.Tests.Services
 {
     public class GlobalFishingWatchServiceTests
     {
-        private readonly Mock<IHttpClientFactory> _mockHttpClientFactory;
+        private readonly Mock<HttpMessageHandler> _mockHttpMessageHandler;
+        private readonly HttpClient _httpClient;
+        private readonly Mock<IConfiguration> _mockConfiguration;
         private readonly Mock<ILogger<GlobalFishingWatchService>> _mockLogger;
         private readonly GlobalFishingWatchService _service;
 
         public GlobalFishingWatchServiceTests()
         {
-            _mockHttpClientFactory = new Mock<IHttpClientFactory>();
+            _mockHttpMessageHandler = new Mock<HttpMessageHandler>();
+            _httpClient = new HttpClient(_mockHttpMessageHandler.Object);
+            _mockConfiguration = new Mock<IConfiguration>();
             _mockLogger = new Mock<ILogger<GlobalFishingWatchService>>();
-            _service = new GlobalFishingWatchService(_mockHttpClientFactory.Object, _mockLogger.Object);
+
+            _mockConfiguration.Setup(c => c["ApiKeys:GlobalFishingWatch"]).Returns("test-api-key");
+
+            _service = new GlobalFishingWatchService(_httpClient, _mockConfiguration.Object, _mockLogger.Object);
         }
 
         [Fact]
         public async Task GetVesselTypeAsync_ShouldReturnVesselType_WhenApiCallIsSuccessful()
         {
             // Arrange
-            var imo = 1234567;
-            var expectedVesselType = "cargo";
-            var jsonResponse = $@"{{""entries"":[{{""type"":""{expectedVesselType}""}}]}}";
+            var imo = "1234567";
+            var expectedVesselType = VesselType.Cargo;
+            var jsonResponse = JsonSerializer.Serialize(new GfwVesselResponse
+            {
+                Entries = new List<Entry>
+                {
+                    new Entry
+                    {
+                        Imo = imo,
+                        SelfReportedInfo = new List<SelfReportedInfo>
+                        {
+                            new SelfReportedInfo { ShipType = "Cargo" }
+                        }
+                    }
+                }
+            });
 
-            var mockHttpMessageHandler = new Mock<HttpMessageHandler>();
-            mockHttpMessageHandler.Protected()
+            _mockHttpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>(
                     "SendAsync",
                     ItExpr.IsAny<HttpRequestMessage>(),
@@ -44,12 +68,6 @@ namespace HarborFlow.Tests.Services
                     StatusCode = HttpStatusCode.OK,
                     Content = new StringContent(jsonResponse),
                 });
-
-            var client = new HttpClient(mockHttpMessageHandler.Object)
-            {
-                BaseAddress = new Uri("https://gateway.api.globalfishingwatch.org/")
-            };
-            _mockHttpClientFactory.Setup(_ => _.CreateClient(It.IsAny<string>())).Returns(client);
 
             // Act
             var result = await _service.GetVesselTypeAsync(imo);
