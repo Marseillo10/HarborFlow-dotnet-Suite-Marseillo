@@ -86,9 +86,10 @@ namespace HarborFlow.Application.Services
             try
             {
                 var vessel = await _context.Vessels.Include(v => v.Positions).FirstOrDefaultAsync(v => v.IMO == imo);
-                if (vessel != null)
+                if (vessel != null && vessel.VesselType == VesselType.Other)
                 {
                     vessel.VesselType = await _globalFishingWatchService.GetVesselTypeAsync(imo);
+                    await _context.SaveChangesAsync();
                 }
                 return vessel;
             }
@@ -136,10 +137,11 @@ namespace HarborFlow.Application.Services
             try
             {
                 var vessels = await _context.Vessels.Include(v => v.Positions).ToListAsync();
-                foreach (var vessel in vessels)
+                foreach (var vessel in vessels.Where(v => v.VesselType == VesselType.Other))
                 {
                     vessel.VesselType = await _globalFishingWatchService.GetVesselTypeAsync(vessel.IMO);
                 }
+                await _context.SaveChangesAsync();
                 return vessels;
             }
             catch (Exception ex)
