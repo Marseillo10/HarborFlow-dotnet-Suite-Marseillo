@@ -41,6 +41,51 @@ namespace HarborFlow.Infrastructure.Services
                 }
             }
 
+        public async Task<Dictionary<string, VesselType>> GetVesselTypesAsync(List<string> imos)
+        {
+            var result = new Dictionary<string, VesselType>();
+            if (!imos.Any()) return result;
+
+            var client = _httpClientFactory.CreateClient("GlobalFishingWatch");
+            try
+            {
+                var imoString = string.Join(",", imos);
+                var response = await client.GetAsync($"vessels?imos={imoString}");
+                response.EnsureSuccessStatusCode();
+                var content = await response.Content.ReadAsStringAsync();
+                var vesselData = JsonConvert.DeserializeObject<GfwVesselResponse>(content);
+                if (vesselData?.Entries != null)
+                {
+                    foreach (var entry in vesselData.Entries)
+                    {
+                        if (Enum.TryParse<VesselType>(entry.Type, true, out var vesselType))
+                        {
+                            result[entry.Imo.ToString()] = vesselType;
+                        }
+                        else
+                        {
+                            result[entry.Imo.ToString()] = VesselType.Other;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching vessel types for IMOs {Imos}", string.Join(",", imos));
+            }
+
+            // For any IMOs not found in the API response, default to Other
+            foreach (var imo in imos)
+            {
+                if (!result.ContainsKey(imo))
+                {
+                    result[imo] = VesselType.Other;
+                }
+            }
+
+            return result;
+        }
+
             return VesselType.Other; // Default value
         }
 

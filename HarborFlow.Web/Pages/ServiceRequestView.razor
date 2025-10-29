@@ -6,6 +6,13 @@
 
 <h3>Service Requests</h3>
 
+@if (SessionContext.CurrentUser == null)
+{
+    <div class="alert alert-info" role="alert">
+        You are viewing a read-only list of service requests. Please log in to manage requests.
+    </div>
+}
+
 <table class="table">
     <thead>
         <tr>

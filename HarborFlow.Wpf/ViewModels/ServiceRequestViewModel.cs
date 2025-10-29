@@ -65,6 +65,7 @@ namespace HarborFlow.Wpf.ViewModels
         public bool CanAddServiceRequest => _sessionContext.CurrentUser?.Role == UserRole.MaritimeAgent;
         public bool CanEditServiceRequest => _sessionContext.CurrentUser?.Role == UserRole.MaritimeAgent && SelectedServiceRequest?.RequestedBy == _sessionContext.CurrentUser?.UserId;
         public bool CanDeleteServiceRequest => _sessionContext.CurrentUser?.Role == UserRole.Administrator;
+        public bool IsGuestUser => _sessionContext.CurrentUser == null;
 
 
         public ServiceRequestViewModel(IPortServiceManager portServiceManager, IWindowManager windowManager, INotificationService notificationService, ILogger<ServiceRequestViewModel> logger, SessionContext sessionContext, MainWindowViewModel mainWindowViewModel)
