@@ -26,7 +26,6 @@ namespace HarborFlow.Core.Models
         public decimal LengthOverall { get; set; }
         public decimal Beam { get; set; }
         public decimal GrossTonnage { get; set; }
-        public string Type { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public string Metadata { get; set; } = string.Empty; // Using string for jsonb, EF Core handles mapping

@@ -8,21 +8,24 @@
 
 <h3>Vessel Map</h3>
 
-<div class="mb-3 d-flex align-items-center gap-2">
-    <select class="form-select" @onchange="OnBookmarkSelected">
-        <option value="">Select a bookmark...</option>
-        @if (_bookmarks.Any())
-        {
-            @foreach (var bookmark in _bookmarks)
+@if (SessionContext.CurrentUser != null)
+{
+    <div class="mb-3 d-flex align-items-center gap-2">
+        <select class="form-select" @onchange="OnBookmarkSelected">
+            <option value="">Select a bookmark...</option>
+            @if (_bookmarks.Any())
             {
-                <option value="@bookmark.Id">@bookmark.Name</option>
+                @foreach (var bookmark in _bookmarks)
+                {
+                    <option value="@bookmark.Id">@bookmark.Name</option>
+                }
             }
-        }
-    </select>
-    <input type="text" class="form-control" placeholder="New bookmark name" @bind="_newBookmarkName" />
-    <button class="btn btn-primary" @onclick="SaveBookmark" disabled="@string.IsNullOrWhiteSpace(_newBookmarkName)">Save</button>
-    <button class="btn btn-danger" @onclick="DeleteBookmark" disabled="@(_selectedBookmarkId == Guid.Empty)">Delete</button>
-</div>
+        </select>
+        <input type="text" class="form-control" placeholder="New bookmark name" @bind="_newBookmarkName" />
+        <button class="btn btn-primary" @onclick="SaveBookmark" disabled="@string.IsNullOrWhiteSpace(_newBookmarkName)">Save</button>
+        <button class="btn btn-danger" @onclick="DeleteBookmark" disabled="@(_selectedBookmarkId == Guid.Empty)">Delete</button>
+    </div>
+}
 
 <div class="mb-2">
     <span>Map Layers:</span>
@@ -84,7 +87,7 @@
                     lat = lastPosition?.Latitude,
                     lng = lastPosition?.Longitude,
                     speed = lastPosition?.SpeedOverGround,
-                    type = GetVesselIcon(vessel.Type)
+                    type = GetVesselIcon(vessel.VesselType)
                 };
             }).Where(v => v.lat.HasValue && v.lng.HasValue).ToList();
 
@@ -100,10 +103,6 @@
         if (SessionContext.CurrentUser != null)
         {
             _bookmarks = (await BookmarkService.GetBookmarksForUserAsync(SessionContext.CurrentUser.UserId)).ToList();
-        }
-        else
-        {
-            _bookmarks = await JSRuntime.InvokeAsync<List<MapBookmark>>("getGuestBookmarks");
         }
         StateHasChanged();
     }
@@ -145,12 +144,6 @@
             newBookmark.UserId = SessionContext.CurrentUser.UserId;
             await BookmarkService.AddBookmarkAsync(newBookmark);
         }
-        else
-        {
-            var guestBookmarks = await JSRuntime.InvokeAsync<List<MapBookmark>>("getGuestBookmarks");
-            guestBookmarks.Add(newBookmark);
-            await JSRuntime.InvokeVoidAsync("saveGuestBookmarks", guestBookmarks);
-        }
 
         _newBookmarkName = string.Empty;
         await LoadBookmarks();
@@ -164,16 +157,6 @@
         if (SessionContext.CurrentUser != null)
         {
             await BookmarkService.DeleteBookmarkAsync(_selectedBookmarkId, SessionContext.CurrentUser.UserId);
-        }
-        else
-        {
-            var guestBookmarks = await JSRuntime.InvokeAsync<List<MapBookmark>>("getGuestBookmarks");
-            var bookmarkToRemove = guestBookmarks.FirstOrDefault(b => b.Id == _selectedBookmarkId);
-            if (bookmarkToRemove != null)
-            {
-                guestBookmarks.Remove(bookmarkToRemove);
-                await JSRuntime.InvokeVoidAsync("saveGuestBookmarks", guestBookmarks);
-            }
         }
 
         _selectedBookmarkId = Guid.Empty;

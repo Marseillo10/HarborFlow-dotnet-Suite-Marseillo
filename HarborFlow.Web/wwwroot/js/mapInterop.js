@@ -94,17 +94,6 @@ window.updateVesselPosition = (position) => {
     }
 };
 
-// --- Guest Bookmark Management (localStorage) ---
-const GUEST_BOOKMARKS_KEY = 'harborflow_guest_bookmarks';
-
-window.getGuestBookmarks = () => {
-    const bookmarksJson = localStorage.getItem(GUEST_BOOKMARKS_KEY);
-    return bookmarksJson ? JSON.parse(bookmarksJson) : [];
-};
-
-window.saveGuestBookmarks = (bookmarks) => {
-    localStorage.setItem(GUEST_BOOKMARKS_KEY, JSON.stringify(bookmarks));
-};
 
 window.scrollToElement = (elementId) => {
     const element = document.getElementById(elementId);

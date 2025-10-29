@@ -14,7 +14,10 @@
             <th>Service Type</th>
             <th>Status</th>
             <th>Requested On</th>
-            <th>Actions</th>
+            @if (SessionContext.CurrentUser != null)
+            {
+                <th>Actions</th>
+            }
         </tr>
     </thead>
     <tbody>
@@ -26,13 +29,16 @@
                 <td>@request.ServiceType</td>
                 <td>@request.Status</td>
                 <td>@request.RequestDate.ToString("g")</td>
-                <td>
-                    @if (request.Status == RequestStatus.Submitted)
-                    {
-                        <button class="btn btn-sm btn-success" @onclick="() => UpdateRequestStatus(request.RequestId, RequestStatus.Approved)" disabled="@(SessionContext.CurrentUser == null)">Approve</button>
-                        <button class="btn btn-sm btn-warning" @onclick="() => UpdateRequestStatus(request.RequestId, RequestStatus.Rejected)" disabled="@(SessionContext.CurrentUser == null)">Deny</button>
-                    }
-                </td>
+                @if (SessionContext.CurrentUser != null)
+                {
+                    <td>
+                        @if (request.Status == RequestStatus.Submitted)
+                        {
+                            <button class="btn btn-sm btn-success" @onclick="() => UpdateRequestStatus(request.RequestId, RequestStatus.Approved)">Approve</button>
+                            <button class="btn btn-sm btn-warning" @onclick="() => UpdateRequestStatus(request.RequestId, RequestStatus.Rejected)">Deny</button>
+                        }
+                    </td>
+                }
             </tr>
         }
     </tbody>
