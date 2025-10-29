@@ -27,6 +27,11 @@
             <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Width="150" Margin="20,0,0,0" />
         </StackPanel>
 
+        <TextBlock Grid.Row="1" Text="As a guest, you can only view service requests. Please log in to manage them."
+                   Visibility="{Binding IsGuestUser, Converter={StaticResource BoolToVis}}"
+                   Margin="0,0,0,10"
+                   HorizontalAlignment="Center" />
+
         <DataGrid Grid.Row="1" 
                   ItemsSource="{Binding FilteredServiceRequests}" 
                   SelectedItem="{Binding SelectedServiceRequest}"

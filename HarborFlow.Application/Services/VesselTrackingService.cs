@@ -137,11 +137,20 @@ namespace HarborFlow.Application.Services
             try
             {
                 var vessels = await _context.Vessels.Include(v => v.Positions).ToListAsync();
-                foreach (var vessel in vessels.Where(v => v.VesselType == VesselType.Other))
+                var vesselsToUpdate = vessels.Where(v => v.VesselType == VesselType.Other).ToList();
+                if (vesselsToUpdate.Any())
                 {
-                    vessel.VesselType = await _globalFishingWatchService.GetVesselTypeAsync(vessel.IMO);
+                    var imoNumbers = vesselsToUpdate.Select(v => v.IMO).ToList();
+                    var vesselTypes = await _globalFishingWatchService.GetVesselTypesAsync(imoNumbers);
+                    foreach (var vessel in vesselsToUpdate)
+                    {
+                        if (vesselTypes.TryGetValue(vessel.IMO, out var vesselType))
+                        {
+                            vessel.VesselType = vesselType;
+                        }
+                    }
+                    await _context.SaveChangesAsync();
                 }
-                await _context.SaveChangesAsync();
                 return vessels;
             }
             catch (Exception ex)

@@ -186,5 +186,39 @@ namespace HarborFlow.Tests.ViewModels
                 _portServiceManagerMock.Verify(s => s.GetAllServiceRequestsAsync(_sessionContext.CurrentUser), Times.Once); // Because it reloads
             }
         }
+
+        [Fact]
+        public void IsGuestUser_ShouldBeTrue_WhenCurrentUserIsNull()
+        {
+            // Arrange
+            var sessionContext = new SessionContext { CurrentUser = null };
+            var viewModel = new ServiceRequestViewModel(
+                _portServiceManagerMock.Object,
+                _windowManagerMock.Object,
+                _notificationServiceMock.Object,
+                _loggerMock.Object,
+                sessionContext,
+                _mainWindowViewModelMock.Object);
+
+            // Assert
+            Assert.True(viewModel.IsGuestUser);
+        }
+
+        [Fact]
+        public void IsGuestUser_ShouldBeFalse_WhenCurrentUserIsNotNull()
+        {
+            // Arrange
+            var sessionContext = new SessionContext { CurrentUser = new User() };
+            var viewModel = new ServiceRequestViewModel(
+                _portServiceManagerMock.Object,
+                _windowManagerMock.Object,
+                _notificationServiceMock.Object,
+                _loggerMock.Object,
+                sessionContext,
+                _mainWindowViewModelMock.Object);
+
+            // Assert
+            Assert.False(viewModel.IsGuestUser);
+        }
     }
 }
