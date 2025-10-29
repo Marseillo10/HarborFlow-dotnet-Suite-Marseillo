@@ -17,15 +17,17 @@ namespace HarborFlow.Application.Services
         private readonly HarborFlowDbContext _context;
         private readonly ILogger<VesselTrackingService> _logger;
         private readonly IAisStreamService _aisStreamService;
+        private readonly IGlobalFishingWatchService _globalFishingWatchService;
         private readonly SynchronizationContext? _syncContext;
 
         public ObservableCollection<Vessel> TrackedVessels { get; } = new ObservableCollection<Vessel>();
 
-        public VesselTrackingService(HarborFlowDbContext context, ILogger<VesselTrackingService> logger, IAisStreamService aisStreamService)
+        public VesselTrackingService(HarborFlowDbContext context, ILogger<VesselTrackingService> logger, IAisStreamService aisStreamService, IGlobalFishingWatchService globalFishingWatchService)
         {
             _context = context;
             _logger = logger;
             _aisStreamService = aisStreamService;
+            _globalFishingWatchService = globalFishingWatchService;
             _syncContext = SynchronizationContext.Current;
 
             _aisStreamService.PositionReceived += AisStreamService_PositionReceived;
@@ -83,7 +85,12 @@ namespace HarborFlow.Application.Services
         {
             try
             {
-                return await _context.Vessels.Include(v => v.Positions).FirstOrDefaultAsync(v => v.IMO == imo);
+                var vessel = await _context.Vessels.Include(v => v.Positions).FirstOrDefaultAsync(v => v.IMO == imo);
+                if (vessel != null)
+                {
+                    vessel.VesselType = await _globalFishingWatchService.GetVesselTypeAsync(imo);
+                }
+                return vessel;
             }
             catch (Exception ex)
             {
@@ -128,7 +135,12 @@ namespace HarborFlow.Application.Services
         {
             try
             {
-                return await _context.Vessels.Include(v => v.Positions).ToListAsync();
+                var vessels = await _context.Vessels.Include(v => v.Positions).ToListAsync();
+                foreach (var vessel in vessels)
+                {
+                    vessel.VesselType = await _globalFishingWatchService.GetVesselTypeAsync(vessel.IMO);
+                }
+                return vessels;
             }
             catch (Exception ex)
             {

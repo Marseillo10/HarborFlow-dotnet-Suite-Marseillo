@@ -83,7 +83,8 @@
                     imo = vessel.IMO,
                     lat = lastPosition?.Latitude,
                     lng = lastPosition?.Longitude,
-                    speed = lastPosition?.SpeedOverGround
+                    speed = lastPosition?.SpeedOverGround,
+                    type = GetVesselIcon(vessel.Type)
                 };
             }).Where(v => v.lat.HasValue && v.lng.HasValue).ToList();
 
@@ -186,6 +187,17 @@
         if (!string.IsNullOrEmpty(layerName)){
             await JSRuntime.InvokeVoidAsync("setTileLayer", layerName);
         }
+    }
+
+    private string GetVesselIcon(VesselType vesselType)
+    {
+        return vesselType switch
+        {
+            VesselType.Cargo => "cargo",
+            VesselType.Tanker => "tanker",
+            VesselType.Passenger => "passenger",
+            _ => "vessel",
+        };
     }
 
     public void Dispose()

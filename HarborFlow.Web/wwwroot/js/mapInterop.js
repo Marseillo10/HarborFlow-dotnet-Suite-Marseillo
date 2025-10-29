@@ -13,7 +13,12 @@ window.addVesselMarkers = (vessels) => {
     vesselMarkers = [];
 
     vessels.forEach(vessel => {
-        const markerOptions = { imo: vessel.imo };
+        const icon = L.icon({
+            iconUrl: `/images/vessel-icons/${vessel.type}.svg`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+        });
+        const markerOptions = { imo: vessel.imo, icon: icon };
         const marker = L.marker([vessel.lat, vessel.lng], markerOptions)
             .addTo(map)
             .bindPopup(`<b>${vessel.name}</b><br>IMO: ${vessel.imo}<br>Speed: ${vessel.speed} knots`);
@@ -76,7 +81,12 @@ window.updateVesselPosition = (position) => {
         vesselMarker.setLatLng([position.latitude, position.longitude]);
     } else {
         // Marker does not exist, create a new one
-        const markerOptions = { imo: position.vesselImo };
+        const icon = L.icon({
+            iconUrl: '/images/vessel-icons/vessel.svg',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+        });
+        const markerOptions = { imo: position.vesselImo, icon: icon };
         const newMarker = L.marker([position.latitude, position.longitude], markerOptions)
             .addTo(map)
             .bindPopup(`<b>IMO: ${position.vesselImo}</b><br>Name: Loading...`);
