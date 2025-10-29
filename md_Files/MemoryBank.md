@@ -11,7 +11,7 @@ This document serves as a log of key architectural decisions, refactoring effort
     - **Real-Time Map:** The map was made fully interactive and live. It now subscribes to the backend `AisStreamService` and uses JS Interop to create and move vessel markers in real-time as new data arrives.
     - **Advanced News Feed:** The news feature was completely overhauled with multi-category tabs, interactive date filters, auto-scrolling, a 3-column card layout, and a much more robust backend keyword filter to ensure content relevance.
     - **Guest Access Model:** The application was refactored to allow full public access to all pages. Functionality requiring a user account (saving, editing, approving) is now dynamically disabled on the UI for guest users, preventing runtime errors.
-    - **Guest Bookmarking:** To provide a better UX for guests, a separate bookmarking system was implemented using the browser's `localStorage`, completely distinct from the database-backed system used by logged-in users.
+    - **Guest Bookmarking:** To provide a better UX for guests, a separate bookmarking system was implemented using the browser's `localStorage`, completely distinct from the database-backed system used by logged-in users. This feature was later removed to align with the goal of providing a consistent experience for all users.
     - **Debugging & Stability:** A significant portion of the session was dedicated to a deep debugging process, resolving dozens of build and runtime errors related to dependency injection, configuration, incorrect method/property names, and Blazor component lifecycle issues.
 
 

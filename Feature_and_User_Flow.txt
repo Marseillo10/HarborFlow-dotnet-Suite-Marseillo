@@ -11,7 +11,7 @@ This document outlines the user flow for both the WPF and Web applications.
 │         ├─── 👤 Mode Pengguna: Tamu (Default)
 │         │    │
 │         │    ├─── 🗺️ Navigasi -> Peta Kapal (MapView)
-│         │    │    ├─── Fitur: Lacak kapal secara real-time. [Backend Terverifikasi] [Web Implementasi]
+│         │    │    ├─── Fitur: Lacak kapal secara real-time dengan ikon khusus. [Backend Terverifikasi] [Web Implementasi]
 │         │    │    └─── Fitur: Ganti lapisan peta (Street, Satellite, Nautical). [Web Implementasi]
 │         │    │
 │         │    ├─── 📰 Navigasi -> Berita Maritim (NewsView)
@@ -23,7 +23,7 @@ This document outlines the user flow for both the WPF and Web applications.
 │         │    │    └─── Fitur: Lihat daftar semua kapal di database. [Web Implementasi]
 │         │    │
 │         │    ├─── 📋 Navigasi -> Permintaan Layanan (ServiceRequestView)
-│         │    │    └─── Fitur: Lihat semua permintaan layanan. [Dalam Pengembangan]
+│         │    │    └─── Fitur: Lihat semua permintaan layanan (hanya baca). [Web Implementasi]
 │         │    │
 │         │    ├─── 🔐 Header -> Tombol "Login"
 │         │    │    └─── Aksi: Membuka halaman Login. [Web Implementasi]
@@ -40,11 +40,11 @@ This document outlines the user flow for both the WPF and Web applications.
           │    └─── Fitur: Lihat grafik jumlah kapal per tipe. [Backend Terverifikasi] [Web Implementasi]
           │
           ├─── 🗺️ Navigasi -> Peta Kapal (MapView)
-          │    ├─── Fitur: Lacak kapal secara real-time. [Backend Terverifikasi] [Web Implementasi]
+          │    ├─── Fitur: Lacak kapal secara real-time dengan ikon khusus. [Backend Terverifikasi] [Web Implementasi]
           │    └─── ⭐ Fitur Login: Panel Bookmark
-          │         ├─── Aksi: Tambah bookmark dari tampilan peta saat ini. [Dalam Pengembangan]
-          │         ├─── Aksi: Pilih bookmark untuk navigasi cepat. [Dalam Pengembangan]
-          │         └─── Aksi: Hapus bookmark yang tersimpan. [Dalam Pengembangan]
+          │         ├─── Aksi: Tambah bookmark dari tampilan peta saat ini. [Web Implementasi]
+          │         ├─── Aksi: Pilih bookmark untuk navigasi cepat. [Web Implementasi]
+          │         └─── Aksi: Hapus bookmark yang tersimpan. [Web Implementasi]
           │
           ├─── 📰 Navigasi -> Berita Maritim (NewsView)
           │    └─── (Fungsionalitas sama seperti mode Tamu)
