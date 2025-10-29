@@ -93,8 +93,6 @@ namespace HarborFlow.Wpf.ViewModels
 
         public async Task LoadServiceRequestsAsync()
         {
-            if (_sessionContext.CurrentUser == null) return;
-
             _mainWindowViewModel.IsLoading = true;
             try
             {
