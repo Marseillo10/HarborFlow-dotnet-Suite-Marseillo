@@ -88,6 +88,9 @@ namespace HarborFlow.Wpf
                     services.AddScoped<IBookmarkService, BookmarkService>();
                     services.AddSingleton<IVesselTrackingService, VesselTrackingService>();
 
+                    services.AddMemoryCache();
+                    services.AddSingleton<IGlobalFishingWatchService, GlobalFishingWatchService>();
+
                     services.AddHttpClient<IRssService, RssService>();
 
                     services.AddDbContext<HarborFlowDbContext>(options =>

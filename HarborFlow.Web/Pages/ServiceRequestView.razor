@@ -13,47 +13,55 @@
     </div>
 }
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Request ID</th>
-            <th>Vessel Name</th>
-            <th>Service Type</th>
-            <th>Status</th>
-            <th>Requested On</th>
-            @if (SessionContext.CurrentUser != null)
-            {
-                <th>Actions</th>
-            }
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var request in _serviceRequests)
-        {
+@if (_isLoading)
+{
+    <p><em>Loading service requests...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
             <tr>
-                <td>@request.RequestId</td>
-                <td>@(_vesselNames.ContainsKey(request.VesselImo) ? _vesselNames[request.VesselImo] : "Loading...")</td>
-                <td>@request.ServiceType</td>
-                <td>@request.Status</td>
-                <td>@request.RequestDate.ToString("g")</td>
+                <th>Request ID</th>
+                <th>Vessel Name</th>
+                <th>Service Type</th>
+                <th>Status</th>
+                <th>Requested On</th>
                 @if (SessionContext.CurrentUser != null)
                 {
-                    <td>
-                        @if (request.Status == RequestStatus.Submitted)
-                        {
-                            <button class="btn btn-sm btn-success" @onclick="() => UpdateRequestStatus(request.RequestId, RequestStatus.Approved)">Approve</button>
-                            <button class="btn btn-sm btn-warning" @onclick="() => UpdateRequestStatus(request.RequestId, RequestStatus.Rejected)">Deny</button>
-                        }
-                    </td>
+                    <th>Actions</th>
                 }
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var request in _serviceRequests)
+            {
+                <tr>
+                    <td>@request.RequestId</td>
+                    <td>@(_vesselNames.ContainsKey(request.VesselImo) ? _vesselNames[request.VesselImo] : "Loading...")</td>
+                    <td>@request.ServiceType</td>
+                    <td>@request.Status</td>
+                    <td>@request.RequestDate.ToString("g")</td>
+                    @if (SessionContext.CurrentUser != null)
+                    {
+                        <td>
+                            @if (request.Status == RequestStatus.Submitted)
+                            {
+                                <button class="btn btn-sm btn-success" @onclick="() => UpdateRequestStatus(request.RequestId, RequestStatus.Approved)">Approve</button>
+                                <button class="btn btn-sm btn-warning" @onclick="() => UpdateRequestStatus(request.RequestId, RequestStatus.Rejected)">Deny</button>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
 @code {
     private List<ServiceRequest> _serviceRequests = new List<ServiceRequest>();
     private Dictionary<string, string> _vesselNames = new Dictionary<string, string>();
+    private bool _isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -62,6 +70,7 @@
 
     private async Task LoadServiceRequests()
     {
+        _isLoading = true;
         _serviceRequests = (await PortServiceManager.GetAllServiceRequestsAsync(SessionContext.CurrentUser)).ToList();
         
         var imos = _serviceRequests.Select(r => r.VesselImo).Distinct();
@@ -73,6 +82,7 @@
                 _vesselNames[imo] = vessel?.Name ?? "Unknown Vessel";
             }
         }
+        _isLoading = false;
         StateHasChanged();
     }
 

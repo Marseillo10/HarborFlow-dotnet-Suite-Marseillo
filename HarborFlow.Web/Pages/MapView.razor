@@ -8,6 +8,13 @@
 
 <h3>Vessel Map</h3>
 
+@if (SessionContext.CurrentUser == null)
+{
+    <div class="alert alert-info" role="alert">
+        <a href="/login">Log in</a> or <a href="/register">register</a> to save and manage map bookmarks.
+    </div>
+}
+
 @if (SessionContext.CurrentUser != null)
 {
     <div class="mb-3 d-flex align-items-center gap-2">
