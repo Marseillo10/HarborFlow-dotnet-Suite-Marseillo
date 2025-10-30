@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using HarborFlow.Core.Models;
 using System.Text.Json;
 using HarborFlow.Infrastructure.DTOs.GlobalFishingWatch;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace HarborFlow.Tests.Services
 {
@@ -22,6 +23,7 @@ namespace HarborFlow.Tests.Services
         private readonly HttpClient _httpClient;
         private readonly Mock<IConfiguration> _mockConfiguration;
         private readonly Mock<ILogger<GlobalFishingWatchService>> _mockLogger;
+        private readonly IMemoryCache _memoryCache;
         private readonly GlobalFishingWatchService _service;
 
         public GlobalFishingWatchServiceTests()
@@ -30,10 +32,11 @@ namespace HarborFlow.Tests.Services
             _httpClient = new HttpClient(_mockHttpMessageHandler.Object);
             _mockConfiguration = new Mock<IConfiguration>();
             _mockLogger = new Mock<ILogger<GlobalFishingWatchService>>();
+            _memoryCache = new MemoryCache(new MemoryCacheOptions());
 
             _mockConfiguration.Setup(c => c["ApiKeys:GlobalFishingWatch"]).Returns("test-api-key");
 
-            _service = new GlobalFishingWatchService(_httpClient, _mockConfiguration.Object, _mockLogger.Object);
+            _service = new GlobalFishingWatchService(_httpClient, _mockConfiguration.Object, _mockLogger.Object, _memoryCache);
         }
 
         [Fact]
@@ -44,14 +47,13 @@ namespace HarborFlow.Tests.Services
             var expectedVesselType = VesselType.Cargo;
             var jsonResponse = JsonSerializer.Serialize(new GfwVesselResponse
             {
-                Entries = new List<Entry>
+                Entries = new List<GfwVessel>
                 {
-                    new Entry
+                    new GfwVessel
                     {
-                        Imo = imo,
-                        SelfReportedInfo = new List<SelfReportedInfo>
+                        SelfReportedInfo = new List<GfwSelfReportedInfo>
                         {
-                            new SelfReportedInfo { ShipType = "Cargo" }
+                            new GfwSelfReportedInfo { ShipType = "Cargo" }
                         }
                     }
                 }

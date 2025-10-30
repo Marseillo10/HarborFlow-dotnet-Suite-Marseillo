@@ -54,6 +54,7 @@ namespace HarborFlow.Wpf.ViewModels
         public ObservableCollection<MapBookmark> Bookmarks { get; } = new();
 
         public bool IsBookmarkFeatureEnabled => _sessionContext.CurrentUser != null;
+        public bool IsGuest => _sessionContext.CurrentUser == null;
 
         public VesselType? SelectedVesselTypeFilter
         {

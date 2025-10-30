@@ -16,8 +16,10 @@ builder.Services.AddDbContext<HarborFlowDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
 
 // Register application services
+builder.Services.AddScoped<IGlobalFishingWatchService, GlobalFishingWatchService>();
 builder.Services.AddScoped<IVesselTrackingService, VesselTrackingService>();
 builder.Services.AddScoped<IPortServiceManager, PortServiceManager>();
 builder.Services.AddScoped<IAisStreamService, AisStreamService>();
