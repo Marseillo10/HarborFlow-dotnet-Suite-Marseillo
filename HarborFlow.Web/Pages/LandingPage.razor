@@ -1,0 +1,97 @@
+@page "/"
+@attribute [AllowAnonymous]
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="landing-page">
+    <header class="hero-section text-center text-white">
+        <div class="container">
+            <h1 class="display-4">Welcome to HarborFlow</h1>
+            <p class="lead">Smart Port Management for the Modern Age</p>
+            <a href="/login" class="btn btn-primary btn-lg">Get Started</a>
+        </div>
+    </header>
+
+    <section id="about" class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6">
+                    <h2>About HarborFlow</h2>
+                    <p>HarborFlow is a comprehensive port management solution designed to streamline operations, enhance efficiency, and improve communication for port authorities, shipping companies, and logistics partners. This project is developed as a part of a junior software engineering class for IT undergraduates, showcasing modern web technologies and software design principles.</p>
+                </div>
+                <div class="col-lg-6">
+                    <img src="https://via.placeholder.com/500" alt="About HarborFlow" class="img-fluid rounded">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="bg-light py-5">
+        <div class="container">
+            <h2 class="text-center">Key Features</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card mb-4 shadow-sm">
+                        <img src="https://via.placeholder.com/300" class="card-img-top" alt="Real-time Vessel Tracking">
+                        <div class="card-body">
+                            <h5 class="card-title">Real-time Vessel Tracking</h5>
+                            <p class="card-text">Monitor vessel movements, arrivals, and departures with our live tracking system.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-4 shadow-sm">
+                        <img src="https://via.placeholder.com/300" class="card-img-top" alt="Automated Berth Allocation">
+                        <div class="card-body">
+                            <h5 class="card-title">Automated Berth Allocation</h5>
+                            <p class="card-text">Optimize berth usage and reduce vessel waiting times with our intelligent allocation system.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-4 shadow-sm">
+                        <img src="https://via.placeholder.com/300" class="card-img-top" alt="Data Analytics">
+                        <div class="card-body">
+                            <h5 class="card-title">Data Analytics</h5>
+                            <p class="card-text">Gain insights into port operations with our advanced data analytics and reporting tools.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="cta" class="py-5 text-center">
+        <div class="container">
+            <h2>Ready to Get Started?</h2>
+            <p class="lead">Join HarborFlow today and experience the future of port management.</p>
+            <a href="/register" class="btn btn-success btn-lg">Register Now</a>
+            <a href="/login" class="btn btn-outline-primary btn-lg">Login</a>
+        </div>
+    </section>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user?.Identity?.IsAuthenticated ?? false)
+        {
+            NavigationManager.NavigateTo("/dashboard");
+        }
+    }
+}
+
+<style>
+    .hero-section {
+        background: url('https://via.placeholder.com/1920x1080') no-repeat center center;
+        background-size: cover;
+        padding: 100px 0;
+    }
+    .card-img-top {
+        height: 200px;
+        object-fit: cover;
+    }
+</style>
