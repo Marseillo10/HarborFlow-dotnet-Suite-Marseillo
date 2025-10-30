@@ -36,6 +36,7 @@ namespace HarborFlow.Wpf.ViewModels
         public event EventHandler<string>? MapLayerChanged;
         public event EventHandler<MapBookmark>? BookmarkNavigationRequested;
         public event EventHandler<Vessel>? CenterMapOnVesselRequested;
+        public event EventHandler<IEnumerable<VesselMapData>>? VesselsUpdated;
 
         public string SearchTerm
         {
@@ -248,11 +249,40 @@ namespace HarborFlow.Wpf.ViewModels
             FilteredVesselsOnMap.Clear();
             var filtered = _vesselTrackingService.TrackedVessels
                 .Where(v => SelectedVesselTypeFilter == null || v.VesselType == SelectedVesselTypeFilter);
-            
+
             foreach (var vessel in filtered)
             {
                 FilteredVesselsOnMap.Add(vessel);
             }
+
+            var vesselMapData = FilteredVesselsOnMap.Select(v => {
+                var pos = v.Positions.OrderByDescending(p => p.PositionTimestamp).FirstOrDefault();
+                return new VesselMapData
+                {
+                    Imo = v.IMO,
+                    Name = v.Name,
+                    Latitude = pos?.Latitude ?? 0,
+                    Longitude = pos?.Longitude ?? 0,
+                    Course = pos?.CourseOverGround,
+                    Speed = pos?.SpeedOverGround,
+                    VesselType = v.VesselType.ToString(),
+                    IconUrl = GetVesselIcon(v.VesselType)
+                };
+            });
+
+            VesselsUpdated?.Invoke(this, vesselMapData);
+        }
+
+        private string GetVesselIcon(VesselType vesselType)
+        {
+            var iconName = vesselType switch
+            {
+                VesselType.Cargo => "cargo",
+                VesselType.Tanker => "tanker",
+                VesselType.Passenger => "passenger",
+                _ => "vessel",
+            };
+            return $"/icons/{iconName}.svg";
         }
 
         private void SelectSuggestion(object? suggestion)

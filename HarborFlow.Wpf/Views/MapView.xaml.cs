@@ -25,8 +25,7 @@ namespace HarborFlow.Wpf.Views
 
             InitializeWebViewAsync();
 
-            _viewModel.FilteredVesselsOnMap.CollectionChanged += VesselsOnMap_CollectionChanged;
-            _viewModel.SearchResults.CollectionChanged += SearchResults_CollectionChanged;
+            _viewModel.VesselsUpdated += VesselsOnMap_CollectionChanged;
             _viewModel.VesselSelected += ViewModel_VesselSelected;
             _viewModel.HistoryTrackRequested += ViewModel_HistoryTrackRequested;
             _viewModel.MapLayerChanged += ViewModel_MapLayerChanged;
@@ -40,35 +39,16 @@ namespace HarborFlow.Wpf.Views
             _isWebViewInitialized = true;
         }
 
-        private void VesselsOnMap_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        private void VesselsOnMap_CollectionChanged(object? sender, IEnumerable<VesselMapData> e)
         {
-            UpdateVesselsOnMapAsync(_viewModel.FilteredVesselsOnMap);
+            UpdateVesselsOnMapAsync(e);
         }
 
-        private void SearchResults_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            UpdateVesselsOnMapAsync(_viewModel.SearchResults);
-        }
-
-        private async void UpdateVesselsOnMapAsync(IEnumerable<Vessel> vessels)
+        private async void UpdateVesselsOnMapAsync(IEnumerable<VesselMapData> vessels)
         {
             if (!_isWebViewInitialized) return;
 
-            var vesselPositions = vessels.Select(v => {
-                var pos = v.Positions.OrderByDescending(p => p.PositionTimestamp).FirstOrDefault();
-                return new 
-                {
-                    v.Name, 
-                    v.IMO, 
-                    Latitude = pos?.Latitude, 
-                    Longitude = pos?.Longitude,
-                    Course = pos?.CourseOverGround,
-                    Speed = pos?.SpeedOverGround,
-                    VesselType = v.VesselType.ToString()
-                };
-            }).Where(p => p.Latitude.HasValue && p.Longitude.HasValue).ToList();
-
-            var json = JsonSerializer.Serialize(vesselPositions);
+            var json = JsonSerializer.Serialize(vessels);
             await WebView.CoreWebView2.ExecuteScriptAsync($"updateVessels('{json}')");
         }
 
