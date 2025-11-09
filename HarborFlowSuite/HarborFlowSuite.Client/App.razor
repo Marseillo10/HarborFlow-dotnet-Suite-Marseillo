@@ -1,0 +1,34 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Blazored.Toast.Configuration
+@using Microsoft.JSInterop
+@using HarborFlowSuite.Client.Providers
+
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p role="alert">Sorry, there's nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+    <BlazoredToasts />
+</CascadingAuthenticationState>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var firebaseAuthenticationStateProvider = (FirebaseAuthenticationStateProvider)AuthenticationStateProvider;
+            await JSRuntime.InvokeVoidAsync("authInterop.init", DotNetObjectReference.Create(firebaseAuthenticationStateProvider));
+        }
+    }
+}

@@ -1,0 +1,92 @@
+@page "/edit-service-request/{Id}"
+@using Microsoft.AspNetCore.Authorization
+@using System.Net.Http
+@using System.Net.Http.Json
+@using HarborFlowSuite.Core.Models
+@inject IHttpClientFactory ClientFactory
+@inject NavigationManager NavigationManager
+@inject IToastService ToastService
+
+@attribute [Authorize]
+
+<h3>Edit Service Request</h3>
+
+@if (_serviceRequest == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <EditForm Model="@_serviceRequest" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <InputText id="title" class="form-control" @bind-Value="_serviceRequest.Title" />
+        </div>
+
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <InputTextArea id="description" class="form-control" @bind-Value="_serviceRequest.Description" />
+        </div>
+
+        <div class="mb-3">
+            <label for="status" class="form-label">Status</label>
+            <InputSelect id="status" class="form-control" @bind-Value="_serviceRequest.Status">
+                @foreach (var status in Enum.GetValues(typeof(ServiceRequestStatus)))
+                {
+                    <option value="@status">@status</option>
+                }
+            </InputSelect>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+
+    private ServiceRequest? _serviceRequest;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
+        try
+        {
+            _serviceRequest = await client.GetFromJsonAsync<ServiceRequest>($"api/servicerequest/{Id}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            ToastService.ShowError(ex.Message);
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
+        try
+        {
+            var response = await client.PutAsJsonAsync($"api/servicerequest/{Id}", _serviceRequest);
+
+            if (response.IsSuccessStatusCode)
+            {
+                ToastService.ShowSuccess("Service request updated successfully!");
+                NavigationManager.NavigateTo("/service-request-management");
+            }
+            else
+            {
+                var errorMessage = await response.Content.ReadAsStringAsync();
+                ToastService.ShowError($"Error updating service request: {errorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            ToastService.ShowError(ex.Message);
+        }
+    }
+}

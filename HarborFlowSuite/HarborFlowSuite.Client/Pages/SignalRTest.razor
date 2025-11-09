@@ -1,0 +1,68 @@
+@page "/signalr-test"
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
+
+<h3>SignalR Test</h3>
+
+<p>Connection Status: @connectionStatus</p>
+
+<button @onclick="Connect" disabled="@(hubConnection?.State == HubConnectionState.Connected)">Connect</button>
+<button @onclick="Disconnect" disabled="@(hubConnection?.State == HubConnectionState.Disconnected || hubConnection?.State == null)">Disconnect</button>
+
+@code {
+    private HubConnection? hubConnection;
+    private string connectionStatus = "Disconnected";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Connect();
+    }
+
+    private async Task Connect()
+    {
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("/aisHub"))
+                .Build();
+
+            hubConnection.On<string>("ReceiveAisData", (message) =>
+            {
+                // Log received messages for debugging
+                Console.WriteLine($"Received AIS Data: {message}");
+            });
+
+            hubConnection.Closed += async (error) =>
+            {
+                connectionStatus = "Disconnected";
+                await InvokeAsync(StateHasChanged);
+            };
+
+            await hubConnection.StartAsync();
+            connectionStatus = "Connected";
+        }
+        catch (Exception ex)
+        {
+            connectionStatus = $"Error: {ex.Message}";
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task Disconnect()
+    {
+        if (hubConnection != null)
+        {
+            await hubConnection.StopAsync();
+            connectionStatus = "Disconnected";
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}

@@ -1,0 +1,77 @@
+@page "/edit-company/{Id}"
+@using Microsoft.AspNetCore.Authorization
+@using System.Net.Http
+@using System.Net.Http.Json
+@using HarborFlowSuite.Core.Models
+@inject IHttpClientFactory ClientFactory
+@inject NavigationManager NavigationManager
+@inject IToastService ToastService
+
+@attribute [Authorize]
+
+<h3>Edit Company</h3>
+
+@if (_company == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <EditForm Model="@_company" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="name" class="form-label">Name</label>
+            <InputText id="name" class="form-control" @bind-Value="_company.Name" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+
+    private Company? _company;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
+        try
+        {
+            _company = await client.GetFromJsonAsync<Company>($"api/company/{Id}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            ToastService.ShowError(ex.Message);
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
+        try
+        {
+            var response = await client.PutAsJsonAsync($"api/company/{Id}", _company);
+
+            if (response.IsSuccessStatusCode)
+            {
+                ToastService.ShowSuccess("Company updated successfully!");
+                NavigationManager.NavigateTo("/company-management");
+            }
+            else
+            {
+                var errorMessage = await response.Content.ReadAsStringAsync();
+                ToastService.ShowError($"Error updating company: {errorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            ToastService.ShowError(ex.Message);
+        }
+    }
+}

@@ -1,0 +1,63 @@
+@page "/add-vessel"
+@using System.Net.Http
+@using System.Net.Http.Json
+@using HarborFlowSuite.Core.DTOs
+@using Microsoft.AspNetCore.Authorization
+@inject IHttpClientFactory ClientFactory
+@inject NavigationManager NavigationManager
+@inject IToastService ToastService
+
+@attribute [Authorize]
+
+<h3>Add Vessel</h3>
+
+<EditForm Model="@_createVesselDto" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label for="name" class="form-label">Name</label>
+        <InputText id="name" class="form-control" @bind-Value="_createVesselDto.Name" />
+    </div>
+
+    <div class="mb-3">
+        <label for="imo" class="form-label">IMO</label>
+        <InputText id="imo" class="form-control" @bind-Value="_createVesselDto.IMO" />
+    </div>
+
+    <div class="mb-3">
+        <label for="type" class="form-label">Type</label>
+        <InputText id="type" class="form-control" @bind-Value="_createVesselDto.Type" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</EditForm>
+
+@code {
+    private readonly CreateVesselDto _createVesselDto = new() { Name = "", Type = "" };
+
+    private async Task HandleValidSubmit()
+    {
+        var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
+        try
+        {
+            var response = await client.PostAsJsonAsync("api/vessel", _createVesselDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                ToastService.ShowSuccess("Vessel added successfully!");
+                NavigationManager.NavigateTo("/vessel-management");
+            }
+            else
+            {
+                var errorMessage = await response.Content.ReadAsStringAsync();
+                ToastService.ShowError($"Error adding vessel: {errorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            ToastService.ShowError(ex.Message);
+        }
+    }
+}

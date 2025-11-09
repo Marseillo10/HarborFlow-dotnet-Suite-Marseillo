@@ -1,0 +1,108 @@
+@page "/vessel-management"
+@using Microsoft.AspNetCore.Authorization
+@using HarborFlowSuite.Core.Models
+@using HarborFlowSuite.Client.Services
+@inject IVesselService VesselService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject IToastService ToastService
+
+@attribute [Authorize]
+
+<PageTitle>Vessel Management</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Vessel Management</h1>
+    <button class="btn btn-success" @onclick='() => NavigationManager.NavigateTo("/add-vessel")'>
+        <span class="bi bi-plus-circle-fill" aria-hidden="true"></span> Add Vessel
+    </button>
+</div>
+
+<p>This page displays a list of vessels.</p>
+
+<div class="mb-3">
+    <input type="text" class="form-control" placeholder="Search by vessel name..." @bind="SearchTerm" @bind:event="oninput" />
+</div>
+
+@if (_vessels == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (FilteredVessels.Any())
+{
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>IMO Number</th>
+                <th>Type</th>
+                <th>Length</th>
+                <th>Width</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var vessel in FilteredVessels)
+            {
+                <tr>
+                    <td>@vessel.Name</td>
+                    <td>@vessel.ImoNumber</td>
+                    <td>@vessel.VesselType</td>
+                    <td>@vessel.Length m</td>
+                    <td>@vessel.Width m</td>
+                    <td>
+                        @if (vessel.IsActive)
+                        {                            <span class="badge bg-success">Active</span>
+                        }
+                        else
+                        {                            <span class="badge bg-danger">Inactive</span>
+                        }
+                    </td>
+                    <td>
+                        <a href="/edit-vessel/@vessel.Id" class="btn btn-sm btn-primary"><span class="bi bi-pencil-square" aria-hidden="true"></span> Edit</a>
+                        <button class="btn btn-sm btn-danger" @onclick='() => ToastService.ShowInfo("Delete functionality not implemented in mock service.")'><span class="bi bi-trash-fill" aria-hidden="true"></span> Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No vessels found matching your criteria.</p>
+}
+
+@code {
+    private List<Vessel>? _vessels;
+    private string _searchTerm = string.Empty;
+
+    private string SearchTerm
+    {
+        get => _searchTerm;
+        set
+        {
+            _searchTerm = value;
+        }
+    }
+
+    private List<Vessel> FilteredVessels => _vessels?.Where(v => v.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList() ?? new List<Vessel>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadVessels();
+    }
+
+    private async Task LoadVessels()
+    {
+        try
+        {
+            _vessels = await VesselService.GetVessels();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            ToastService.ShowError(ex.Message);
+        }
+    }
+}

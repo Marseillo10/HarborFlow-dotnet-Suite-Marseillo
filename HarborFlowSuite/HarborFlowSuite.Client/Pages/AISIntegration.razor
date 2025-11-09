@@ -1,0 +1,84 @@
+@page "/ais-integration"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Text.Json
+@using HarborFlowSuite.Core.Models
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+
+@attribute [Authorize]
+
+<PageTitle>AIS Integration</PageTitle>
+
+<h1>AIS Integration</h1>
+
+<p>Real-time AIS data display.</p>
+
+<div id="ais-map" style="height: 600px;"></div>
+
+@code {
+    private HubConnection? hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/aisHub"), options =>
+            {
+                options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
+            })
+            .Build();
+
+        hubConnection.On<string>("ReceiveAisData", (message) =>
+        {
+            var aisData = JsonSerializer.Deserialize<AisData>(message);
+            if (aisData?.MessageType == "PositionReport")
+            {
+                var positionReport = JsonSerializer.Deserialize<PositionReport>(aisData.Message.ToString());
+                if (positionReport != null)
+                {
+                    JSRuntime.InvokeVoidAsync("HarborFlowMap.updateVesselMarker",
+                        positionReport.UserID,
+                        positionReport.Latitude,
+                        positionReport.Longitude,
+                        positionReport.Cog,
+                        positionReport.Sog,
+                        "Vessel " + positionReport.UserID);
+                }
+            }
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("HarborFlowMap.initMap", "ais-map");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+
+    public class AisData
+    {
+        public string MessageType { get; set; }
+        public object Message { get; set; }
+    }
+
+    public class PositionReport
+    {
+        public int UserID { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public double Cog { get; set; }
+        public double Sog { get; set; }
+    }
+}

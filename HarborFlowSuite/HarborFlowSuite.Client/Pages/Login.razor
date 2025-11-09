@@ -1,0 +1,68 @@
+@page "/login"
+@using HarborFlowSuite.Client.Services
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+
+<h3>Login</h3>
+
+<div class="card">
+    <div class="card-body">
+        <EditForm Model="@_loginModel" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <InputText id="email" class="form-control" @bind-Value="_loginModel.Email" />
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-group">
+                    <InputText id="password" type="@(_showPassword ? "text" : "password")" class="form-control" @bind-Value="_loginModel.Password" />
+                    <div class="input-group-append">
+                        <span class="input-group-text" @onclick="TogglePasswordVisibility" style="cursor: pointer; font-size: 1.2rem; color: #6c757d;" title="@(_showPassword ? "Hide password" : "Show password")">
+                            <i class="fas @(_showPassword ? "fa-eye-slash" : "fa-eye")"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Login</button>
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <div class="alert alert-danger mt-3">@_errorMessage</div>
+            }
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private readonly LoginModel _loginModel = new() { Email = "", Password = "" };
+    private string? _errorMessage;
+    private bool _showPassword;
+
+    private void TogglePasswordVisibility()
+    {
+        _showPassword = !_showPassword;
+    }
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            await AuthService.SignIn(_loginModel.Email, _loginModel.Password);
+            NavigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+    }
+
+    public class LoginModel
+    {
+        public required string Email { get; set; }
+        public required string Password { get; set; }
+    }
+}

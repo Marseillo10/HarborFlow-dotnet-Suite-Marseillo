@@ -1,0 +1,24 @@
+using System;
+using System.Collections.Generic;
+
+namespace HarborFlowSuite.Core.Models
+{
+    public class User
+    {
+        public Guid Id { get; set; }
+        public Guid CompanyId { get; set; }
+        public Guid RoleId { get; set; }
+        public string FirebaseUid { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+
+        public Company? Company { get; set; }
+        public Role? Role { get; set; }
+        public ICollection<ServiceRequest>? ServiceRequests { get; set; }
+        public ICollection<MapBookmark>? MapBookmarks { get; set; }
+        public ICollection<ApprovalHistory>? ApprovalHistories { get; set; }
+    }
+}
