@@ -56,7 +56,7 @@
             if (success)
             {
                 Console.WriteLine("Login successful. Navigating to /");
-                NavigationManager.NavigateTo("/");
+                NavigationManager.NavigateTo("/", forceLoad: true);
             }
             else
             {
