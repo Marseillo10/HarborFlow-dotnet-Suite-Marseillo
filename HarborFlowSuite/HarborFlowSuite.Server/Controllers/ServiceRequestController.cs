@@ -31,7 +31,18 @@ namespace HarborFlowSuite.Server.Controllers
         [HttpPost]
         public async Task<ActionResult<ServiceRequest>> CreateServiceRequest([FromBody] ServiceRequest serviceRequest)
         {
-            var createdServiceRequest = await _serviceRequestService.CreateServiceRequest(serviceRequest);
+            var firebaseUid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(firebaseUid))
+            {
+                return Unauthorized("User not found.");
+            }
+            var createdServiceRequest = await _serviceRequestService.CreateServiceRequest(serviceRequest, firebaseUid);
+
+            if (createdServiceRequest == null)
+            {
+                return BadRequest("User not found or error creating service request.");
+            }
+
             return CreatedAtAction(nameof(GetServiceRequests), new { id = createdServiceRequest.Id }, createdServiceRequest);
         }
 

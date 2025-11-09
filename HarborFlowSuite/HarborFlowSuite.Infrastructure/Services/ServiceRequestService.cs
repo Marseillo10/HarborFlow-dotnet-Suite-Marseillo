@@ -44,11 +44,21 @@ namespace HarborFlowSuite.Infrastructure.Services
             return serviceRequest;
         }
 
-        public async Task<ServiceRequest> CreateServiceRequest(ServiceRequest serviceRequest)
+        public async Task<ServiceRequest> CreateServiceRequest(ServiceRequest serviceRequest, string firebaseUid)
         {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
+            if (user == null)
+            {
+                // Or throw an exception, depending on how you want to handle this case
+                return null;
+            }
+
             serviceRequest.Id = Guid.NewGuid();
+            serviceRequest.RequestorUserId = user.Id;
+            serviceRequest.CompanyId = user.CompanyId;
             serviceRequest.CreatedAt = DateTime.UtcNow;
             serviceRequest.UpdatedAt = DateTime.UtcNow;
+
             _context.ServiceRequests.Add(serviceRequest);
             await _context.SaveChangesAsync();
             return serviceRequest;
