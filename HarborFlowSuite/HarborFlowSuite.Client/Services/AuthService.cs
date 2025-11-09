@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Microsoft.JSInterop;
 
@@ -17,9 +18,17 @@ public class AuthService : IAuthService
         return await _jsRuntime.InvokeAsync<string>("firebaseAuth.getCurrentUserToken");
     }
 
-    public async Task SignIn(string email, string password)
+    public async Task<bool> SignIn(string email, string password)
     {
-        await _jsRuntime.InvokeVoidAsync("firebaseAuth.signIn", email, password);
+        try
+        {
+            return await _jsRuntime.InvokeAsync<bool>("firebaseAuth.signIn", email, password);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error during Firebase sign-in JS interop: {ex.Message}");
+            return false;
+        }
     }
 
     public async Task SignOut()

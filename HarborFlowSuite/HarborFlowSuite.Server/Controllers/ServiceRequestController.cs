@@ -3,72 +3,58 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using HarborFlowSuite.Application.Services;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HarborFlowSuite.Server.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class ServiceRequestController : ControllerBase
     {
-        [HttpGet]
-        public Task<ActionResult<List<ServiceRequest>>> GetServiceRequests()
+        private readonly IServiceRequestService _serviceRequestService;
+
+        public ServiceRequestController(IServiceRequestService serviceRequestService)
         {
-            var serviceRequests = new List<ServiceRequest>
-            {
-                new ServiceRequest
-                {
-                    Id = Guid.NewGuid(),
-                    RequestorUserId = Guid.NewGuid(),
-                    CompanyId = Guid.NewGuid(),
-                    Title = "Fuel Refueling Request",
-                    Description = "Request for 5000 liters of marine diesel for Ever Given.",
-                    Status = ServiceRequestStatus.Pending.ToString(),
-                    Priority = "High",
-                    RequestedAt = DateTime.UtcNow.AddDays(-2),
-                    CreatedAt = DateTime.UtcNow.AddDays(-2),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-1)
-                },
-                new ServiceRequest
-                {
-                    Id = Guid.NewGuid(),
-                    RequestorUserId = Guid.NewGuid(),
-                    CompanyId = Guid.NewGuid(),
-                    Title = "Cargo Inspection for Majestic Maersk",
-                    Description = "Pre-loading inspection for hazardous materials.",
-                    Status = ServiceRequestStatus.Approved.ToString(),
-                    Priority = "Medium",
-                    RequestedAt = DateTime.UtcNow.AddDays(-5),
-                    CreatedAt = DateTime.UtcNow.AddDays(-5),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-3)
-                },
-                new ServiceRequest
-                {
-                    Id = Guid.NewGuid(),
-                    RequestorUserId = Guid.NewGuid(),
-                    CompanyId = Guid.NewGuid(),
-                    Title = "Crew Change for MSC Gulsun",
-                    Description = "Arrangement for 10 crew members to disembark and 12 to embark.",
-                    Status = ServiceRequestStatus.InProgress.ToString(),
-                    Priority = "High",
-                    RequestedAt = DateTime.UtcNow.AddDays(-1),
-                    CreatedAt = DateTime.UtcNow.AddDays(-1),
-                    UpdatedAt = DateTime.UtcNow.AddHours(-12)
-                },
-                new ServiceRequest
-                {
-                    Id = Guid.NewGuid(),
-                    RequestorUserId = Guid.NewGuid(),
-                    CompanyId = Guid.NewGuid(),
-                    Title = "Waste Disposal for HMM Algeciras",
-                    Description = "Disposal of solid waste and bilge water.",
-                    Status = ServiceRequestStatus.Rejected.ToString(),
-                    Priority = "Low",
-                    RequestedAt = DateTime.UtcNow.AddDays(-10),
-                    CreatedAt = DateTime.UtcNow.AddDays(-10),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-8)
-                }
-            };
-            return Task.FromResult<ActionResult<List<ServiceRequest>>>(Ok(serviceRequests));
+            _serviceRequestService = serviceRequestService;
         }
+
+        [HttpGet]
+        public async Task<ActionResult<List<ServiceRequest>>> GetServiceRequests()
+        {
+            var serviceRequests = await _serviceRequestService.GetServiceRequests();
+            return Ok(serviceRequests);
+        }
+
+        [HttpPost("{id}/approve")]
+        public async Task<IActionResult> Approve(Guid id, [FromBody] ApprovalDto approvalDto)
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var result = await _serviceRequestService.ApproveServiceRequest(id, userId, approvalDto.Comments);
+            if (result == null)
+            {
+                return NotFound();
+            }
+            return Ok(result);
+        }
+
+        [HttpPost("{id}/reject")]
+        public async Task<IActionResult> Reject(Guid id, [FromBody] ApprovalDto approvalDto)
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var result = await _serviceRequestService.RejectServiceRequest(id, userId, approvalDto.Comments);
+            if (result == null)
+            {
+                return NotFound();
+            }
+            return Ok(result);
+        }
+    }
+
+    public class ApprovalDto
+    {
+        public string Comments { get; set; }
     }
 }

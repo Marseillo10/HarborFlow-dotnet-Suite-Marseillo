@@ -51,8 +51,15 @@
     {
         try
         {
-            await AuthService.SignIn(_loginModel.Email, _loginModel.Password);
-            NavigationManager.NavigateTo("/");
+            bool success = await AuthService.SignIn(_loginModel.Email, _loginModel.Password);
+            if (success)
+            {
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                _errorMessage = "Login failed. Please check your credentials.";
+            }
         }
         catch (Exception ex)
         {

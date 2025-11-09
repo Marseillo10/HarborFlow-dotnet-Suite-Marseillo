@@ -1,6 +1,12 @@
 window.firebaseAuth = {
-    signIn: function (email, password) {
-        return firebase.auth().signInWithEmailAndPassword(email, password);
+    signIn: async function (email, password) {
+        try {
+            await firebase.auth().signInWithEmailAndPassword(email, password);
+            return true;
+        } catch (error) {
+            console.error("Firebase sign-in error:", error);
+            return false;
+        }
     },
     signOut: function () {
         return firebase.auth().signOut();

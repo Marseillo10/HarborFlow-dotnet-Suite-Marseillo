@@ -14,6 +14,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ServiceRequest> ServiceRequests { get; set; }
     public DbSet<MapBookmark> MapBookmarks { get; set; }
     public DbSet<Company> Companies { get; set; }
+    public DbSet<ApprovalHistory> ApprovalHistories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,6 +26,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<ServiceRequest>().HasKey(sr => sr.Id);
         modelBuilder.Entity<MapBookmark>().HasKey(mb => mb.Id);
         modelBuilder.Entity<Company>().HasKey(c => c.Id);
+        modelBuilder.Entity<ApprovalHistory>().HasKey(ah => ah.Id);
 
         // Configure relationships
         modelBuilder.Entity<User>()
@@ -68,6 +70,18 @@ public class ApplicationDbContext : DbContext
             .WithMany(r => r.Users)
             .HasForeignKey(u => u.RoleId);
             
+        modelBuilder.Entity<ApprovalHistory>()
+            .HasOne(ah => ah.ServiceRequest)
+            .WithMany(sr => sr.ApprovalHistories)
+            .HasForeignKey(ah => ah.ServiceRequestId)
+            .IsRequired();
+
+        modelBuilder.Entity<ApprovalHistory>()
+            .HasOne(ah => ah.Approver)
+            .WithMany()
+            .HasForeignKey(ah => ah.ApproverId)
+            .IsRequired();
+
         // Configure enum conversions
         modelBuilder.Entity<ServiceRequest>()
             .Property(sr => sr.Status)

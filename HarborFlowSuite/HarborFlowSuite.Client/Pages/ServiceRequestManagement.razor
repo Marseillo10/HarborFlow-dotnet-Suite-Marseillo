@@ -6,6 +6,7 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 @inject IToastService ToastService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 @attribute [Authorize]
 
@@ -57,6 +58,11 @@ else if (FilteredServiceRequests.Any())
                     <td>
                         <a href="/edit-service-request/@request.Id" class="btn btn-sm btn-primary"><span class="bi bi-pencil-square" aria-hidden="true"></span> Edit</a>
                         <button class="btn btn-sm btn-danger" @onclick='() => ToastService.ShowInfo("Delete functionality not implemented in mock service.")'><span class="bi bi-trash-fill" aria-hidden="true"></span> Delete</button>
+                        @if (_isPortAuthorityOfficer && request.Status == "Pending")
+                        {
+                            <button class="btn btn-sm btn-success" @onclick="() => OpenApprovalModal(request, true)">Approve</button>
+                            <button class="btn btn-sm btn-warning" @onclick="() => OpenApprovalModal(request, false)">Reject</button>
+                        }
                     </td>
                 </tr>
             }
@@ -68,9 +74,38 @@ else
     <p>No service requests found matching your criteria.</p>
 }
 
+@if (_showApprovalModal)
+{
+    <div class="modal fade show" style="display:block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(_isApproving ? "Approve" : "Reject") Service Request</h5>
+                    <button type="button" class="btn-close" @onclick="CloseApprovalModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Request:</strong> @_selectedRequest.Title</p>
+                    <textarea class="form-control" @bind="_approvalComments" placeholder="Enter comments..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseApprovalModal">Cancel</button>
+                    <button type="button" class="btn @(_isApproving ? "btn-success" : "btn-danger")" @onclick="SubmitApproval">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+
 @code {
     private List<ServiceRequest>? _serviceRequests;
     private string _searchTerm = string.Empty;
+    private bool _isPortAuthorityOfficer;
+    private bool _showApprovalModal;
+    private ServiceRequest _selectedRequest;
+    private bool _isApproving;
+    private string _approvalComments;
 
     private string SearchTerm
     {
@@ -85,6 +120,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        _isPortAuthorityOfficer = user.IsInRole("Port Authority Officer");
         await LoadServiceRequests();
     }
 
@@ -98,6 +136,47 @@ else
         {
             Console.WriteLine(ex.Message);
             ToastService.ShowError(ex.Message);
+        }
+    }
+
+    private void OpenApprovalModal(ServiceRequest request, bool isApproving)
+    {
+        _selectedRequest = request;
+        _isApproving = isApproving;
+        _showApprovalModal = true;
+    }
+
+    private void CloseApprovalModal()
+    {
+        _showApprovalModal = false;
+        _selectedRequest = null;
+        _approvalComments = string.Empty;
+    }
+
+    private async Task SubmitApproval()
+    {
+        try
+        {
+            if (_isApproving)
+            {
+                await ServiceRequestService.ApproveServiceRequest(_selectedRequest.Id, _approvalComments);
+                ToastService.ShowSuccess("Service request approved.");
+            }
+            else
+            {
+                await ServiceRequestService.RejectServiceRequest(_selectedRequest.Id, _approvalComments);
+                ToastService.ShowSuccess("Service request rejected.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError(ex.Message);
+        }
+        finally
+        {
+            CloseApprovalModal();
+            await LoadServiceRequests();
+            StateHasChanged();
         }
     }
 

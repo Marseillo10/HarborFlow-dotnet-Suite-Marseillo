@@ -22,6 +22,7 @@ builder.Services.AddNpgsql<ApplicationDbContext>(connectionString);
 // Register services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IServiceRequestService, ServiceRequestService>();
 
 // Configure Firebase Admin SDK
 FirebaseApp.Create(new AppOptions()
