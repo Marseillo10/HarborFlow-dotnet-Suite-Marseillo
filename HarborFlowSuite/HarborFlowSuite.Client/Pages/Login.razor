@@ -51,18 +51,22 @@
     {
         try
         {
+            Console.WriteLine("Attempting login...");
             bool success = await AuthService.SignIn(_loginModel.Email, _loginModel.Password);
             if (success)
             {
+                Console.WriteLine("Login successful. Navigating to /");
                 NavigationManager.NavigateTo("/");
             }
             else
             {
+                Console.WriteLine("Login failed. Displaying error message.");
                 _errorMessage = "Login failed. Please check your credentials.";
             }
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"Login exception: {ex.Message}");
             _errorMessage = ex.Message;
         }
     }
