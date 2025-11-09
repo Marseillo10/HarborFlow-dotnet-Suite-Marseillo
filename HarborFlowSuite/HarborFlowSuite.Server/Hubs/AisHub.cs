@@ -3,12 +3,19 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace HarborFlowSuite.Server.Hubs
 {
     public class AisHub : Hub
     {
         private ClientWebSocket? _webSocket;
+        private readonly IConfiguration _configuration;
+
+        public AisHub(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
 
         public override async Task OnConnectedAsync()
         {
@@ -17,7 +24,7 @@ namespace HarborFlowSuite.Server.Hubs
 
             var subscriptionMessage = new
             {
-                APIkey = "6e4e5f4fc6ffdf9c3038f42de65c005a9a55a763",
+                APIkey = _configuration["AisStreamApiKey"],
                 BoundingBoxes = new[]
                 {
                     new[] { new[] { -90.0, -180.0 }, new[] { 90.0, 180.0 } }

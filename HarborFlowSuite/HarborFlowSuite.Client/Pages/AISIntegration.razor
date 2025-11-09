@@ -15,7 +15,9 @@
 
 <p>Real-time AIS data display.</p>
 
-<div id="ais-map" style="height: 600px;"></div>
+<div style="height: 600px;">
+    <iframe src="https://map.openseamap.org/" loading="lazy" style="width: 100%; height: 100%; border: none;"></iframe>
+</div>
 
 @code {
     private HubConnection? hubConnection;
@@ -23,7 +25,7 @@
     protected override async Task OnInitializedAsync()
     {
         hubConnection = new HubConnectionBuilder()
-            .WithUrl(Navigation.ToAbsoluteUri("/aisHub"), options =>
+            .WithUrl("https://localhost:7274/aisHub", options =>
             {
                 options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
             })
@@ -37,13 +39,8 @@
                 var positionReport = JsonSerializer.Deserialize<PositionReport>(aisData.Message.ToString());
                 if (positionReport != null)
                 {
-                    JSRuntime.InvokeVoidAsync("HarborFlowMap.updateVesselMarker",
-                        positionReport.UserID,
-                        positionReport.Latitude,
-                        positionReport.Longitude,
-                        positionReport.Cog,
-                        positionReport.Sog,
-                        "Vessel " + positionReport.UserID);
+                    // Removed JSRuntime.InvokeVoidAsync("HarborFlowMap.updateVesselMarker", ...)
+                    // as the iframe does not interact with our local map.js
                 }
             }
         });
@@ -53,10 +50,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            await JSRuntime.InvokeVoidAsync("HarborFlowMap.initMap", "ais-map");
-        }
+        // Removed map initialization as we are using an iframe
     }
 
     public async ValueTask DisposeAsync()

@@ -3,24 +3,36 @@ var vesselMarkers = {};
 
 window.HarborFlowMap = {
     initMap: function (mapElementId) {
-        map = L.map(mapElementId).setView([-7.797, 110.37], 10); // Yogyakarta, Indonesia, zoom level 10
+        try {
+            var mapContainer = document.getElementById(mapElementId);
+            if (!mapContainer) {
+                console.error('Map container not found:', mapElementId);
+                return;
+            }
 
-        L.tileLayer('https://t2.openseamap.org/tile/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            subdomains: 'abc'
-        }).addTo(map);
+            console.log('Initializing map on:', mapElementId);
+            map = L.map(mapElementId).setView([-7.797, 110.37], 10); // Yogyakarta, Indonesia, zoom level 10
 
-        L.tileLayer('http://t1.openseamap.org/seamark/{z}/{x}/{y}.png', {
-            maxZoom: 18,
-            attribution: 'Nautical charts &copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors'
-        }).addTo(map);
+            // Using OpenSeaMap as the base layer
+            var seaMarkUrl = 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png';
+            L.tileLayer(seaMarkUrl, {
+                maxZoom: 18,
+                attribution: 'Nautical charts &copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors'
+            }).addTo(map);
+
+            console.log('Map initialized successfully.');
+
+        } catch (error) {
+            console.error('Error initializing map:', error);
+        }
     },
     addMarker: function (lat, lng, title) {
         if (map) {
             L.marker([lat, lng]).addTo(map)
                 .bindPopup(title)
                 .openPopup();
+        } else {
+            console.error('Map not initialized. Cannot add marker.');
         }
     },
     updateVesselMarker: function (mmsi, lat, lng, heading, speed, name) {
@@ -30,9 +42,10 @@ window.HarborFlowMap = {
                 vesselMarkers[mmsi].setLatLng([lat, lng]);
                 vesselMarkers[mmsi].setPopupContent(popupContent);
             } else {
+                console.log('Adding new vessel marker for:', mmsi);
                 vesselMarkers[mmsi] = L.marker([lat, lng], {
                     icon: L.icon({
-                        iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+                        iconUrl: 'images/vessel-icon.png', // Using a local icon
                         iconSize: [25, 41],
                         iconAnchor: [12, 41],
                         popupAnchor: [1, -34],
@@ -41,7 +54,8 @@ window.HarborFlowMap = {
                 }).addTo(map)
                     .bindPopup(popupContent);
             }
+        } else {
+            console.error('Map not initialized. Cannot update vessel marker.');
         }
     }
 };
-

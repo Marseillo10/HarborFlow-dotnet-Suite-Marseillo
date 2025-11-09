@@ -79,7 +79,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<AisHub>("/aisHub");
-app.MapPost("/aisHub/negotiate", () => Results.Ok());
 
 app.Run();
 
