@@ -1,15 +1,18 @@
 using HarborFlowSuite.Core.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace HarborFlowSuite.Client.Services
 {
     public class MockServiceRequestService : IServiceRequestService
     {
-        public Task<List<ServiceRequest>> GetServiceRequests()
+        private List<ServiceRequest> _serviceRequests;
+
+        public MockServiceRequestService()
         {
-            var serviceRequests = new List<ServiceRequest>
+            _serviceRequests = new List<ServiceRequest>
             {
                 new ServiceRequest
                 {
@@ -64,7 +67,31 @@ namespace HarborFlowSuite.Client.Services
                     UpdatedAt = DateTime.UtcNow.AddDays(-8)
                 }
             };
-            return Task.FromResult(serviceRequests);
+        }
+
+        public Task<ServiceRequest> ApproveServiceRequest(Guid id, string comments)
+        {
+            var request = _serviceRequests.FirstOrDefault(r => r.Id == id);
+            if (request != null)
+            {
+                request.Status = ServiceRequestStatus.Approved.ToString();
+            }
+            return Task.FromResult(request);
+        }
+
+        public Task<List<ServiceRequest>> GetServiceRequests()
+        {
+            return Task.FromResult(_serviceRequests);
+        }
+
+        public Task<ServiceRequest> RejectServiceRequest(Guid id, string comments)
+        {
+            var request = _serviceRequests.FirstOrDefault(r => r.Id == id);
+            if (request != null)
+            {
+                request.Status = ServiceRequestStatus.Rejected.ToString();
+            }
+            return Task.FromResult(request);
         }
     }
 }
