@@ -1,20 +1,16 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.JSInterop;
-using Microsoft.AspNetCore.Components.Authorization;
-using HarborFlowSuite.Client.Providers;
 
 namespace HarborFlowSuite.Client.Services;
 
 public class AuthService : IAuthService
 {
     private readonly IJSRuntime _jsRuntime;
-    private readonly FirebaseAuthenticationStateProvider _authenticationStateProvider;
 
-    public AuthService(IJSRuntime jsRuntime, AuthenticationStateProvider authenticationStateProvider)
+    public AuthService(IJSRuntime jsRuntime)
     {
         _jsRuntime = jsRuntime;
-        _authenticationStateProvider = (FirebaseAuthenticationStateProvider)authenticationStateProvider;
     }
 
     public async Task<string> GetCurrentUserToken()
@@ -26,13 +22,7 @@ public class AuthService : IAuthService
     {
         try
         {
-            bool success = await _jsRuntime.InvokeAsync<bool>("firebaseAuth.signIn", email, password);
-            if (success)
-            {
-                var token = await GetCurrentUserToken();
-                _authenticationStateProvider.AuthenticateUser(token);
-            }
-            return success;
+            return await _jsRuntime.InvokeAsync<bool>("firebaseAuth.signIn", email, password);
         }
         catch (Exception ex)
         {
@@ -44,6 +34,5 @@ public class AuthService : IAuthService
     public async Task SignOut()
     {
         await _jsRuntime.InvokeVoidAsync("firebaseAuth.signOut");
-        _authenticationStateProvider.AuthenticateUser(null);
     }
 }

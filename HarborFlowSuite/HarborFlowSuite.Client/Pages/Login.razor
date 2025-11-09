@@ -2,6 +2,7 @@
 @using HarborFlowSuite.Client.Services
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <h3>Login</h3>
 
@@ -54,7 +55,15 @@
             bool success = await AuthService.SignIn(_loginModel.Email, _loginModel.Password);
             if (success)
             {
-                NavigationManager.NavigateTo("/");
+                var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                if (authState.User.Identity?.IsAuthenticated == true)
+                {
+                    NavigationManager.NavigateTo("/");
+                }
+                else
+                {
+                    _errorMessage = "Login successful, but authentication state not updated. Please try again.";
+                }
             }
             else
             {

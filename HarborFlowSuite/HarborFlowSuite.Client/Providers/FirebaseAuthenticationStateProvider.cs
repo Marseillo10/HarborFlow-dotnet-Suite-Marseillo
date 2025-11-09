@@ -12,13 +12,11 @@ namespace HarborFlowSuite.Client.Providers;
 public class FirebaseAuthenticationStateProvider : AuthenticationStateProvider
 {
     private readonly IAuthService _authService;
-    private readonly IJSRuntime _jsRuntime;
     private ClaimsPrincipal _anonymous = new ClaimsPrincipal(new ClaimsIdentity());
 
-    public FirebaseAuthenticationStateProvider(IAuthService authService, IJSRuntime jsRuntime)
+    public FirebaseAuthenticationStateProvider(IAuthService authService)
     {
         _authService = authService;
-        _jsRuntime = jsRuntime;
     }
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -37,26 +35,20 @@ public class FirebaseAuthenticationStateProvider : AuthenticationStateProvider
         return new AuthenticationState(user);
     }
 
-    public void AuthenticateUser(string token)
+    [JSInvokable]
+    public void OnAuthStateChanged(FirebaseUserDto userDto)
     {
-        if (string.IsNullOrEmpty(token))
+        if (userDto == null)
         {
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_anonymous)));
             return;
         }
 
-        var claims = ParseClaimsFromJwt(token);
+        var claims = ParseClaimsFromJwt(userDto.Token);
         var identity = new ClaimsIdentity(claims, "jwt");
         var user = new ClaimsPrincipal(identity);
 
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
-    }
-
-    // This method is invoked from JavaScript when the Firebase auth state changes
-    [JSInvokable]
-    public void OnAuthStateChanged(FirebaseUserDto userDto)
-    {
-        AuthenticateUser(userDto?.Token);
     }
 
     private static IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
