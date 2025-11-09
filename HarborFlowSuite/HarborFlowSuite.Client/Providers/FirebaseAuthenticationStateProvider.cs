@@ -3,17 +3,22 @@ using System.Threading.Tasks;
 using HarborFlowSuite.Client.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
+using System.Collections.Generic;
+using System;
+using System.Text.Json;
 
 namespace HarborFlowSuite.Client.Providers;
 
 public class FirebaseAuthenticationStateProvider : AuthenticationStateProvider
 {
     private readonly IAuthService _authService;
+    private readonly IJSRuntime _jsRuntime;
     private ClaimsPrincipal _anonymous = new ClaimsPrincipal(new ClaimsIdentity());
 
-    public FirebaseAuthenticationStateProvider(IAuthService authService)
+    public FirebaseAuthenticationStateProvider(IAuthService authService, IJSRuntime jsRuntime)
     {
         _authService = authService;
+        _jsRuntime = jsRuntime;
     }
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -32,20 +37,26 @@ public class FirebaseAuthenticationStateProvider : AuthenticationStateProvider
         return new AuthenticationState(user);
     }
 
-    [JSInvokable]
-    public void OnAuthStateChanged(FirebaseUserDto userDto)
+    public void AuthenticateUser(string token)
     {
-        if (userDto == null)
+        if (string.IsNullOrEmpty(token))
         {
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_anonymous)));
             return;
         }
 
-        var claims = ParseClaimsFromJwt(userDto.Token);
+        var claims = ParseClaimsFromJwt(token);
         var identity = new ClaimsIdentity(claims, "jwt");
         var user = new ClaimsPrincipal(identity);
 
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
+    }
+
+    // This method is invoked from JavaScript when the Firebase auth state changes
+    [JSInvokable]
+    public void OnAuthStateChanged(FirebaseUserDto userDto)
+    {
+        AuthenticateUser(userDto?.Token);
     }
 
     private static IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
@@ -53,7 +64,7 @@ public class FirebaseAuthenticationStateProvider : AuthenticationStateProvider
         var claims = new List<Claim>();
         var payload = jwt.Split('.')[1];
         var jsonBytes = ParseBase64WithoutPadding(payload);
-        var keyValuePairs = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
+        var keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
 
         if (keyValuePairs != null)
         {
