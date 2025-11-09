@@ -28,6 +28,13 @@ namespace HarborFlowSuite.Server.Controllers
             return Ok(serviceRequests);
         }
 
+        [HttpPost]
+        public async Task<ActionResult<ServiceRequest>> CreateServiceRequest([FromBody] ServiceRequest serviceRequest)
+        {
+            var createdServiceRequest = await _serviceRequestService.CreateServiceRequest(serviceRequest);
+            return CreatedAtAction(nameof(GetServiceRequests), new { id = createdServiceRequest.Id }, createdServiceRequest);
+        }
+
         [HttpPost("{id}/approve")]
         public async Task<IActionResult> Approve(Guid id, [FromBody] ApprovalDto approvalDto)
         {
