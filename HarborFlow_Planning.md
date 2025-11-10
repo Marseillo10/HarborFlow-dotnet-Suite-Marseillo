@@ -1,4 +1,3 @@
-/criticalthink I'm done running the projects, you can start checking the web and do review the web command to me yourself with chrome-devtools-mcp! 
 
 * **Workflow Loops**
 Please adhere to the following instructions for the continued development of the web application:
