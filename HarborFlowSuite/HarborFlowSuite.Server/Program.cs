@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using HarborFlowSuite.Application.Services;
 using HarborFlowSuite.Infrastructure.Services;
 using HarborFlowSuite.Server.Hubs;
+using HarborFlowSuite.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 });
 builder.Services.AddOpenApi();
 builder.Services.AddSignalR();
+builder.Services.AddHostedService<AisDataService>();
 
 // Configure PostgreSQL and ApplicationDbContext
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -75,7 +77,7 @@ if (app.Environment.IsDevelopment())
     }
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 app.UseCors("AllowClient");
 

@@ -17,3 +17,4 @@
 /Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/HarborFlowSuite/HarborFlowSuite.Infrastructure/obj/Debug/net9.0/ref/HarborFlowSuite.Infrastructure.dll
 /Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/HarborFlowSuite/HarborFlowSuite.Infrastructure/bin/Debug/net9.0/HarborFlowSuite.Application.dll
 /Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/HarborFlowSuite/HarborFlowSuite.Infrastructure/bin/Debug/net9.0/HarborFlowSuite.Application.pdb
+/Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/HarborFlowSuite/HarborFlowSuite.Infrastructure/obj/Debug/net9.0/HarborFlowSuite.Infrastructure.sourcelink.json

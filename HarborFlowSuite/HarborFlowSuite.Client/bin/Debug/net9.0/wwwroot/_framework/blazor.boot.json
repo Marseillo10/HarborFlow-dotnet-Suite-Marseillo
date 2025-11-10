@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "HarborFlowSuite.Client",
   "resources": {
-    "hash": "sha256-n+yg1+msLyG655hkNmoCl7JzXScZkVyOGkxzGb0HdTw=",
+    "hash": "sha256-zEYjVmqxgvpa2Gm2o9CXLyY7B+Jh7V1Tig8hztR3yJY=",
     "fingerprinting": {
       "Blazored.Toast.4gbrhkrum5.wasm": "Blazored.Toast.wasm",
       "Microsoft.AspNetCore.Authorization.50odlujk1g.wasm": "Microsoft.AspNetCore.Authorization.wasm",
@@ -216,10 +216,9 @@
       "icudt_CJK.tjcz0u77k5.dat": "icudt_CJK.dat",
       "icudt_EFIGS.tptq2av103.dat": "icudt_EFIGS.dat",
       "icudt_no_CJK.lfu7j35m59.dat": "icudt_no_CJK.dat",
-      "HarborFlowSuite.Core.hbyem6okzy.wasm": "HarborFlowSuite.Core.wasm",
-      "HarborFlowSuite.Core.fltxr5hu7w.pdb": "HarborFlowSuite.Core.pdb",
-      "HarborFlowSuite.Client.mjw0e6tzx9.wasm": "HarborFlowSuite.Client.wasm",
-      "HarborFlowSuite.Client.k5pqveag3o.pdb": "HarborFlowSuite.Client.pdb"
+      "HarborFlowSuite.Core.on8pwfpvpx.wasm": "HarborFlowSuite.Core.wasm",
+      "HarborFlowSuite.Core.9oihwocf1c.pdb": "HarborFlowSuite.Core.pdb",
+      "HarborFlowSuite.Client.ar7vyi3iin.wasm": "HarborFlowSuite.Client.wasm"
     },
     "jsModuleNative": {
       "dotnet.native.l4ptthxatg.js": "sha256-ddUN4+taa/Qv7Mr8mLpunJO+0Xw3ViOqBvedhe57/hA="
@@ -444,12 +443,11 @@
       "WindowsBase.ahs9krftg4.wasm": "sha256-bgi2FHdT0ABsUP1yKQQ2AP8qfo1V/bS/4cJFE4OUHX8=",
       "mscorlib.k5iaovx9v7.wasm": "sha256-mEFLDERlY1HMNQHzh68xOPawXvI48O1fHW9PbfXugb4=",
       "netstandard.6sr1qvn64m.wasm": "sha256-Gpf+qEqCYaCB6zqI5sNPIurnfpwRtfcWksgf3CW6mHE=",
-      "HarborFlowSuite.Core.hbyem6okzy.wasm": "sha256-wywg6l2YkhWZVr6+ynneXOz8m1dIRVmzg7jY4oEfBbc=",
-      "HarborFlowSuite.Client.mjw0e6tzx9.wasm": "sha256-wtpTdxzE4KYYGIB/SQuCEVc8njYVljB+6GtdaiawoOE="
+      "HarborFlowSuite.Core.on8pwfpvpx.wasm": "sha256-7PsKZrD8LbikM2L7Aw8JYzZfyVmy6zboPJTq8K4uKtg=",
+      "HarborFlowSuite.Client.ar7vyi3iin.wasm": "sha256-BtPoyYRiVhVVekorojEyYve7r58wCXat5mTvq8nzdRY="
     },
     "pdb": {
-      "HarborFlowSuite.Core.fltxr5hu7w.pdb": "sha256-E9NjC5FSh8YVH6o6XyHAwDzyE3rKOdiXBr1SH+7ynjI=",
-      "HarborFlowSuite.Client.k5pqveag3o.pdb": "sha256-2BgQ/+fe2mI8QZhPU3PBRIvotfs7rtFS7PIjfWTJDwg="
+      "HarborFlowSuite.Core.9oihwocf1c.pdb": "sha256-N4f0rv87JPjxm0mChE5fOxGyVI/bscYCIvMWBavzUCA="
     }
   },
   "cacheBootResources": true,

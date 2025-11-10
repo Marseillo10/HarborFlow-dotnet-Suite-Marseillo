@@ -25,7 +25,7 @@ namespace HarborFlowSuite.Infrastructure.Services
                 return null;
             }
 
-            serviceRequest.Status = ServiceRequestStatus.Approved.ToString();
+            serviceRequest.Status = ServiceRequestStatus.Approved;
             serviceRequest.UpdatedAt = DateTime.UtcNow;
 
             var approvalHistory = new ApprovalHistory
@@ -54,7 +54,7 @@ namespace HarborFlowSuite.Infrastructure.Services
             }
 
             serviceRequest.Id = Guid.NewGuid();
-            serviceRequest.RequestorUserId = user.Id;
+            serviceRequest.RequesterId = user.Id;
             serviceRequest.CompanyId = user.CompanyId;
             serviceRequest.CreatedAt = DateTime.UtcNow;
             serviceRequest.UpdatedAt = DateTime.UtcNow;
@@ -95,7 +95,7 @@ namespace HarborFlowSuite.Infrastructure.Services
                 return null;
             }
 
-            serviceRequest.Status = ServiceRequestStatus.Rejected.ToString();
+            serviceRequest.Status = ServiceRequestStatus.Rejected;
             serviceRequest.UpdatedAt = DateTime.UtcNow;
 
             var approvalHistory = new ApprovalHistory

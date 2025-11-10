@@ -144,7 +144,7 @@
             Console.WriteLine("All data fetched.");
 
             _vesselCount = vesselTask.Result?.Length ?? 0;
-            _pendingServiceRequestCount = serviceRequestTask.Result?.Count(r => r.Status == ServiceRequestStatus.Pending.ToString()) ?? 0;
+            _pendingServiceRequestCount = serviceRequestTask.Result?.Count(r => r.Status == ServiceRequestStatus.Pending) ?? 0;
             _companyCount = companyTask.Result?.Length ?? 0;
             _serviceRequestStatusSummary = serviceRequestStatusTask.Result;
             _vesselTypeSummary = vesselTypeTask.Result;

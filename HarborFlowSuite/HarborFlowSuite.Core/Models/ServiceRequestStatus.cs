@@ -5,8 +5,8 @@ namespace HarborFlowSuite.Core.Models
         Pending,
         Approved,
         Rejected,
-        InProgress,
+        Cancelled,
         Completed,
-        Cancelled
+        InProgress
     }
 }

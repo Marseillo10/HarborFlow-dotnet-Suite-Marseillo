@@ -50,7 +50,7 @@ else if (FilteredServiceRequests.Any())
                     <td>@request.Title</td>
                     <td>@request.Description</td>
                     <td>
-                        <span class="badge @GetStatusBadgeClass(request.Status)">@request.Status</span>
+                        <span class="badge @GetStatusBadgeClass(request.Status)">@request.Status.ToString()</span>
                     </td>
                     <td>
                         <span class="badge @GetPriorityBadgeClass(request.Priority)">@request.Priority</span>
@@ -59,7 +59,7 @@ else if (FilteredServiceRequests.Any())
                     <td>
                         <a href="/edit-service-request/@request.Id" class="btn btn-sm btn-primary"><span class="bi bi-pencil-square" aria-hidden="true"></span> Edit</a>
                         <button class="btn btn-sm btn-danger" @onclick='() => ToastService.ShowInfo("Delete functionality not implemented in mock service.")'><span class="bi bi-trash-fill" aria-hidden="true"></span> Delete</button>
-                        @if (_isPortAuthorityOfficer && request.Status == "Pending")
+                        @if (_isPortAuthorityOfficer && request.Status == ServiceRequestStatus.Pending)
                         {
                             <button class="btn btn-sm btn-success" @onclick="() => OpenApprovalModal(request, true)">Approve</button>
                             <button class="btn btn-sm btn-warning" @onclick="() => OpenApprovalModal(request, false)">Reject</button>
@@ -158,14 +158,18 @@ else
     {
         try
         {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var approverId = Guid.Parse(user.FindFirst(c => c.Type == "nameid")?.Value);
+
             if (_isApproving)
             {
-                await ServiceRequestService.ApproveServiceRequest(_selectedRequest.Id, _approvalComments);
+                await ServiceRequestService.ApproveServiceRequest(_selectedRequest.Id, approverId, _approvalComments);
                 ToastService.ShowSuccess("Service request approved.");
             }
             else
             {
-                await ServiceRequestService.RejectServiceRequest(_selectedRequest.Id, _approvalComments);
+                await ServiceRequestService.RejectServiceRequest(_selectedRequest.Id, approverId, _approvalComments);
                 ToastService.ShowSuccess("Service request rejected.");
             }
         }
@@ -181,27 +185,27 @@ else
         }
     }
 
-    private string GetStatusBadgeClass(string status)
+    private string GetStatusBadgeClass(ServiceRequestStatus status)
     {
         return status switch
         {
-            "Pending" => "bg-warning text-dark",
-            "Approved" => "bg-success",
-            "Rejected" => "bg-danger",
-            "InProgress" => "bg-info text-dark",
-            "Completed" => "bg-primary",
-            "Cancelled" => "bg-secondary",
+            ServiceRequestStatus.Pending => "bg-warning text-dark",
+            ServiceRequestStatus.Approved => "bg-success",
+            ServiceRequestStatus.Rejected => "bg-danger",
+            ServiceRequestStatus.InProgress => "bg-info text-dark",
+            ServiceRequestStatus.Completed => "bg-primary",
+            ServiceRequestStatus.Cancelled => "bg-secondary",
             _ => "bg-light text-dark"
         };
     }
 
-    private string GetPriorityBadgeClass(string priority)
+    private string GetPriorityBadgeClass(int priority)
     {
         return priority switch
         {
-            "High" => "bg-danger",
-            "Medium" => "bg-warning text-dark",
-            "Low" => "bg-info text-dark",
+            1 => "bg-danger",
+            2 => "bg-warning text-dark",
+            3 => "bg-info text-dark",
             _ => "bg-light text-dark"
         };
     }

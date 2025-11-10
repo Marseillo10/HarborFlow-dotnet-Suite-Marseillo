@@ -151,3 +151,4 @@
 /Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/HarborFlowSuite/HarborFlowSuite.Server/bin/Debug/net9.0/System.IdentityModel.Tokens.Jwt.dll
 /Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/HarborFlowSuite/HarborFlowSuite.Server/bin/Debug/net9.0/System.Management.dll
 /Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/HarborFlowSuite/HarborFlowSuite.Server/bin/Debug/net9.0/runtimes/win/lib/net7.0/System.Management.dll
+/Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/HarborFlowSuite/HarborFlowSuite.Server/obj/Debug/net9.0/HarborFlowSuite.Server.sourcelink.json

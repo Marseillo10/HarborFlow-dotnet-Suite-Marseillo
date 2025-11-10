@@ -35,6 +35,9 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                     b.Property<DateTime>("ActionAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime>("ApprovalDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("ApproverId")
                         .HasColumnType("uuid");
 
@@ -48,13 +51,22 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                     b.Property<Guid>("ServiceRequestId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ApproverId");
 
                     b.HasIndex("ServiceRequestId");
 
-                    b.ToTable("ApprovalHistory");
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ApprovalHistories");
                 });
 
             modelBuilder.Entity("HarborFlowSuite.Core.Models.Company", b =>
@@ -108,7 +120,11 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("UserId1")
                         .HasColumnType("uuid");
 
                     b.Property<int>("ZoomLevel")
@@ -116,7 +132,7 @@ namespace HarborFlowSuite.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId1");
 
                     b.ToTable("MapBookmarks");
                 });
@@ -201,10 +217,10 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("AssignedOfficerUserId")
+                    b.Property<Guid?>("AssignedOfficerId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -214,14 +230,16 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Priority")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("RequestDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("RequestedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("RequestorUserId")
+                    b.Property<Guid>("RequesterId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Status")
@@ -230,7 +248,8 @@ namespace HarborFlowSuite.Infrastructure.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -240,11 +259,11 @@ namespace HarborFlowSuite.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssignedOfficerUserId");
+                    b.HasIndex("AssignedOfficerId");
 
                     b.HasIndex("CompanyId");
 
-                    b.HasIndex("RequestorUserId");
+                    b.HasIndex("RequesterId");
 
                     b.HasIndex("VesselId");
 
@@ -281,6 +300,9 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("RoleId1")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -289,6 +311,8 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                     b.HasIndex("CompanyId");
 
                     b.HasIndex("RoleId");
+
+                    b.HasIndex("RoleId1");
 
                     b.ToTable("Users");
                 });
@@ -373,7 +397,7 @@ namespace HarborFlowSuite.Infrastructure.Migrations
             modelBuilder.Entity("HarborFlowSuite.Core.Models.ApprovalHistory", b =>
                 {
                     b.HasOne("HarborFlowSuite.Core.Models.User", "Approver")
-                        .WithMany("ApprovalHistories")
+                        .WithMany()
                         .HasForeignKey("ApproverId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -384,6 +408,10 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("HarborFlowSuite.Core.Models.User", null)
+                        .WithMany("ApprovalHistories")
+                        .HasForeignKey("UserId");
+
                     b.Navigation("Approver");
 
                     b.Navigation("ServiceRequest");
@@ -391,13 +419,9 @@ namespace HarborFlowSuite.Infrastructure.Migrations
 
             modelBuilder.Entity("HarborFlowSuite.Core.Models.MapBookmark", b =>
                 {
-                    b.HasOne("HarborFlowSuite.Core.Models.User", "User")
+                    b.HasOne("HarborFlowSuite.Core.Models.User", null)
                         .WithMany("MapBookmarks")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
+                        .HasForeignKey("UserId1");
                 });
 
             modelBuilder.Entity("HarborFlowSuite.Core.Models.RolePermission", b =>
@@ -422,18 +446,16 @@ namespace HarborFlowSuite.Infrastructure.Migrations
             modelBuilder.Entity("HarborFlowSuite.Core.Models.ServiceRequest", b =>
                 {
                     b.HasOne("HarborFlowSuite.Core.Models.User", "AssignedOfficer")
-                        .WithMany()
-                        .HasForeignKey("AssignedOfficerUserId");
+                        .WithMany("ServiceRequests")
+                        .HasForeignKey("AssignedOfficerId");
 
                     b.HasOne("HarborFlowSuite.Core.Models.Company", "Company")
                         .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CompanyId");
 
                     b.HasOne("HarborFlowSuite.Core.Models.User", "Requester")
-                        .WithMany("ServiceRequests")
-                        .HasForeignKey("RequestorUserId")
+                        .WithMany()
+                        .HasForeignKey("RequesterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -457,10 +479,14 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                         .HasForeignKey("CompanyId");
 
                     b.HasOne("HarborFlowSuite.Core.Models.Role", "Role")
-                        .WithMany("Users")
+                        .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("HarborFlowSuite.Core.Models.Role", null)
+                        .WithMany("Users")
+                        .HasForeignKey("RoleId1");
 
                     b.Navigation("Company");
 

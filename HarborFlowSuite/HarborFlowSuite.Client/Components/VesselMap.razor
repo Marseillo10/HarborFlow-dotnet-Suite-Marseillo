@@ -1,0 +1,32 @@
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.SignalR.Client
+@inject IJSRuntime JSRuntime
+@inject HubConnection HubConnection
+
+<div id="@MapElementId" style="width: 100%; height: 600px;"></div>
+
+@code {
+    [Parameter]
+    public string MapElementId { get; set; } = "map";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("HarborFlowMap.initMap", MapElementId);
+        }
+    }
+
+    public async Task UpdateVesselMarker(string mmsi, double lat, double lng, double heading, double speed, string name)
+    {
+        await JSRuntime.InvokeVoidAsync("HarborFlowMap.updateVesselMarker", mmsi, lat, lng, heading, speed, name);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (HubConnection is not null)
+        {
+            await HubConnection.DisposeAsync();
+        }
+    }
+}

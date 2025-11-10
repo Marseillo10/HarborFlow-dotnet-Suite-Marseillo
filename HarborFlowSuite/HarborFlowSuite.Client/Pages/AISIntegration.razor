@@ -4,8 +4,10 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using System.Text.Json
 @using HarborFlowSuite.Core.Models
+@using HarborFlowSuite.Client.Components
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
+@inject HubConnection HubConnection
 
 @attribute [Authorize]
 
@@ -15,64 +17,26 @@
 
 <p>Real-time AIS data display.</p>
 
-<div style="height: 600px;">
-    <iframe src="https://map.openseamap.org/" loading="lazy" style="width: 100%; height: 100%; border: none;"></iframe>
-</div>
+<VesselMap @ref="vesselMap" />
 
 @code {
-    private HubConnection? hubConnection;
+    private VesselMap? vesselMap;
 
     protected override async Task OnInitializedAsync()
     {
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl("https://localhost:7274/aisHub", options =>
-            {
-                options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
-            })
-            .Build();
-
-        hubConnection.On<string>("ReceiveAisData", (message) =>
+        if (HubConnection.State == HubConnectionState.Disconnected)
         {
-            var aisData = JsonSerializer.Deserialize<AisData>(message);
-            if (aisData?.MessageType == "PositionReport")
-            {
-                var positionReport = JsonSerializer.Deserialize<PositionReport>(aisData.Message.ToString());
-                if (positionReport != null)
-                {
-                    // Removed JSRuntime.InvokeVoidAsync("HarborFlowMap.updateVesselMarker", ...)
-                    // as the iframe does not interact with our local map.js
-                }
-            }
-        });
-
-        await hubConnection.StartAsync();
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        // Removed map initialization as we are using an iframe
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (hubConnection is not null)
-        {
-            await hubConnection.DisposeAsync();
+            await HubConnection.StartAsync();
         }
-    }
 
-    public class AisData
-    {
-        public string MessageType { get; set; }
-        public object Message { get; set; }
-    }
-
-    public class PositionReport
-    {
-        public int UserID { get; set; }
-        public double Latitude { get; set; }
-        public double Longitude { get; set; }
-        public double Cog { get; set; }
-        public double Sog { get; set; }
+        HubConnection.On<string, double, double, double, double, string>("ReceiveVesselPositionUpdate",
+            async (mmsi, lat, lng, heading, speed, name) =>
+            {
+                if (vesselMap != null)
+                {
+                    await vesselMap.UpdateVesselMarker(mmsi, lat, lng, heading, speed, name);
+                    await InvokeAsync(StateHasChanged);
+                }
+            });
     }
 }

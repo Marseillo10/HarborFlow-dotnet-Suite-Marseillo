@@ -43,15 +43,9 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<ServiceRequest>()
             .HasOne(sr => sr.Requester)
-            .WithMany(u => u.ServiceRequests)
-            .HasForeignKey(sr => sr.RequestorUserId)
-            .IsRequired();
-
-        modelBuilder.Entity<ServiceRequest>()
-            .HasOne(sr => sr.AssignedOfficer)
             .WithMany()
-            .HasForeignKey(sr => sr.AssignedOfficerUserId)
-            .IsRequired(false);
+            .HasForeignKey(sr => sr.RequesterId)
+            .IsRequired();
 
         modelBuilder.Entity<ServiceRequest>()
             .HasOne(sr => sr.Vessel)
@@ -59,15 +53,9 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(sr => sr.VesselId)
             .IsRequired(false);
 
-        modelBuilder.Entity<MapBookmark>()
-            .HasOne(mb => mb.User)
-            .WithMany(u => u.MapBookmarks)
-            .HasForeignKey(mb => mb.UserId)
-            .IsRequired();
-
         modelBuilder.Entity<User>()
             .HasOne(u => u.Role)
-            .WithMany(r => r.Users)
+            .WithMany()
             .HasForeignKey(u => u.RoleId);
             
         modelBuilder.Entity<ApprovalHistory>()
@@ -85,6 +73,10 @@ public class ApplicationDbContext : DbContext
         // Configure enum conversions
         modelBuilder.Entity<ServiceRequest>()
             .Property(sr => sr.Status)
+            .HasConversion<string>();
+            
+        modelBuilder.Entity<ApprovalHistory>()
+            .Property(ah => ah.Status)
             .HasConversion<string>();
     }
 }

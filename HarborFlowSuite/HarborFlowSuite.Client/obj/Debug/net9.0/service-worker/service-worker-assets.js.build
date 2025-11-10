@@ -1,5 +1,5 @@
 self.assetsManifest = {
-  "version": "HNYt+p57",
+  "version": "t17XgC5U",
   "assets": [
     {
       "hash": "sha256-YVth6GdBnpA9uQPnfYT+OlewlTjISxbRvITKgVz0l+k=",
@@ -14,20 +14,16 @@ self.assetsManifest = {
       "url": "_framework/Blazored.Toast.4gbrhkrum5.wasm"
     },
     {
-      "hash": "sha256-2BgQ/+fe2mI8QZhPU3PBRIvotfs7rtFS7PIjfWTJDwg=",
-      "url": "_framework/HarborFlowSuite.Client.k5pqveag3o.pdb"
+      "hash": "sha256-BtPoyYRiVhVVekorojEyYve7r58wCXat5mTvq8nzdRY=",
+      "url": "_framework/HarborFlowSuite.Client.ar7vyi3iin.wasm"
     },
     {
-      "hash": "sha256-wtpTdxzE4KYYGIB/SQuCEVc8njYVljB+6GtdaiawoOE=",
-      "url": "_framework/HarborFlowSuite.Client.mjw0e6tzx9.wasm"
+      "hash": "sha256-N4f0rv87JPjxm0mChE5fOxGyVI/bscYCIvMWBavzUCA=",
+      "url": "_framework/HarborFlowSuite.Core.9oihwocf1c.pdb"
     },
     {
-      "hash": "sha256-E9NjC5FSh8YVH6o6XyHAwDzyE3rKOdiXBr1SH+7ynjI=",
-      "url": "_framework/HarborFlowSuite.Core.fltxr5hu7w.pdb"
-    },
-    {
-      "hash": "sha256-wywg6l2YkhWZVr6+ynneXOz8m1dIRVmzg7jY4oEfBbc=",
-      "url": "_framework/HarborFlowSuite.Core.hbyem6okzy.wasm"
+      "hash": "sha256-7PsKZrD8LbikM2L7Aw8JYzZfyVmy6zboPJTq8K4uKtg=",
+      "url": "_framework/HarborFlowSuite.Core.on8pwfpvpx.wasm"
     },
     {
       "hash": "sha256-O6gwBUzf9DWkYK5DXMp4fTEAstwNFIPsjlViL0BTB+s=",
@@ -842,7 +838,7 @@ self.assetsManifest = {
       "url": "_framework/WindowsBase.ahs9krftg4.wasm"
     },
     {
-      "hash": "sha256-3Dzja+MNaQE5GGsvFu909a6x10Rj/J9mI+qs4CqIsv4=",
+      "hash": "sha256-gQ47kd4e158pu6czO6k1og/flxBOXbc2EZm8EumLPXw=",
       "url": "_framework/blazor.boot.json"
     },
     {
@@ -910,7 +906,11 @@ self.assetsManifest = {
       "url": "icon-512.png"
     },
     {
-      "hash": "sha256-f6NlBep5lhHbQ4VOmyf6zoun/aBK3xfjBvkcjBfDzGc=",
+      "hash": "sha256-3SPcTy2/DRzfaD6ccF4UT5dwGVwnmvDTFrzafRt02QM=",
+      "url": "images/vessel-icon.png"
+    },
+    {
+      "hash": "sha256-Z4K3ejT7bMpCyTTzLoTlIZdXSj1jPeHbHUyFCV2BeHM=",
       "url": "index.html"
     },
     {
@@ -918,11 +918,11 @@ self.assetsManifest = {
       "url": "js/auth-init.js"
     },
     {
-      "hash": "sha256-JL/EHtVQJVcg+hoPxHAoVWhvD3/NBFX9WcDR3hNrAik=",
+      "hash": "sha256-r3dCVLAqJIbjYfXdSYoviUi6CXBXzrHWj+2Zry6OUug=",
       "url": "js/auth.js"
     },
     {
-      "hash": "sha256-DdXNv8L1F53dUqORHJ1gHq/fgNM4HiQc30BJDWnHGBI=",
+      "hash": "sha256-ytEvH3xojP3gjuQrt9p12W/XDKBUp4LL3kBADVj5Za4=",
       "url": "js/map.js"
     },
     {

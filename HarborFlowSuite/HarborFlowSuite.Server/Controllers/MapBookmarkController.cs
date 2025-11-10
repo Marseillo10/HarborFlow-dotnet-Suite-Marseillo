@@ -28,8 +28,7 @@ public class MapBookmarkController : ControllerBase
         {
             return Unauthorized();
         }
-        var userGuid = Guid.Parse(userId);
-        return await _context.MapBookmarks.Where(mb => mb.UserId == userGuid).ToListAsync();
+        return await _context.MapBookmarks.Where(mb => mb.UserId == userId).ToListAsync();
     }
 
     [HttpPost]
@@ -48,7 +47,7 @@ public class MapBookmarkController : ControllerBase
             Name = createMapBookmarkDto.Name,
             Latitude = (decimal)createMapBookmarkDto.Latitude,
             Longitude = (decimal)createMapBookmarkDto.Longitude,
-            UserId = Guid.Parse(userId)
+            UserId = userId
         };
 
         _context.MapBookmarks.Add(mapBookmark);

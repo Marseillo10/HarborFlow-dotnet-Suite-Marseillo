@@ -32,6 +32,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9DaGFydFBsYWNlaG9sZGVyLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/HarborFlowSuite/HarborFlowSuite.Client/Components/VesselMap.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9WZXNzZWxNYXAucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/HarborFlowSuite/HarborFlowSuite.Client/Pages/AddCompany.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQWRkQ29tcGFueS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
@@ -90,6 +94,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/HarborFlowSuite/HarborFlowSuite.Client/Pages/MapBookmarkManagement.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTWFwQm9va21hcmtNYW5hZ2VtZW50LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/HarborFlowSuite/HarborFlowSuite.Client/Pages/NauticalChart.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTmF1dGljYWxDaGFydC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/HarborFlowSuite/HarborFlowSuite.Client/Pages/Register.razor]

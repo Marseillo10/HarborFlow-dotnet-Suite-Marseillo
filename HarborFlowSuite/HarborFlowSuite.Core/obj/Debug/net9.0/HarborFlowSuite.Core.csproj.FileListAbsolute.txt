@@ -9,3 +9,4 @@
 /Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/HarborFlowSuite/HarborFlowSuite.Core/obj/Debug/net9.0/refint/HarborFlowSuite.Core.dll
 /Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/HarborFlowSuite/HarborFlowSuite.Core/obj/Debug/net9.0/HarborFlowSuite.Core.pdb
 /Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/HarborFlowSuite/HarborFlowSuite.Core/obj/Debug/net9.0/ref/HarborFlowSuite.Core.dll
+/Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/HarborFlowSuite/HarborFlowSuite.Core/obj/Debug/net9.0/HarborFlowSuite.Core.sourcelink.json
