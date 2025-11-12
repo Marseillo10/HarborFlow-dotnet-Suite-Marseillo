@@ -1,0 +1,54 @@
+@page "/user-profile"
+@using System.Net.Http
+@using System.Net.Http.Json
+@using System.Threading.Tasks
+@using HarborFlowSuite.Core.DTOs
+@inject HttpClient Http
+
+<h3>User Profile</h3>
+
+@if (userProfile == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Edit Profile</h5>
+            <form @onsubmit="UpdateProfile">
+                <div class="mb-3">
+                    <label for="fullName" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="fullName" @bind="userProfile.FullName" />
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" @bind="userProfile.Email" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </form>
+        </div>
+    </div>
+}
+
+@code {
+    private UserProfileDto userProfile = new UserProfileDto();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserProfile();
+    }
+
+    private async Task LoadUserProfile()
+    {
+        userProfile = await Http.GetFromJsonAsync<UserProfileDto>("api/UserProfile");
+    }
+
+    private async Task UpdateProfile()
+    {
+        if (userProfile != null)
+        {
+            await Http.PutAsJsonAsync("api/UserProfile", userProfile);
+        }
+    }
+}

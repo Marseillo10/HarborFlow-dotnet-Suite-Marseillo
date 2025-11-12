@@ -15,10 +15,9 @@ namespace HarborFlowSuite.Core.Models
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
-        public Company? Company { get; set; }
-        public Role? Role { get; set; }
-        public ICollection<ServiceRequest>? ServiceRequests { get; set; }
-        public ICollection<MapBookmark>? MapBookmarks { get; set; }
-        public ICollection<ApprovalHistory>? ApprovalHistories { get; set; }
+        public Company Company { get; set; }
+        public Role Role { get; set; }
+        public ICollection<ServiceRequest> ServiceRequests { get; set; }
+        public ICollection<ApprovalHistory> ApprovalHistories { get; set; }
     }
 }

@@ -1,0 +1,102 @@
+# generated: 2025-11-11
+# project: HarborFflow_dotnet_Suite_Marseillo_v2
+# project_key: HarborFflow_dotnet_Suite_Marseillo_v2
+# tracking_system: file-system
+# story_location: /Users/marseillosatrian/Downloads/HarborFlow_dotnet_Suite_Marseillo_v2/docs/stories
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic exists in epic file but not contexted
+#   - contexted: Next epic tech context created by *epic-tech-context (required)
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - drafted: Story file created in stories folder by *create-story
+#   - ready-for-dev: Draft approved and story context created by *story-ready
+#   - in-progress: Developer actively working on implementation by *dev-story
+#   - review: Implementation complete, ready for review by *code-review
+#   - done: Story completed by *story-done
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - completed: Retrospective has been done by *retrospective
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epics should be 'contexted' before stories can be 'drafted'
+# - SM typically drafts next story ONLY after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', dev reviews, then Dev moves to 'done'
+
+generated: 2025-11-11
+project: HarborFflow_dotnet_Suite_Marseillo_v2
+project_key: HarborFflow_dotnet_Suite_Marseillo_v2
+tracking_system: file-system
+story_location: /Users/marseillosatrian/Downloads/HarborFlow_dotnet_Suite_Marseillo_v2/docs/stories
+
+development_status:
+  epic-1: backlog
+  1-1-display-interactive-map-with-vessel-positions: done
+  1-2-real-time-position-updates: in-progress
+  1-3-implement-vessel-detail-sliding-panel: backlog
+  1-4-multiple-map-layer-support: backlog
+  1-5-implement-collapsible-sidebar-for-map-view: backlog
+  1-6-implement-vessel-hover-tooltip: backlog
+  1-7-implement-map-search-highlighting: backlog
+  1-8-handle-live-feed-interruption-state: backlog
+  epic-1-retrospective: optional
+  epic-2: backlog
+  2-1-firebase-authentication-integration: backlog
+  2-2-jwt-token-validation: backlog
+  2-3-session-management: backlog
+  2-4-user-profile-management: backlog
+  2-5-account-recovery: backlog
+  epic-2-retrospective: optional
+  epic-3: backlog
+  3-1-four-tier-role-system-implementation: backlog
+  3-2-granular-permission-enforcement: backlog
+  3-3-company-based-data-isolation: backlog
+  3-4-role-assignment-management: backlog
+  3-5-permission-inheritance: backlog
+  epic-3-retrospective: optional
+  epic-4: backlog
+  4-1-service-request-status-visualization: backlog
+  4-2-vessel-count-by-type-analytics: backlog
+  4-3-role-based-data-filtering: backlog
+  4-4-real-time-dashboard-updates: backlog
+  4-5-export-functionality: backlog
+  epic-4-retrospective: optional
+  epic-5: backlog
+  5-1-implement-contextual-modal-service-request-form: backlog
+  5-2-request-status-tracking: backlog
+  5-3-company-based-request-filtering: backlog
+  5-4-implement-badge-and-toast-notifications-for-service-requests: backlog
+  5-5-build-two-pane-review-command-center-layout: backlog
+  5-6-implement-request-detail-pane-with-mini-map: backlog
+  5-7-implement-approve-reject-actions-with-keyboard-shortcuts: backlog
+  epic-5-retrospective: optional
+  epic-6: backlog
+  6-1-curated-maritime-news-feed: backlog
+  6-2-client-side-filtering: backlog
+  epic-6-retrospective: optional
+  epic-7: backlog
+  7-1-postgresql-database-schema: backlog
+  epic-7-retrospective: optional
+  epic-8: backlog
+  8-1-save-map-locations: backlog
+  epic-8-retrospective: optional
+  epic-9: backlog
+  9-1-offline-functionality: backlog
+  9-2-background-synchronization: backlog
+  9-3-push-notifications: backlog
+  epic-9-retrospective: optional
+  epic-10: backlog
+  10-1-implement-command-palette-ui: backlog
+  10-2-develop-multi-entity-fuzzy-search-engine: backlog
+  10-3-implement-command-palette-keyboard-navigation-and-action-execution: backlog
+  epic-10-retrospective: optional
+  epic-11: backlog
+  11-1-implement-mudblazor-and-base-theme: backlog
+  11-2-implement-core-application-layout: backlog
+  11-3-define-and-implement-typography-and-spacing-system: backlog
+  epic-11-retrospective: optional

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HarborFlow Suite - Color Theme Visualizer</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: #f8f9fa; color: #212529; }
+        .container { padding: 2rem; }
+        h1, h2, h3 { font-weight: 600; }
+        h1 { text-align: center; margin-bottom: 2rem; }
+        .theme-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; }
+        .theme-card { border: 1px solid #dee2e6; border-radius: 0.5rem; background-color: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; }
+        .theme-header { padding: 1.5rem; border-bottom: 1px solid #dee2e6; }
+        .theme-header h2 { margin: 0 0 0.5rem 0; }
+        .theme-body { padding: 1.5rem; }
+        .palette { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+        .swatch { width: 50px; height: 50px; border-radius: 0.25rem; text-align: center; font-size: 0.75rem; color: white; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        .swatch span { font-weight: 500; }
+        .components-preview h3 { margin-top: 0; }
+        .btn { padding: 0.5rem 1rem; border: none; border-radius: 0.25rem; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.85; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+        .form-group input { width: 100%; padding: 0.5rem; border: 1px solid; border-radius: 0.25rem; }
+        .alert { padding: 1rem; border-radius: 0.25rem; margin-top: 1rem; }
+
+        /* Theme 1: Nautical Professional */
+        .theme-1 .palette .primary { background-color: #0d47a1; }
+        .theme-1 .palette .secondary { background-color: #00838f; }
+        .theme-1 .palette .success { background-color: #2e7d32; }
+        .theme-1 .palette .warning { background-color: #ff8f00; }
+        .theme-1 .palette .error { background-color: #c62828; }
+        .theme-1 .btn.primary { background-color: #0d47a1; color: white; }
+        .theme-1 .btn.secondary { background-color: #00838f; color: white; }
+        .theme-1 input { border-color: #ced4da; }
+        .theme-1 input:focus { border-color: #0d47a1; outline: none; box-shadow: 0 0 0 2px rgba(13, 71, 161, 0.25); }
+        .theme-1 .alert.success { background-color: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
+        .theme-1 .alert.error { background-color: #ffebee; color: #b71c1c; border: 1px solid #ef9a9a; }
+
+        /* Theme 2: Modern Efficiency */
+        .theme-2 .palette .primary { background-color: #4f46e5; }
+        .theme-2 .palette .secondary { background-color: #6b7280; }
+        .theme-2 .palette .success { background-color: #10b981; }
+        .theme-2 .palette .warning { background-color: #f59e0b; }
+        .theme-2 .palette .error { background-color: #ef4444; }
+        .theme-2 .btn.primary { background-color: #4f46e5; color: white; }
+        .theme-2 .btn.secondary { background-color: #6b7280; color: white; }
+        .theme-2 input { border-color: #d1d5db; }
+        .theme-2 input:focus { border-color: #4f46e5; outline: none; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.25); }
+        .theme-2 .alert.success { background-color: #f0fdf4; color: #14532d; border: 1px solid #a7f3d0; }
+        .theme-2 .alert.error { background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+        /* Theme 3: High-Tech Command (Dark) */
+        .theme-3 { background-color: #111827; color: #d1d5db; }
+        .theme-3 .theme-header, .theme-3 .theme-body { border-color: #374151; }
+        .theme-3 .palette .primary { background-color: #2563eb; }
+        .theme-3 .palette .secondary { background-color: #4b5563; }
+        .theme-3 .palette .success { background-color: #059669; }
+        .theme-3 .palette .warning { background-color: #d97706; }
+        .theme-3 .palette .error { background-color: #dc2626; }
+        .theme-3 .btn.primary { background-color: #2563eb; color: white; }
+        .theme-3 .btn.secondary { background-color: #4b5563; color: white; }
+        .theme-3 input { background-color: #1f2937; border-color: #4b5563; color: #d1d5db; }
+        .theme-3 input:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25); }
+        .theme-3 .alert.success { background-color: #064e3b; color: #a7f3d0; border: 1px solid #34d399; }
+        .theme-3 .alert.error { background-color: #991b1b; color: #fecaca; border: 1px solid #ef4444; }
+
+        /* Theme 4: Safety & Clarity */
+        .theme-4 .palette .primary { background-color: #d97706; }
+        .theme-4 .palette .secondary { background-color: #374151; }
+        .theme-4 .palette .success { background-color: #059669; }
+        .theme-4 .palette .warning { background-color: #f59e0b; }
+        .theme-4 .palette .error { background-color: #b91c1c; }
+        .theme-4 .btn.primary { background-color: #d97706; color: white; }
+        .theme-4 .btn.secondary { background-color: #374151; color: white; }
+        .theme-4 input { border-color: #9ca3af; }
+        .theme-4 input:focus { border-color: #d97706; outline: none; box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.25); }
+        .theme-4 .alert.success { background-color: #ecfdf5; color: #047857; border: 1px solid #6ee7b7; }
+        .theme-4 .alert.error { background-color: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Color Theme Visualizer</h1>
+        <div class="theme-grid">
+            <!-- Theme 1 -->
+            <div class="theme-card theme-1">
+                <div class="theme-header">
+                    <h2>1. Nautical Professional</h2>
+                    <p>Trustworthy & Calm. A classic maritime theme with a modern twist.</p>
+                </div>
+                <div class="theme-body">
+                    <div class="palette">
+                        <div class="swatch primary"><span>Primary</span>#0d47a1</div>
+                        <div class="swatch secondary"><span>Second</span>#00838f</div>
+                        <div class="swatch success"><span>Success</span>#2e7d32</div>
+                        <div class="swatch warning"><span>Warn</span>#ff8f00</div>
+                        <div class="swatch error"><span>Error</span>#c62828</div>
+                    </div>
+                    <div class="components-preview">
+                        <h3>Components</h3>
+                        <button class="btn primary">Primary Action</button>
+                        <button class="btn secondary">Secondary</button>
+                        <div class="form-group">
+                            <label for="name1">Name</label>
+                            <input type="text" id="name1" placeholder="Enter name...">
+                        </div>
+                        <div class="alert success">Success! Your request was submitted.</div>
+                        <div class="alert error">Error! Please check your input.</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Theme 2 -->
+            <div class="theme-card theme-2">
+                <div class="theme-header">
+                    <h2>2. Modern Efficiency</h2>
+                    <p>Productive & Focused. A clean, minimalist theme for clarity.</p>
+                </div>
+                <div class="theme-body">
+                    <div class="palette">
+                        <div class="swatch primary"><span>Primary</span>#4f46e5</div>
+                        <div class="swatch secondary"><span>Second</span>#6b7280</div>
+                        <div class="swatch success"><span>Success</span>#10b981</div>
+                        <div class="swatch warning"><span>Warn</span>#f59e0b</div>
+                        <div class="swatch error"><span>Error</span>#ef4444</div>
+                    </div>
+                    <div class="components-preview">
+                        <h3>Components</h3>
+                        <button class="btn primary">Primary Action</button>
+                        <button class="btn secondary">Secondary</button>
+                        <div class="form-group">
+                            <label for="name2">Name</label>
+                            <input type="text" id="name2" placeholder="Enter name...">
+                        </div>
+                        <div class="alert success">Success! Your request was submitted.</div>
+                        <div class="alert error">Error! Please check your input.</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Theme 3 -->
+            <div class="theme-card theme-3">
+                <div class="theme-header">
+                    <h2>3. High-Tech Command</h2>
+                    <p>Empowered & In Control. A dark theme for a high-tech command center feel.</p>
+                </div>
+                <div class="theme-body">
+                    <div class="palette">
+                        <div class="swatch primary"><span>Primary</span>#2563eb</div>
+                        <div class="swatch secondary"><span>Second</span>#4b5563</div>
+                        <div class="swatch success"><span>Success</span>#059669</div>
+                        <div class="swatch warning"><span>Warn</span>#d97706</div>
+                        <div class="swatch error"><span>Error</span>#dc2626</div>
+                    </div>
+                    <div class="components-preview">
+                        <h3>Components</h3>
+                        <button class="btn primary">Primary Action</button>
+                        <button class="btn secondary">Secondary</button>
+                        <div class="form-group">
+                            <label for="name3">Name</label>
+                            <input type="text" id="name3" placeholder="Enter name...">
+                        </div>
+                        <div class="alert success">Success! Your request was submitted.</div>
+                        <div class="alert error">Error! Please check your input.</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Theme 4 -->
+            <div class="theme-card theme-4">
+                <div class="theme-header">
+                    <h2>4. Safety & Clarity</h2>
+                    <p>Reliable & Clear. A theme inspired by maritime safety colors for high visibility.</p>
+                </div>
+                <div class="theme-body">
+                    <div class="palette">
+                        <div class="swatch primary"><span>Primary</span>#d97706</div>
+                        <div class="swatch secondary"><span>Second</span>#374151</div>
+                        <div class="swatch success"><span>Success</span>#059669</div>
+                        <div class="swatch warning"><span>Warn</span>#f59e0b</div>
+                        <div class="swatch error"><span>Error</span>#b91c1c</div>
+                    </div>
+                    <div class="components-preview">
+                        <h3>Components</h3>
+                        <button class="btn primary">Primary Action</button>
+                        <button class="btn secondary">Secondary</button>
+                        <div class="form-group">
+                            <label for="name4">Name</label>
+                            <input type="text" id="name4" placeholder="Enter name...">
+                        </div>
+                        <div class="alert success">Success! Your request was submitted.</div>
+                        <div class="alert error">Error! Please check your input.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -11,7 +11,7 @@ namespace HarborFlowSuite.Server.Hubs
             return base.OnConnectedAsync();
         }
 
-        public override Task OnDisconnectedAsync(System.Exception? exception)
+        public override Task OnDisconnectedAsync(System.Exception exception)
         {
             // Logic to handle client disconnections can be added here.
             return base.OnDisconnectedAsync(exception);

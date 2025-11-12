@@ -25,13 +25,14 @@ window.HarborFlowMap = {
                     position.heading,
                     position.speed,
                     position.vesselName,
-                    position.vesselType
+                    position.vesselType,
+                    position.metadata
                 );
             });
         }
     },
 
-    updateVesselMarker: function (mmsi, lat, lng, heading, speed, name, type = 'HSC') {
+    updateVesselMarker: function (mmsi, lat, lng, heading, speed, name, type = 'HSC', metadata) {
         if (!this.map) return;
 
         const iconUrl = this.getIconUrl(type);
@@ -43,12 +44,18 @@ window.HarborFlowMap = {
             popupAnchor: [0, -24]
         });
 
-        const popupContent = `<b>Vessel:</b> ${name}<br>
+        let popupContent = `<b>Vessel:</b> ${name}<br>
                               <b>Type:</b> ${type}<br>
                               <b>Lat:</b> ${lat}<br>
                               <b>Lng:</b> ${lng}<br>
                               <b>Speed:</b> ${speed} knots<br>
                               <b>Heading:</b> ${heading}°`;
+
+        if (metadata) {
+            popupContent += `<br><b>Flag:</b> ${metadata.flag}<br>
+                             <b>Length:</b> ${metadata.length}m<br>
+                             <b>IMO:</b> ${metadata.imoNumber}`;
+        }
 
         if (this.vesselMarkers[mmsi]) {
             // Update existing marker

@@ -1,5 +1,6 @@
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.SignalR.Client
+@using HarborFlowSuite.Core.DTOs
 @inject IJSRuntime JSRuntime
 @inject HubConnection HubConnection
 
@@ -17,9 +18,9 @@
         }
     }
 
-    public async Task UpdateVesselMarker(string mmsi, double lat, double lng, double heading, double speed, string name)
+    public async Task UpdateVesselMarker(string mmsi, double lat, double lng, double heading, double speed, string name, string vesselType, VesselMetadataDto metadata)
     {
-        await JSRuntime.InvokeVoidAsync("HarborFlowMap.updateVesselMarker", mmsi, lat, lng, heading, speed, name);
+        await JSRuntime.InvokeVoidAsync("HarborFlowMap.updateVesselMarker", mmsi, lat, lng, heading, speed, name, vesselType, metadata);
     }
 
     public async ValueTask DisposeAsync()

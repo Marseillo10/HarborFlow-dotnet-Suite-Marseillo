@@ -5,7 +5,9 @@
 @using System.Net.Http
 @using System.Net.Http.Json
 @using HarborFlowSuite.Client.Components
+@using Microsoft.AspNetCore.SignalR.Client
 @inject IHttpClientFactory ClientFactory
+@inject HubConnection HubConnection
 
 @attribute [Authorize]
 
@@ -124,7 +126,7 @@
                 Interactive Map
             </div>
             <div class="card-body map-container" style="height: 600px;">
-                <Map />
+                <VesselMap @ref="vesselMap" />
             </div>
         </div>
     </div>
@@ -136,6 +138,7 @@
     private int _companyCount;
     private List<ServiceRequestStatusSummaryDto> _serviceRequestStatusSummary;
     private List<VesselTypeSummaryDto> _vesselTypeSummary;
+    private VesselMap? vesselMap;
 
     protected override async Task OnInitializedAsync()
     {
@@ -163,6 +166,21 @@
             _vesselTypeSummary = vesselTypeTask.Result;
 
             Console.WriteLine("Dashboard data processed.");
+
+            if (HubConnection.State == HubConnectionState.Disconnected)
+            {
+                await HubConnection.StartAsync();
+            }
+
+            HubConnection.On<string, double, double, double, double, string, string, VesselMetadataDto>("ReceiveVesselPositionUpdate",
+                async (mmsi, lat, lng, heading, speed, name, vesselType, metadata) =>
+                {
+                    if (vesselMap != null)
+                    {
+                        await vesselMap.UpdateVesselMarker(mmsi, lat, lng, heading, speed, name, vesselType, metadata);
+                        await InvokeAsync(StateHasChanged);
+                    }
+                });
         }
         catch (Exception ex)
         {

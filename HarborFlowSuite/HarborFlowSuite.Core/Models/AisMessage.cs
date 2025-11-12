@@ -11,5 +11,6 @@ namespace HarborFlowSuite.Core.Models
     public class AisMessageContent
     {
         public PositionReport PositionReport { get; set; }
+        public ShipStaticData ShipStaticData { get; set; }
     }
 }

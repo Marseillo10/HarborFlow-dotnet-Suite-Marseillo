@@ -12,9 +12,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Vessel> Vessels { get; set; }
     public DbSet<ServiceRequest> ServiceRequests { get; set; }
-    public DbSet<MapBookmark> MapBookmarks { get; set; }
     public DbSet<Company> Companies { get; set; }
     public DbSet<ApprovalHistory> ApprovalHistories { get; set; }
+    public DbSet<GfwMetadataCache> GfwMetadataCache { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,7 +24,6 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<User>().HasKey(u => u.Id);
         modelBuilder.Entity<Vessel>().HasKey(v => v.Id);
         modelBuilder.Entity<ServiceRequest>().HasKey(sr => sr.Id);
-        modelBuilder.Entity<MapBookmark>().HasKey(mb => mb.Id);
         modelBuilder.Entity<Company>().HasKey(c => c.Id);
         modelBuilder.Entity<ApprovalHistory>().HasKey(ah => ah.Id);
 

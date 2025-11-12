@@ -20,7 +20,12 @@ public class CustomAuthorizationMessageHandler : DelegatingHandler
         var token = await _authService.GetCurrentUserToken();
         if (!string.IsNullOrEmpty(token))
         {
+            Console.WriteLine($"Attaching token: {token}");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+        else
+        {
+            Console.WriteLine("No token found.");
         }
 
         return await base.SendAsync(request, cancellationToken);

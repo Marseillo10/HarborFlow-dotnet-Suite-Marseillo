@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prototype: Review Command Center</title>
+    <style>
+        :root {
+            --primary: #0d47a1;
+            --secondary: #00838f;
+            --success: #2e7d32;
+            --error: #c62828;
+            --bg-dark: #111827;
+            --bg-light: #1f2937;
+            --text-light: #d1d5db;
+            --text-dark: #9ca3af;
+            --border-color: #374151;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            height: 100vh;
+            overflow: hidden;
+        }
+        .command-center {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            height: 100vh;
+        }
+        #request-queue {
+            background-color: var(--bg-light);
+            border-right: 1px solid var(--border-color);
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        #request-queue h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        #request-queue ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #request-queue li {
+            padding: 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        #request-queue li:hover {
+            background-color: var(--border-color);
+        }
+        #request-queue li.active {
+            background-color: var(--primary);
+            border-color: var(--secondary);
+        }
+        #request-queue li h3 {
+            margin: 0 0 0.25rem 0;
+            font-size: 1rem;
+            color: white;
+        }
+        #request-queue li p {
+            margin: 0;
+            font-size: 0.875rem;
+            color: var(--text-dark);
+        }
+        #request-queue li.fading-out {
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+        }
+        #detail-pane {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        #detail-pane h2 {
+            margin-top: 0;
+        }
+        .detail-group {
+            margin-bottom: 1.5rem;
+        }
+        .detail-group label {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+        .detail-group p {
+            margin: 0;
+            font-size: 1rem;
+        }
+        .mini-map {
+            height: 200px;
+            background-color: #334155;
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-style: italic;
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+        }
+        .action-buttons {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn:hover:not(:disabled) {
+            opacity: 0.85;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-danger { background-color: var(--error); color: white; }
+        #rejection-reason {
+            display: none;
+            margin-top: 1rem;
+        }
+        #rejection-reason textarea {
+            width: 100%;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            border-radius: 0.375rem;
+            min-height: 60px;
+        }
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .toast {
+            background-color: #2e7d32;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.375rem;
+            margin-top: 1rem;
+            opacity: 0;
+            transition: opacity 0.5s, transform 0.5s;
+            transform: translateX(100%);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="command-center">
+        <div id="request-queue">
+            <h2>Pending Requests (<span id="queue-count"></span>)</h2>
+            <ul id="queue-list"></ul>
+            <div id="inbox-zero" style="display: none; text-align: center; padding: 2rem; color: var(--text-dark);">
+                <h3>No pending requests.</h3>
+                <p>Inbox zero!</p>
+            </div>
+        </div>
+        <div id="detail-pane">
+            <!-- Details will be rendered here -->
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+        const initialRequests = [
+            { id: 'SR-12345', vessel: 'The Wanderer', type: 'Pilotage', time: '14:30 UTC', location: 'Berth 12', notes: 'Requires senior pilot due to vessel size.' },
+            { id: 'SR-12346', vessel: 'Oceanic Voyager', type: 'Bunkering', time: '16:00 UTC', location: 'Anchorage B', notes: '' },
+            { id: 'SR-12347', vessel: 'Coastal Runner', type: 'Waste Disposal', time: '18:45 UTC', location: 'Berth 7', notes: 'Standard procedure.' },
+            { id: 'SR-12348', vessel: 'Sea Serpent', type: 'Tug Assistance', time: '21:00 UTC', location: 'Main Channel', notes: 'Requires two tugs for docking.' },
+        ];
+
+        let requests = [...initialRequests];
+        let activeRequestId = null;
+
+        const queueList = document.getElementById('queue-list');
+        const queueCount = document.getElementById('queue-count');
+        const detailPane = document.getElementById('detail-pane');
+        const inboxZeroMessage = document.getElementById('inbox-zero');
+
+        function renderQueue() {
+            queueList.innerHTML = '';
+            requests.forEach(req => {
+                const li = document.createElement('li');
+                li.dataset.id = req.id;
+                li.innerHTML = `
+                    <h3>${req.vessel}</h3>
+                    <p>${req.type} @ ${req.time}</p>
+                `;
+                li.addEventListener('click', () => setActiveRequest(req.id));
+                queueList.appendChild(li);
+            });
+            updateQueueCount();
+            if (requests.length > 0) {
+                inboxZeroMessage.style.display = 'none';
+                queueList.style.display = 'block';
+            } else {
+                inboxZeroMessage.style.display = 'block';
+                queueList.style.display = 'none';
+                detailPane.innerHTML = '';
+            }
+        }
+
+        function updateQueueCount() {
+            queueCount.textContent = requests.length;
+        }
+
+        function renderDetails(request) {
+            if (!request) {
+                detailPane.innerHTML = '';
+                return;
+            }
+            detailPane.innerHTML = `
+                <h2>${request.vessel} <span style="font-size: 1rem; color: var(--text-dark);">${request.id}</span></h2>
+                <div class="detail-group">
+                    <label>Service Type</label>
+                    <p>${request.type}</p>
+                </div>
+                <div class="detail-group">
+                    <label>Requested Time</label>
+                    <p>${request.time}</p>
+                </div>
+                <div class="detail-group">
+                    <label>Location</label>
+                    <p>${request.location}</p>
+                </div>
+                <div class="detail-group">
+                    <label>Notes</label>
+                    <p>${request.notes || 'N/A'}</p>
+                </div>
+                <div class="detail-group">
+                    <label>Spatial Context</label>
+                    <div class="mini-map">Mini-map showing vessel and location</div>
+                </div>
+                <div class="action-buttons">
+                    <button id="approve-btn" class="btn btn-success">Approve (A)</button>
+                    <button id="reject-btn" class="btn btn-danger">Reject (R)</button>
+                </div>
+                <div id="rejection-reason">
+                    <label>Reason for Rejection (Required)</label>
+                    <textarea id="rejection-text" placeholder="e.g., Berth conflict, pilot unavailable..."></textarea>
+                    <button id="confirm-reject-btn" class="btn btn-danger" style="margin-top: 0.5rem;">Confirm Rejection</button>
+                </div>
+            `;
+
+            document.getElementById('approve-btn').addEventListener('click', () => handleDecision('approve'));
+            document.getElementById('reject-btn').addEventListener('click', () => {
+                document.getElementById('rejection-reason').style.display = 'block';
+            });
+            document.getElementById('confirm-reject-btn').addEventListener('click', () => handleDecision('reject'));
+        }
+
+        function setActiveRequest(id) {
+            activeRequestId = id;
+            const request = requests.find(r => r.id === id);
+            
+            document.querySelectorAll('#queue-list li').forEach(li => {
+                li.classList.toggle('active', li.dataset.id === id);
+            });
+
+            renderDetails(request);
+        }
+
+        function handleDecision(decision) {
+            if (!activeRequestId) return;
+
+            const reason = document.getElementById('rejection-text')?.value;
+            if (decision === 'reject' && !reason) {
+                alert('A reason is required to reject a request.');
+                return;
+            }
+
+            const requestIndex = requests.findIndex(r => r.id === activeRequestId);
+            const requestItem = document.querySelector(`li[data-id="${activeRequestId}"]`);
+            
+            showToast(`Request ${activeRequestId} ${decision === 'approve' ? 'Approved' : 'Rejected'}`);
+
+            if (requestItem) {
+                requestItem.classList.add('fading-out');
+            }
+
+            setTimeout(() => {
+                requests.splice(requestIndex, 1);
+                renderQueue();
+
+                if (requests.length > 0) {
+                    const nextIndex = Math.min(requestIndex, requests.length - 1);
+                    setActiveRequest(requests[nextIndex].id);
+                } else {
+                    activeRequestId = null;
+                }
+            }, 300);
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10); // slight delay to allow transition
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    container.removeChild(toast);
+                }, 500);
+            }, 3000);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (!activeRequestId) return;
+
+            if (e.key.toLowerCase() === 'a') {
+                handleDecision('approve');
+            } else if (e.key.toLowerCase() === 'r') {
+                document.getElementById('rejection-reason').style.display = 'block';
+                document.getElementById('rejection-text').focus();
+            }
+
+            const currentActive = document.querySelector('li.active');
+            if (!currentActive) return;
+
+            let nextElement = null;
+            if (e.key === 'ArrowDown') {
+                nextElement = currentActive.nextElementSibling;
+            } else if (e.key === 'ArrowUp') {
+                nextElement = currentActive.previousElementSibling;
+            }
+
+            if (nextElement) {
+                setActiveRequest(nextElement.dataset.id);
+                nextElement.scrollIntoView({ block: 'nearest' });
+            }
+        });
+
+        // Initial Load
+        renderQueue();
+        if (requests.length > 0) {
+            setActiveRequest(requests[0].id);
+        }
+
+    </script>
+</body>
+</html>

@@ -29,6 +29,14 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IServiceRequestService, ServiceRequestService>();
 
+// Configure GFW API client
+builder.Services.AddHttpClient<IGfwMetadataService, GfwMetadataService>((serviceProvider, client) =>
+{
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    client.BaseAddress = new Uri(configuration["GfwApiBaseUrl"]);
+    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {configuration["GfwApiKey"]}");
+});
+
 // Configure Firebase Admin SDK
 FirebaseApp.Create(new AppOptions()
 {

@@ -1,0 +1,50 @@
+# Workflow Status Template
+# This tracks progress through BMM methodology phases
+# Phase 3/4 (Implementation) is tracked separately in sprint-status.yaml
+
+# generated: Tuesday, November 11, 2025
+# project: HarborFflow_dotnet_Suite_Marseillo_v2
+# project_type: software
+# selected_track: method
+# field_type: brownfield
+# workflow_path: /Users/marseillosatrian/Downloads/HarborFlow_dotnet_Suite_Marseillo_v2/.bmad/bmm/workflows/workflow-status/paths/method-brownfield.yaml
+
+# STATUS DEFINITIONS:
+# ==================
+# Initial Status (before completion):
+#   - required: Must be completed to progress
+#   - optional: Can be completed but not required
+#   - recommended: Strongly suggested but not required
+#   - conditional: Required only if certain conditions met (e.g., if_has_ui)
+#
+# Completion Status:
+#   - {file-path}: File created/found (e.g., "docs/product-brief.md")
+#   - skipped: Optional/conditional workflow that was skipped
+
+generated: "Tuesday, November 11, 2025"
+project: "HarborFflow_dotnet_Suite_Marseillo_v2"
+project_type: "software"
+selected_track: "method"
+field_type: "brownfield"
+workflow_path: "/Users/marseillosatrian/Downloads/HarborFlow_dotnet_Suite_Marseillo_v2/.bmad/bmm/workflows/workflow-status/paths/method-brownfield.yaml"
+
+workflow_status:
+  # Prerequisite: Documentation
+  document-project: /Users/marseillosatrian/Downloads/HarborFlow_dotnet_Suite_Marseillo_v2/docs/index.md  # agent: analyst
+
+  # Phase 0: Discovery (Optional)
+
+  # Phase 1: Planning
+  prd: /Users/marseillosatrian/Downloads/HarborFlow_dotnet_Suite_Marseillo_v2/docs/PRD.md  # agent: pm
+  validate-prd: /Users/marseillosatrian/Downloads/HarborFlow_dotnet_Suite_Marseillo_v2/docs/validation-report-2025-11-12T12:00:00Z.md  # agent: pm
+  create-epics-and-stories: /Users/marseillosatrian/Downloads/HarborFlow_dotnet_Suite_Marseillo_v2/docs/epics.md  # agent: pm
+  create-design: /Users/marseillosatrian/Downloads/HarborFlow_dotnet_Suite_Marseillo_v2/docs/ux-design-specification.md  # agent: ux-designer
+
+  # Phase 2: Solutioning
+  create-architecture: /Users/marseillosatrian/Downloads/HarborFlow_dotnet_Suite_Marseillo_v2/docs/architecture.md  # agent: architect
+  validate-architecture: /Users/marseillosatrian/Downloads/HarborFlow_dotnet_Suite_Marseillo_v2/docs/validation-report-architecture-2025-11-12T12:00:00Z.md  # agent: architect
+  solutioning-gate-check: /Users/marseillosatrian/Downloads/HarborFlow_dotnet_Suite_Marseillo_v2/docs/implementation-readiness-report-2025-11-11.md  # agent: architect
+
+  # Phase 3: Implementation
+  sprint-planning: /Users/marseillosatrian/Downloads/HarborFlow_dotnet_Suite_Marseillo_v2/.bmad-ephemeral/sprint-status.yaml  # agent: sm
+  story-development: /Users/marseillosatrian/Downloads/HarborFlow_dotnet_Suite_Marseillo_v2/.bmad-ephemeral/stories/1-1-display-interactive-map-with-vessel-positions.context.xml  # agent: sm

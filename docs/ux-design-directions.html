@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HarborFlow Suite - Design Direction Mockups</title>
+    <style>
+        :root {
+            --primary: #0d47a1;
+            --secondary: #00838f;
+            --success: #2e7d32;
+            --warning: #ff8f00;
+            --error: #c62828;
+            --bg-dark: #111827;
+            --bg-light: #1f2937;
+            --text-light: #d1d5db;
+            --text-dark: #9ca3af;
+            --border-color: #374151;
+        }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: var(--bg-dark); color: var(--text-light); display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 250px; background-color: var(--bg-light); padding: 1rem; display: flex; flex-direction: column; border-right: 1px solid var(--border-color); }
+        .sidebar h1 { font-size: 1.2rem; margin: 0 0 2rem 0; color: white; }
+        .sidebar h2 { font-size: 0.8rem; text-transform: uppercase; color: var(--text-dark); margin: 2rem 0 1rem 0; }
+        .sidebar .nav-link { display: block; padding: 0.75rem 1rem; border-radius: 0.375rem; color: var(--text-light); text-decoration: none; margin-bottom: 0.5rem; transition: background-color 0.2s; }
+        .sidebar .nav-link:hover { background-color: var(--border-color); }
+        .sidebar .nav-link.active { background-color: var(--primary); color: white; }
+        .main-content { flex: 1; padding: 2rem; overflow-y: auto; }
+        .mockup-container { border: 1px solid var(--border-color); border-radius: 0.5rem; margin-bottom: 2rem; }
+        .mockup-header { padding: 1rem; background-color: var(--bg-light); border-bottom: 1px solid var(--border-color); }
+        .mockup-header h3 { margin: 0; }
+        .mockup-body { padding: 1.5rem; }
+        .button-group { margin-top: 1rem; }
+        .btn { padding: 0.5rem 1rem; border: none; border-radius: 0.25rem; font-weight: 500; cursor: pointer; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-secondary { background-color: var(--secondary); color: white; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h1>HarborFlow Directions</h1>
+        <h2>Layouts</h2>
+        <a href="#direction1" class="nav-link active" onclick="showDirection('direction1')">1. Sidebar / Dense</a>
+        <a href="#direction2" class="nav-link" onclick="showDirection('direction2')">2. Sidebar / Spacious</a>
+        <a href="#direction3" class="nav-link" onclick="showDirection('direction3')">3. Top Nav / Minimal</a>
+        <a href="#direction4" class="nav-link" onclick="showDirection('direction4')">4. Top Nav / Rich</a>
+    </div>
+    <div class="main-content">
+        <div id="direction1" class="mockup-container direction">
+            <div class="mockup-header">
+                <h3>Direction 1: Sidebar / Dense</h3>
+                <p><strong>Philosophy:</strong> Information-rich command center for power users.</p>
+                <p><strong>Best for:</strong> Users who need to see a lot of data at once and value efficiency over whitespace.</p>
+            </div>
+            <div class="mockup-body">
+                <h4>Dashboard</h4>
+                <p>A dense grid of charts and key metrics.</p>
+                <img src="https://placehold.co/800x400/1f2937/d1d5db?text=Dense+Dashboard+Charts" alt="Dense Dashboard" style="width:100%; border-radius: 0.25rem;">
+                <h4 style="margin-top: 2rem;">Vessel Map</h4>
+                <p>Map with multiple information panels and controls visible.</p>
+                <img src="https://placehold.co/800x400/1f2937/d1d5db?text=Dense+Vessel+Map+View" alt="Dense Map" style="width:100%; border-radius: 0.25rem;">
+            </div>
+        </div>
+        <div id="direction2" class="mockup-container direction" style="display: none;">
+            <div class="mockup-header">
+                <h3>Direction 2: Sidebar / Spacious</h3>
+                <p><strong>Philosophy:</strong> Balanced and calm, providing focus on one task at a time.</p>
+                <p><strong>Best for:</strong> Users who prefer a less cluttered interface and clear visual hierarchy.</p>
+            </div>
+            <div class="mockup-body">
+                <h4>Dashboard</h4>
+                <p>More whitespace around key metrics, larger charts.</p>
+                <img src="https://placehold.co/800x400/1f2937/d1d5db?text=Spacious+Dashboard" alt="Spacious Dashboard" style="width:100%; border-radius: 0.25rem;">
+                <h4 style="margin-top: 2rem;">Service Requests (Kanban)</h4>
+                <p>A clean, spacious Kanban board for managing service requests.</p>
+                <img src="https://placehold.co/800x400/1f2937/d1d5db?text=Spacious+Kanban+Board" alt="Spacious Kanban" style="width:100%; border-radius: 0.25rem;">
+            </div>
+        </div>
+        <div id="direction3" class="mockup-container direction" style="display: none;">
+            <div class="mockup-header">
+                <h3>Direction 3: Top Nav / Minimal</h3>
+                <p><strong>Philosophy:</strong> Content-first approach, maximizing vertical space.</p>
+                <p><strong>Best for:</strong> Users who primarily focus on a single content area, like the map.</p>
+            </div>
+            <div class="mockup-body">
+                <h4>Vessel Map</h4>
+                <p>An almost full-screen map experience with minimal UI chrome.</p>
+                <img src="https://placehold.co/800x400/1f2937/d1d5db?text=Minimal+Map+with+Top+Nav" alt="Minimal Map" style="width:100%; border-radius: 0.25rem;">
+                 <div class="button-group">
+                    <button class="btn btn-primary">Toggle Layers</button>
+                    <button class="btn btn-secondary">Search</button>
+                </div>
+            </div>
+        </div>
+        <div id="direction4" class="mockup-container direction" style="display: none;">
+            <div class="mockup-header">
+                <h3>Direction 4: Top Nav / Rich</h3>
+                <p><strong>Philosophy:</strong> A more traditional web app feel with clear separation of sections.</p>
+                <p><strong>Best for:</strong> Users who are familiar with standard enterprise applications.</p>
+            </div>
+            <div class="mockup-body">
+                <h4>Service Requests (Table View)</h4>
+                <p>A detailed table view for service requests with rich filtering and sorting options.</p>
+                <img src="https://placehold.co/800x400/1f2937/d1d5db?text=Rich+Data+Table+for+Requests" alt="Rich Table" style="width:100%; border-radius: 0.25rem;">
+            </div>
+        </div>
+    </div>
+    <script>
+        function showDirection(id) {
+            document.querySelectorAll('.direction').forEach(el => el.style.display = 'none');
+            document.getElementById(id).style.display = 'block';
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            document.querySelector(`a[href="#${id}"]`).classList.add('active');
+        }
+    </script>
+</body>
+</html>

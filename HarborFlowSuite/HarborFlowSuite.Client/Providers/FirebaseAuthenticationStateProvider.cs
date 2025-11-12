@@ -38,6 +38,7 @@ public class FirebaseAuthenticationStateProvider : AuthenticationStateProvider
     [JSInvokable]
     public void OnAuthStateChanged(FirebaseUserDto userDto)
     {
+        Console.WriteLine("OnAuthStateChanged called");
         if (userDto == null)
         {
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_anonymous)));

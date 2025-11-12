@@ -51,15 +51,18 @@
 
     private async Task HandleLogin()
     {
+        Console.WriteLine("HandleLogin called");
         try
         {
             bool success = await AuthService.SignIn(_loginModel.Email, _loginModel.Password);
+            Console.WriteLine($"SignIn success: {success}");
             if (success)
             {
                 var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                Console.WriteLine($"IsAuthenticated: {authState.User.Identity?.IsAuthenticated}");
                 if (authState.User.Identity?.IsAuthenticated == true)
                 {
-                    NavigationManager.NavigateTo("/");
+                    NavigationManager.NavigateTo("/dashboard");
                 }
                 else
                 {
@@ -74,6 +77,7 @@
         catch (Exception ex)
         {
             _errorMessage = ex.Message;
+            Console.WriteLine($"Login exception: {ex.Message}");
         }
     }
 

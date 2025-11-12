@@ -9,6 +9,7 @@ using HarborFlowSuite.Server.Hubs;
 using System.Text.Json;
 using HarborFlowSuite.Core.Models;
 using Microsoft.Extensions.Configuration;
+using System.Collections.Concurrent;
 
 namespace HarborFlowSuite.Server.Services
 {
@@ -16,13 +17,16 @@ namespace HarborFlowSuite.Server.Services
     {
         private readonly IHubContext<AisHub> _hubContext;
         private readonly IConfiguration _configuration;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private ClientWebSocket _webSocket;
         private readonly string _apiKey;
+        private readonly ConcurrentDictionary<string, string> _vesselTypes = new ConcurrentDictionary<string, string>();
 
-        public AisDataService(IHubContext<AisHub> hubContext, IConfiguration configuration)
+        public AisDataService(IHubContext<AisHub> hubContext, IConfiguration configuration, IServiceScopeFactory serviceScopeFactory)
         {
             _hubContext = hubContext;
             _configuration = configuration;
+            _serviceScopeFactory = serviceScopeFactory;
             _webSocket = new ClientWebSocket();
             _apiKey = _configuration["AisStreamApiKey"];
         }
@@ -43,8 +47,8 @@ namespace HarborFlowSuite.Server.Services
                         var subscriptionMessage = new
                         {
                             APIkey = _apiKey,
-                            BoundingBoxes = new[] { new[] { new[] { -90, -180 }, new[] { 90, 180 } } },
-                            FilterMessageTypes = new[] { "PositionReport" }
+                            BoundingBoxes = new[] { new[] { new[] { -10, 95 }, new[] { 24, 141 } } },
+                            FilterMessageTypes = new[] { "PositionReport", "ShipStaticData" }
                         };
                         var messageBuffer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(subscriptionMessage));
                         await _webSocket.SendAsync(new ArraySegment<byte>(messageBuffer), WebSocketMessageType.Text, true, stoppingToken);
@@ -82,6 +86,14 @@ namespace HarborFlowSuite.Server.Services
                 var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
                 var aisMessage = JsonSerializer.Deserialize<AisMessage>(message);
 
+                if (aisMessage?.MessageType == "ShipStaticData")
+                {
+                    var staticData = aisMessage.Message.ShipStaticData;
+                    var mmsi = staticData.UserID.ToString();
+                    var vesselType = GetVesselType(staticData.Type);
+                    _vesselTypes.AddOrUpdate(mmsi, vesselType, (key, oldValue) => vesselType);
+                }
+
                 if (aisMessage?.MessageType == "PositionReport")
                 {
                     var positionReport = aisMessage.Message.PositionReport;
@@ -91,10 +103,29 @@ namespace HarborFlowSuite.Server.Services
                     var heading = positionReport.TrueHeading;
                     var speed = positionReport.Sog;
                     var name = $"Vessel {mmsi}";
+                    var vesselType = _vesselTypes.GetValueOrDefault(mmsi, "Other");
 
-                    await _hubContext.Clients.All.SendAsync("ReceiveVesselPositionUpdate", mmsi, lat, lon, heading, speed, name, stoppingToken);
+                    using (var scope = _serviceScopeFactory.CreateScope())
+                    {
+                        var gfwMetadataService = scope.ServiceProvider.GetRequiredService<IGfwMetadataService>();
+                        var metadata = await gfwMetadataService.GetVesselMetadataAsync(mmsi);
+                        await _hubContext.Clients.All.SendAsync("ReceiveVesselPositionUpdate", mmsi, lat, lon, heading, speed, name, vesselType, metadata, stoppingToken);
+                    }
                 }
             }
+        }
+
+        private string GetVesselType(int typeCode)
+        {
+            if (typeCode >= 20 && typeCode <= 29) return "WIG";
+            if (typeCode >= 30 && typeCode <= 39) return "Fishing";
+            if (typeCode >= 40 && typeCode <= 49) return "HSC";
+            if (typeCode >= 50 && typeCode <= 59) return "Other";
+            if (typeCode >= 60 && typeCode <= 69) return "Passenger";
+            if (typeCode >= 70 && typeCode <= 79) return "Cargo";
+            if (typeCode >= 80 && typeCode <= 89) return "Tanker";
+            if (typeCode >= 90 && typeCode <= 99) return "Other";
+            return "Other";
         }
     }
 }

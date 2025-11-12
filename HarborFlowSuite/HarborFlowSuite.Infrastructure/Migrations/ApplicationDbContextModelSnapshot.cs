@@ -29,7 +29,6 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Action")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("ActionAt")
@@ -42,7 +41,6 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Comments")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
@@ -76,14 +74,12 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Address")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -94,47 +90,26 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                     b.ToTable("Companies");
                 });
 
-            modelBuilder.Entity("HarborFlowSuite.Core.Models.MapBookmark", b =>
+            modelBuilder.Entity("HarborFlowSuite.Core.Models.GfwMetadataCache", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.Property<string>("Mmsi")
+                        .HasColumnType("text");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<string>("Flag")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImoNumber")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdated")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<double?>("Length")
+                        .HasColumnType("double precision");
 
-                    b.Property<decimal>("Latitude")
-                        .HasColumnType("numeric");
+                    b.HasKey("Mmsi");
 
-                    b.Property<decimal>("Longitude")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid?>("UserId1")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("ZoomLevel")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId1");
-
-                    b.ToTable("MapBookmarks");
+                    b.ToTable("GfwMetadataCache");
                 });
 
             modelBuilder.Entity("HarborFlowSuite.Core.Models.Permission", b =>
@@ -147,11 +122,9 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -172,11 +145,9 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -283,15 +254,12 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("FirebaseUid")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("FullName")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
@@ -330,7 +298,6 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ImoNumber")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
@@ -340,14 +307,12 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                         .HasColumnType("numeric");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("VesselType")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<decimal>("Width")
@@ -415,13 +380,6 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                     b.Navigation("Approver");
 
                     b.Navigation("ServiceRequest");
-                });
-
-            modelBuilder.Entity("HarborFlowSuite.Core.Models.MapBookmark", b =>
-                {
-                    b.HasOne("HarborFlowSuite.Core.Models.User", null)
-                        .WithMany("MapBookmarks")
-                        .HasForeignKey("UserId1");
                 });
 
             modelBuilder.Entity("HarborFlowSuite.Core.Models.RolePermission", b =>
@@ -540,8 +498,6 @@ namespace HarborFlowSuite.Infrastructure.Migrations
             modelBuilder.Entity("HarborFlowSuite.Core.Models.User", b =>
                 {
                     b.Navigation("ApprovalHistories");
-
-                    b.Navigation("MapBookmarks");
 
                     b.Navigation("ServiceRequests");
                 });
