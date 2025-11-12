@@ -1,0 +1,23 @@
+@namespace HarborFlowSuite.Client.Components
+@using HarborFlowSuite.Client.Services
+@inject IJSRuntime JSRuntime
+@inject IVesselService VesselService
+@using HarborFlowSuite.Core.DTOs
+
+<div id="map" style="height: 100vh; width: 100%;"></div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("HarborFlowMap.initMap", "map");
+            var vesselPositions = await VesselService.GetVesselPositions();
+            if (vesselPositions != null)
+            {
+                await JSRuntime.InvokeVoidAsync("HarborFlowMap.addVesselMarkers", vesselPositions);
+            }
+        }
+    }
+}
+

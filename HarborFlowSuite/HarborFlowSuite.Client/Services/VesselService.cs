@@ -1,3 +1,4 @@
+using HarborFlowSuite.Core.DTOs;
 using HarborFlowSuite.Core.Models;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -18,6 +19,11 @@ namespace HarborFlowSuite.Client.Services
         public async Task<List<Vessel>> GetVessels()
         {
             return await _httpClient.GetFromJsonAsync<List<Vessel>>("api/vessel");
+        }
+
+        public async Task<List<VesselPositionDto>> GetVesselPositions()
+        {
+            return await _httpClient.GetFromJsonAsync<List<VesselPositionDto>>("api/vessel/positions");
         }
     }
 }

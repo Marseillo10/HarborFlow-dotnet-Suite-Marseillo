@@ -1,0 +1,132 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.1</storyId>
+    <title>Display Interactive Map with Vessel Positions</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-11</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>/Users/marseillosatrian/Downloads/HarborFlow_dotnet_Suite_Marseillo_v2/.bmad-ephemeral/stories/1-1-display-interactive-map-with-vessel-positions.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>to see an interactive map displaying real-time vessel positions</iWant>
+    <soThat>I can monitor maritime activity</soThat>
+    <tasks>
+- [ ] Task 1 (AC: #1, #2, #3)
+  - [x] Subtask 1.1: Integrate Leaflet.js and OpenStreetMap into Blazor PWA.
+  - [x] Subtask 1.2: Display a basic map centered on a default location.
+  - [x] Subtask 1.3: Ensure map loads within 2 seconds (performance testing).
+- [x] Task 2 (AC: #2)
+  - [x] Subtask 2.1: Develop a mechanism to receive static vessel position data (for initial display).
+  - [x] Subtask 2.2: Render vessel icons on the map at their accurate coordinates.
+  - [x] Subtask 2.3: Implement basic styling for vessel icons.
+- [x] Task 3 (AC: #3)
+  - [x] Subtask 3.1: Implement CSS for responsive map layout.
+  - [x] Subtask 3.2: Test map display and interaction on various screen sizes (desktop, tablet, mobile).
+- [x] Task 4 (AC: #1, #2, #3)
+    - [x] Subtask 4.1: Write unit tests for map component initialization.
+    - [x] Subtask 4.2: Write unit tests for vessel icon rendering logic.
+- [x] Task 5 (AC: #2)
+    - [x] Subtask 5.1: Write integration tests to verify map component interaction with data services.
+- [ ] Task 6 (AC: #1, #2, #3)
+    - [b] Subtask 6.1: Write E2E tests to verify map loading time.
+    - [b] Subtask 6.2: Write E2E tests to verify vessel display on map.
+    - [b] Subtask 6.3: Write E2E tests to verify map responsiveness across devices.
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. The map loads within 2 seconds.
+2. Vessels are displayed with accurate coordinates.
+3. The map is responsive across desktop, tablet, and mobile devices.
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epics and Stories for HarborFlow Suite</title>
+        <section>Epic 1: Real-time Vessel Tracking System</section>
+        <snippet>As a user, I want to see an interactive map displaying real-time vessel positions so that I can monitor maritime activity.</snippet>
+      </doc>
+      <doc>
+        <path>docs/PRD.md</path>
+        <title>Product Requirements Document (PRD) - HarborFlow Suite</title>
+        <section>Functional Requirements Synthesis</section>
+        <snippet>The application must display an interactive map with live vessel positions.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document: HarborFlow Suite</title>
+        <section>Epic-to-Architecture Mapping</section>
+        <snippet>Blazor WebAssembly PWA: Provides the interactive map interface, receives and displays real-time vessel position updates through the SignalR client, and renders vessel information panels.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>HarborFlowSuite/HarborFlowSuite.Client/Pages/Index.razor</path>
+        <kind>page</kind>
+        <symbol>Index</symbol>
+        <lines></lines>
+        <reason>This is the main page where the map component will be displayed.</reason>
+      </file>
+      <file>
+        <path>HarborFlowSuite/HarborFlowSuite.Client/wwwroot/index.html</path>
+        <kind>html</kind>
+        <symbol></symbol>
+        <lines></lines>
+        <reason>This file is the entry point for the Blazor application and where Leaflet CSS and JS will be included.</reason>
+      </file>
+    </code>
+    <dependencies>
+        <dependency>
+            <name>Leaflet</name>
+            <version>1.9.3</version>
+            <reason>Used for rendering interactive maps.</reason>
+        </dependency>
+        <dependency>
+            <name>Microsoft.AspNetCore.Components.WebAssembly</name>
+            <version>9.0.10</version>
+            <reason>Core Blazor WebAssembly framework.</reason>
+        </dependency>
+        <dependency>
+            <name>Microsoft.AspNetCore.SignalR.Client</name>
+            <version>9.0.10</version>
+            <reason>Client library for SignalR.</reason>
+        </dependency>
+        <dependency>
+            <name>Microsoft.Extensions.Http</name>
+            <version>9.0.10</version>
+            <reason>HTTP client extensions.</reason>
+        </dependency>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>The application follows Clean Architecture principles.</constraint>
+    <constraint>The frontend is a Blazor WebAssembly PWA.</constraint>
+    <constraint>Real-time updates will be handled by SignalR, but this story focuses on the initial display.</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+        <name>Vessel Position API</name>
+        <kind>REST endpoint</kind>
+        <signature>GET /api/v1/vessels/positions</signature>
+        <path>HarborFlowSuite/HarborFlowSuite.Server/Controllers/VesselsController.cs</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>xUnit for unit and integration tests. Playwright for E2E tests. Aim for 80% code coverage on core logic.</standards>
+    <locations>
+        - HarborFlowSuite/HarborFlowSuite.Application.Tests/
+        - HarborFlowSuite/HarborFlowSuite.Server.Tests/
+    </locations>
+    <ideas>
+        - Verify that the map component loads within the specified time.
+        - Verify that vessel icons are rendered at the correct coordinates.
+        - Verify that the map is responsive across different screen sizes.
+    </ideas>
+  </tests>
+</story-context>

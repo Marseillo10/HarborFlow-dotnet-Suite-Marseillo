@@ -1,79 +1,93 @@
-var map;
-var vesselMarkers = {};
-var vesselMarkerOrder = []; // To keep track of the order of vessels
-const MAX_VESSELS = 200; // Maximum number of vessels to display
-
 window.HarborFlowMap = {
-    initMap: function (mapElementId) {
-        try {
-            var mapContainer = document.getElementById(mapElementId);
-            if (!mapContainer) {
-                console.error('Map container not found:', mapElementId);
-                return;
-            }
+    map: null,
+    vesselMarkers: {}, // Object to store markers by MMSI
 
-            console.log('Initializing map on:', mapElementId);
-            map = L.map(mapElementId).setView([-7.797, 110.37], 10); // Yogyakarta, Indonesia, zoom level 10
+    initMap: function (elementId = 'map') {
+        if (this.map) {
+            this.map.remove();
+        }
+        this.map = L.map(elementId).setView([1.352083, 103.819836], 12); // Centered on Singapore
 
-            // Using OpenStreetMap as the base layer
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(this.map);
 
-            console.log('Map initialized successfully.');
+        window.addEventListener('resize', () => this.invalidateMapSize());
+    },
 
-        } catch (error) {
-            console.error('Error initializing map:', error);
+    addVesselMarkers: function (vesselPositions) {
+        if (this.map && vesselPositions) {
+            vesselPositions.forEach(position => {
+                this.updateVesselMarker(
+                    position.vesselId.toString(),
+                    position.latitude,
+                    position.longitude,
+                    position.heading,
+                    position.speed,
+                    position.vesselName,
+                    position.vesselType
+                );
+            });
         }
     },
-    addMarker: function (lat, lng, title) {
-        if (map) {
-            L.marker([lat, lng]).addTo(map)
-                .bindPopup(title)
-                .openPopup();
+
+    updateVesselMarker: function (mmsi, lat, lng, heading, speed, name, type = 'HSC') {
+        if (!this.map) return;
+
+        const iconUrl = this.getIconUrl(type);
+        const vesselIcon = L.divIcon({
+            className: 'custom-vessel-icon',
+            html: `<img src="${iconUrl}" style="transform: rotate(${heading}deg); width: 48px; height: 48px;" />`,
+            iconSize: [48, 48],
+            iconAnchor: [24, 24],
+            popupAnchor: [0, -24]
+        });
+
+        const popupContent = `<b>Vessel:</b> ${name}<br>
+                              <b>Type:</b> ${type}<br>
+                              <b>Lat:</b> ${lat}<br>
+                              <b>Lng:</b> ${lng}<br>
+                              <b>Speed:</b> ${speed} knots<br>
+                              <b>Heading:</b> ${heading}°`;
+
+        if (this.vesselMarkers[mmsi]) {
+            // Update existing marker
+            this.vesselMarkers[mmsi].setLatLng([lat, lng]);
+            this.vesselMarkers[mmsi].setIcon(vesselIcon);
+            this.vesselMarkers[mmsi].setPopupContent(popupContent);
         } else {
-            console.error('Map not initialized. Cannot add marker.');
+            // Create new marker
+            const newMarker = L.marker([lat, lng], { icon: vesselIcon }).addTo(this.map);
+            newMarker.bindPopup(popupContent);
+            this.vesselMarkers[mmsi] = newMarker;
         }
     },
-    updateVesselMarker: function (mmsi, lat, lng, heading, speed, name) {
-        if (map) {
-            var popupContent = `<b>${name}</b><br>MMSI: ${mmsi}<br>Speed: ${speed} knots<br>Heading: ${heading}°`;
-            if (vesselMarkers[mmsi]) {
-                // Vessel exists, update its position
-                vesselMarkers[mmsi].setLatLng([lat, lng]);
-                vesselMarkers[mmsi].setPopupContent(popupContent);
-            } else {
-                // New vessel, check limit
-                if (vesselMarkerOrder.length >= MAX_VESSELS) {
-                    // Remove the oldest vessel
-                    var oldestMmsi = vesselMarkerOrder.shift(); // Remove from the beginning of the array
-                    if (vesselMarkers[oldestMmsi]) {
-                        map.removeLayer(vesselMarkers[oldestMmsi]);
-                        delete vesselMarkers[oldestMmsi];
-                        console.log('Removed oldest vessel:', oldestMmsi);
-                    }
-                }
 
-                // Add new vessel marker
-                console.log('Adding new vessel marker for:', mmsi);
-                vesselMarkers[mmsi] = L.marker([lat, lng], {
-                    icon: L.icon({
-                        iconUrl: 'images/vessel-icon.png', // Using a local icon
-                        iconSize: [25, 41],
-                        iconAnchor: [12, 41],
-                        popupAnchor: [1, -34],
-                        shadowSize: [41, 41]
-                    })
-                }).addTo(map)
-                    .bindPopup(popupContent);
-                vesselMarkerOrder.push(mmsi); // Add new vessel to the end of the order array
-            }
-        } else {
-            console.error('Map not initialized. Cannot update vessel marker.');
+    getIconUrl: function (vesselType) {
+        let type = vesselType ? vesselType.toLowerCase() : 'other';
+        switch (type) {
+            case 'cargo':
+                return '/images/vessels/cargo.png';
+            case 'tanker':
+                return '/images/vessels/tanker.png';
+            case 'passenger':
+                return '/images/vessels/passenger.png';
+            case 'fishing':
+                return '/images/vessels/fishing.png';
+            case 'hsc':
+                return '/images/vessels/hsc.png';
+            case 'tug':
+                return '/images/vessels/tug.png';
+            case 'sailing':
+                return '/images/vessels/sailing.png';
+            default:
+                return '/images/vessels/other.png';
         }
     },
-    getVesselMarkerCount: function() {
-        return Object.keys(vesselMarkers).length;
+
+    invalidateMapSize: function () {
+        if (this.map) {
+            this.map.invalidateSize();
+        }
     }
 };
