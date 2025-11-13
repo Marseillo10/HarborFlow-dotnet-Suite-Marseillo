@@ -1,0 +1,91 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.4</storyId>
+    <title>Multiple Map Layer Support</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-13</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>/Users/marseillosatrian/Downloads/HarborFlow-dotnet-Suite-Marseillo-new/.bmad-ephemeral/stories/1-4-multiple-map-layer-support.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>to switch between different map views (e.g., Street, Satellite)</iWant>
+    <soThat>I can customize my map experience</soThat>
+    <tasks>
+- [ ] Task 1: Identify available map layer providers and their APIs.
+  - [ ] Subtask 1.1: Research popular map tile providers (e.g., OpenStreetMap, Google Maps, ESRI).
+  - [ ] Subtask 1.2: Understand their licensing and API usage.
+- [ ] Task 2: Implement UI for selecting different map layers.
+  - [ ] Subtask 2.1: Design a dropdown or button group for layer selection.
+  - [ ] Subtask 2.2: Integrate the UI into the map component.
+- [ ] Task 3: Dynamically switch map layers based on user selection.
+  - [ ] Subtask 3.1: Implement logic to add/remove map tile layers in Leaflet.
+  - [ ] Subtask 3.2: Ensure smooth transitions between layers.
+- [ ] Task 4: Write unit and integration tests for layer switching functionality.
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Users can switch between Street, Satellite, and other map views.
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epics and Stories for HarborFlow Suite</title>
+        <section>Epic 1: Real-time Vessel Tracking System</section>
+        <snippet>As a user, I want to switch between different map views (e.g., Street, Satellite) to customize my map experience.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>HarborFlowSuite/HarborFlowSuite.Client/Components/VesselMap.razor</path>
+        <kind>component</kind>
+        <symbol>VesselMap</symbol>
+        <lines></lines>
+        <reason>The existing map component will be modified to support multiple layers.</reason>
+      </file>
+      <file>
+        <path>HarborFlowSuite/HarborFlowSuite.Client/Components/MapLayerSelector.razor</path>
+        <kind>component</kind>
+        <symbol>MapLayerSelector</symbol>
+        <lines></lines>
+        <reason>A new component for selecting map layers.</reason>
+      </file>
+    </code>
+    <dependencies>
+        <dependency>
+            <name>Leaflet</name>
+            <version>1.9.3</version>
+            <reason>Used for rendering interactive maps and managing layers.</reason>
+        </dependency>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>The application follows Clean Architecture principles.</constraint>
+    <constraint>The frontend is a Blazor WebAssembly PWA.</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+        <name>Map Tile Provider API</name>
+        <kind>External API</kind>
+        <signature>Varies by provider (e.g., OpenStreetMap, Google Maps)</signature>
+        <path>N/A</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>xUnit for unit and integration tests. Playwright for E2E tests. Aim for 80% code coverage on core logic.</standards>
+    <locations>
+        - HarborFlowSuite/HarborFlowSuite.Client.Tests/
+    </locations>
+    <ideas>
+        - Verify that selecting a different layer changes the map view.
+        - Verify that all specified map layers are available for selection.
+        - Verify that the map remains functional after switching layers.
+    </ideas>
+  </tests>
+</story-context>

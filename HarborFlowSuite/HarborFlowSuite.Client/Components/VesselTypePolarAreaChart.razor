@@ -1,0 +1,43 @@
+@using HarborFlowSuite.Core.DTOs
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+    <canvas id="@_chartId"></canvas>
+</div>
+
+@code {
+    [Parameter]
+    public List<VesselTypeSummaryDto> Data { get; set; }
+
+    private string _chartId = "vesselTypeChart-" + Guid.NewGuid().ToString();
+    private IJSObjectReference _chartModule;
+    private DotNetObjectReference<VesselTypePolarAreaChart> _dotNetObjectReference;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetObjectReference = DotNetObjectReference.Create(this);
+            _chartModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/chart.js");
+        }
+
+        if (Data != null && Data.Any() && _chartModule != null)
+        {
+            var labels = Data.Select(d => d.VesselType).ToList();
+            var counts = Data.Select(d => d.Count).ToList();
+            await _chartModule.InvokeVoidAsync("createOrUpdatePolarAreaChart", _chartId, labels, counts);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_chartModule != null)
+        {
+            await _chartModule.InvokeVoidAsync("destroyChart", _chartId);
+            await _chartModule.DisposeAsync();
+        }
+        _dotNetObjectReference?.Dispose();
+    }
+}

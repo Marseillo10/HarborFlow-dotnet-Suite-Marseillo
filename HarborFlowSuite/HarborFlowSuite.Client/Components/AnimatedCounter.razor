@@ -1,0 +1,28 @@
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+
+<span id="@ElementId">@CurrentValue</span>
+
+@code {
+    private static int _counter = 0;
+    private string ElementId { get; set; } = $"animated-counter-{++_counter}";
+
+    [Parameter]
+    public int Value { get; set; }
+
+    private int CurrentValue { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (CurrentValue != Value)
+        {
+            await JSRuntime.InvokeVoidAsync("animateCount", ElementId, CurrentValue, Value);
+            CurrentValue = Value;
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        CurrentValue = Value;
+    }
+}

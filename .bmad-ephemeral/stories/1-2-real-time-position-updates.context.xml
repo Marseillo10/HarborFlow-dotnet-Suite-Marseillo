@@ -1,0 +1,117 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.2</storyId>
+    <title>Real-time Position Updates</title>
+    <status>review</status>
+    <generatedAt>2025-11-13</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>/Users/marseillosatrian/Downloads/HarborFlow-dotnet-Suite-Marseillo-new/.bmad-ephemeral/stories/1-2-real-time-position-updates.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>vessel positions to update in real-time via SignalR</iWant>
+    <soThat>I always have the most current information</soThat>
+    <tasks>
+- [x] Task 1 (AC: #1) - Implement a SignalR hub on the server to broadcast vessel position updates.
+  - [x] Subtask 1.1 - Create a `VesselPositionHub` class that inherits from `Hub`.
+  - [x] Subtask 1.2 - Add a method to the hub to send position updates to clients.
+- [x] Task 2 (AC: #1) - Create a SignalR client service in the Blazor WebAssembly application.
+  - [x] Subtask 2.1 - Create a `SignalRService` to manage the connection to the hub.
+  - [x] Subtask 2.2 - Implement methods to start and stop the connection.
+  - [x] Subtask 2.3 - Expose an event to notify components of new position updates.
+- [x] Task 3 (AC: #1) - Connect the map component to the SignalR client to receive and display real-time position updates.
+  - [x] Subtask 3.1 - Inject the `SignalRService` into the map component.
+  - [x] Subtask 3.2 - Subscribe to the position update event and update the vessel markers on the map.
+- [x] Task 4 (AC: #1) - Add a new service to simulate real-time vessel movement and broadcast updates through the SignalR hub.
+  - [x] Subtask 4.1 - Create a background service that periodically updates vessel positions.
+  - [x] Subtask 4.2 - Inject the `IHubContext<VesselPositionHub>` into the service.
+  - [x] Subtask 4.3 - Call the hub method to broadcast the updated positions.
+- [b] Task 5 (AC: #1) - Write unit tests for the SignalR hub and client service. (Blocked: Test framework issues)
+  - [b] Subtask 5.1 - Test the hub's message broadcasting. (Blocked)
+  - [b] Subtask 5.2 - Test the client service's connection management and event handling. (Blocked)
+- [b] Task 6 (AC: #1) - Write integration tests to verify real-time updates on the map. (Blocked: Test framework issues)
+  - [b] Subtask 6.1 - Create a test that simulates a server-side position update. (Blocked)
+  - [b] Subtask 6.2 - Assert that the map component reflects the updated position within the specified time. (Blocked)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Position updates propagate to all connected clients within 1 second.
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epics and Stories for HarborFlow Suite</title>
+        <section>Epic 1: Real-time Vessel Tracking System</section>
+        <snippet>As a user, I want vessel positions to update in real-time via SignalR so that I always have the most current information.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>HarborFlowSuite/HarborFlowSuite.Server/Hubs/VesselPositionHub.cs</path>
+        <kind>hub</kind>
+        <symbol>VesselPositionHub</symbol>
+        <lines></lines>
+        <reason>SignalR hub for broadcasting vessel position updates.</reason>
+      </file>
+      <file>
+        <path>HarborFlowSuite/HarborFlowSuite.Client/Services/VesselPositionSignalRService.cs</path>
+        <kind>service</kind>
+        <symbol>VesselPositionSignalRService</symbol>
+        <lines></lines>
+        <reason>Client-side service to connect to the SignalR hub and receive updates.</reason>
+      </file>
+      <file>
+        <path>HarborFlowSuite/HarborFlowSuite.Client/Components/VesselMap.razor</path>
+        <kind>component</kind>
+        <symbol>VesselMap</symbol>
+        <lines></lines>
+        <reason>The map component that will be updated with real-time data.</reason>
+      </file>
+      <file>
+        <path>HarborFlowSuite/HarborFlowSuite.Server/Services/VesselPositionUpdateService.cs</path>
+        <kind>service</kind>
+        <symbol>VesselPositionUpdateService</symbol>
+        <lines></lines>
+        <reason>Background service to simulate real-time vessel movement.</reason>
+      </file>
+    </code>
+    <dependencies>
+        <dependency>
+            <name>Microsoft.AspNetCore.SignalR</name>
+            <version>1.1.0</version>
+            <reason>Core library for SignalR.</reason>
+        </dependency>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>The application follows Clean Architecture principles.</constraint>
+    <constraint>The frontend is a Blazor WebAssembly PWA.</constraint>
+    <constraint>Testing is currently blocked due to issues with mocking SignalR and bUnit.</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+        <name>VesselPositionHub</name>
+        <kind>SignalR Hub</kind>
+        <signature>ReceivePositionUpdate(VesselPosition position)</signature>
+        <path>HarborFlowSuite/HarborFlowSuite.Server/Hubs/VesselPositionHub.cs</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>xUnit for unit and integration tests. Playwright for E2E tests. Aim for 80% code coverage on core logic.</standards>
+    <locations>
+        - HarborFlowSuite/HarborFlowSuite.Server.Tests/
+        - HarborFlowSuite/HarborFlowSuite.Client.Tests/
+    </locations>
+    <ideas>
+        - Verify that the SignalR hub broadcasts messages to clients.
+        - Verify that the client service correctly receives and processes messages.
+        - Verify that the map component updates in real-time when a new position is received.
+    </ideas>
+  </tests>
+</story-context>

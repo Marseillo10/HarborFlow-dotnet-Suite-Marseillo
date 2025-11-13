@@ -1,0 +1,104 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.3</storyId>
+    <title>Implement Vessel Detail Sliding Panel</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-11-13</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>/Users/marseillosatrian/Downloads/HarborFlow-dotnet-Suite-Marseillo-new/.bmad-ephemeral/stories/1-3-implement-vessel-detail-sliding-panel.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>to view detailed information about a vessel in a sliding panel from the right by clicking on its icon on the map</iWant>
+    <soThat>I can monitor maritime activity without losing the map context</soThat>
+    <tasks>
+- [x] Task 1: Design and implement the sliding panel UI component.
+  - [x] Subtask 1.1: Create a new Blazor component for the sliding panel (e.g., `VesselDetailPanel.razor`).
+  - [x] Subtask 1.2: Implement CSS for right-side sliding animation and overlay.
+  - [x] Subtask 1.3: Ensure responsiveness of the panel across different screen sizes.
+- [x] Task 2: Integrate the sliding panel with the map component.
+  - [x] Subtask 2.1: Implement event handling in the map component for vessel icon clicks.
+  - [x] Subtask 2.2: Pass selected vessel data to the sliding panel component.
+  - [x] Subtask 2.3: Trigger the sliding panel to open and display vessel details.
+- [ ] Task 3: Implement unit tests for the sliding panel component.
+  - [ ] Subtask 3.1: Test panel visibility and animation.
+  - [ ] Subtask 3.2: Test data binding and display of vessel details.
+- [ ] Task 4: Implement integration tests for map-panel interaction.
+  - [ ] Subtask 4.1: Verify that clicking a vessel icon opens the correct panel.
+  - [ ] Subtask 4.2: Verify that the panel closes correctly.
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Clicking a vessel displays a sliding panel from the right with vessel details.
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epics and Stories for HarborFlow Suite</title>
+        <section>Epic 1: Real-time Vessel Tracking System</section>
+        <snippet>As a user, I want to view detailed information about a vessel in a sliding panel from the right by clicking on its icon on the map, without losing the map context.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Vessel Detail Panel</section>
+        <snippet>Details on the design and behavior of the vessel detail sliding panel.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>HarborFlowSuite/HarborFlowSuite.Client/Components/VesselDetailPanel.razor</path>
+        <kind>component</kind>
+        <symbol>VesselDetailPanel</symbol>
+        <lines></lines>
+        <reason>This will be the new Blazor component for displaying vessel details in a sliding panel.</reason>
+      </file>
+      <file>
+        <path>HarborFlowSuite/HarborFlowSuite.Client/Pages/Index.razor</path>
+        <kind>page</kind>
+        <symbol>Index</symbol>
+        <lines></lines>
+        <reason>This is the main map page where the sliding panel will be integrated and triggered from vessel clicks.</reason>
+      </file>
+    </code>
+    <dependencies>
+        <dependency>
+            <name>MudBlazor</name>
+            <version>6.x.x</version>
+            <reason>Likely used for UI components and styling, including potential drawer/overlay components.</reason>
+        </dependency>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>The application follows Clean Architecture principles.</constraint>
+    <constraint>The frontend is a Blazor WebAssembly PWA.</constraint>
+    <constraint>The panel should not obscure the entire map, maintaining context.</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+        <name>Vessel Data Model</name>
+        <kind>DTO</kind>
+        <signature>HarborFlowSuite.Core.DTOs.VesselDto</signature>
+        <path>HarborFlowSuite/HarborFlowSuite.Core/DTOs/VesselDto.cs</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>xUnit for unit and integration tests. Playwright for E2E tests. Aim for 80% code coverage on core logic.</standards>
+    <locations>
+        - HarborFlowSuite/HarborFlowSuite.Application.Tests/
+        - HarborFlowSuite/HarborFlowSuite.Client.Tests/
+    </locations>
+    <ideas>
+        - Verify that clicking a vessel icon opens the sliding panel.
+        - Verify that the sliding panel displays correct vessel details.
+        - Verify that the panel slides in from the right and does not cover the entire map.
+        - Verify panel responsiveness.
+    </ideas>
+  </tests>
+</story-context>

@@ -47,7 +47,7 @@ namespace HarborFlowSuite.Server.Services
                         var subscriptionMessage = new
                         {
                             APIkey = _apiKey,
-                            BoundingBoxes = new[] { new[] { new[] { -10, 95 }, new[] { 24, 141 } } },
+                            BoundingBoxes = new[] { new[] { new[] { -11.2085669, 94.7717124 }, new[] { 6.92805288332, 141.0194444 } } },
                             FilterMessageTypes = new[] { "PositionReport", "ShipStaticData" }
                         };
                         var messageBuffer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(subscriptionMessage));
@@ -105,12 +105,22 @@ namespace HarborFlowSuite.Server.Services
                     var name = $"Vessel {mmsi}";
                     var vesselType = _vesselTypes.GetValueOrDefault(mmsi, "Other");
 
-                    using (var scope = _serviceScopeFactory.CreateScope())
+                    // Send position update immediately
+                    await _hubContext.Clients.All.SendAsync("ReceiveVesselPositionUpdate", mmsi, lat, lon, heading, speed, name, vesselType, null, stoppingToken);
+
+                    // Fetch metadata in the background
+                    _ = Task.Run(async () =>
                     {
-                        var gfwMetadataService = scope.ServiceProvider.GetRequiredService<IGfwMetadataService>();
-                        var metadata = await gfwMetadataService.GetVesselMetadataAsync(mmsi);
-                        await _hubContext.Clients.All.SendAsync("ReceiveVesselPositionUpdate", mmsi, lat, lon, heading, speed, name, vesselType, metadata, stoppingToken);
-                    }
+                        using (var scope = _serviceScopeFactory.CreateScope())
+                        {
+                            var gfwMetadataService = scope.ServiceProvider.GetRequiredService<IGfwMetadataService>();
+                            var metadata = await gfwMetadataService.GetVesselMetadataAsync(mmsi);
+                            if (metadata != null)
+                            {
+                                await _hubContext.Clients.All.SendAsync("ReceiveVesselMetadataUpdate", mmsi, metadata, stoppingToken);
+                            }
+                        }
+                    }, stoppingToken);
                 }
             }
         }

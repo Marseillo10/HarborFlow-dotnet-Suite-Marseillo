@@ -1,6 +1,3 @@
 @HarborFlowSuite.Server_HostAddress = http://localhost:5170
 
-GET {{HarborFlowSuite.Server_HostAddress}}/weatherforecast/
-Accept: application/json
-
 ###

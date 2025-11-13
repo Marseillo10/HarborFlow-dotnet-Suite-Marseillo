@@ -1,35 +1,25 @@
 window.HarborFlowMap = {
     map: null,
     vesselMarkers: {}, // Object to store markers by MMSI
+    dotNetHelper: null,
 
-    initMap: function (elementId = 'map') {
+    initMap: function (elementId = 'map', dotNetHelper) {
         if (this.map) {
             this.map.remove();
         }
-        this.map = L.map(elementId).setView([1.352083, 103.819836], 12); // Centered on Singapore
+        this.dotNetHelper = dotNetHelper;
+        this.map = L.map(elementId, {
+            center: [1.352083, 103.819836],
+            zoom: 12
+        });
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(this.map);
 
+        this.map.on('moveend zoomend', () => this.reportVesselData());
         window.addEventListener('resize', () => this.invalidateMapSize());
-    },
-
-    addVesselMarkers: function (vesselPositions) {
-        if (this.map && vesselPositions) {
-            vesselPositions.forEach(position => {
-                this.updateVesselMarker(
-                    position.vesselId.toString(),
-                    position.latitude,
-                    position.longitude,
-                    position.heading,
-                    position.speed,
-                    position.vesselName,
-                    position.vesselType,
-                    position.metadata
-                );
-            });
-        }
+        this.reportVesselData(); // Initial report
     },
 
     updateVesselMarker: function (mmsi, lat, lng, heading, speed, name, type = 'HSC', metadata) {
@@ -62,12 +52,37 @@ window.HarborFlowMap = {
             this.vesselMarkers[mmsi].setLatLng([lat, lng]);
             this.vesselMarkers[mmsi].setIcon(vesselIcon);
             this.vesselMarkers[mmsi].setPopupContent(popupContent);
+            this.vesselMarkers[mmsi].vesselType = type; // Update vessel type
         } else {
             // Create new marker
             const newMarker = L.marker([lat, lng], { icon: vesselIcon }).addTo(this.map);
             newMarker.bindPopup(popupContent);
+            newMarker.vesselType = type; // Store vessel type
             this.vesselMarkers[mmsi] = newMarker;
         }
+        this.reportVesselData();
+    },
+
+    reportVesselData: function () {
+        if (!this.map || !this.dotNetHelper) return;
+
+        const bounds = this.map.getBounds();
+        const allVesselTypes = {};
+
+        for (const mmsi in this.vesselMarkers) {
+            const vessel = this.vesselMarkers[mmsi];
+            const type = vessel.vesselType || 'Other';
+            allVesselTypes[type] = (allVesselTypes[type] || 0) + 1;
+        }
+
+        const allVesselTypeSummary = Object.keys(allVesselTypes).map(key => {
+            return { VesselType: key, Count: allVesselTypes[key] };
+        }).sort((a, b) => a.VesselType.localeCompare(b.VesselType));
+
+        const totalVesselCount = Object.keys(this.vesselMarkers).length;
+
+        this.dotNetHelper.invokeMethodAsync('UpdateTotalMapVesselCount', totalVesselCount);
+        this.dotNetHelper.invokeMethodAsync('UpdateVisibleVesselTypeSummary', allVesselTypeSummary);
     },
 
     getIconUrl: function (vesselType) {

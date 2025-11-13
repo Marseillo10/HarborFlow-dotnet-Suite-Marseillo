@@ -1,3 +1,4 @@
+
 @page "/dashboard"
 @using Microsoft.AspNetCore.Authorization
 @using HarborFlowSuite.Core.Models
@@ -5,6 +6,7 @@
 @using System.Net.Http
 @using System.Net.Http.Json
 @using HarborFlowSuite.Client.Components
+@using HarborFlowSuite.Client.Services
 @using Microsoft.AspNetCore.SignalR.Client
 @inject IHttpClientFactory ClientFactory
 @inject HubConnection HubConnection
@@ -31,7 +33,7 @@
                         <p class="card-text text-muted">Total number of vessels:</p>
                     </div>
                 </div>
-                <h2 class="card-text"><strong>@_vesselCount</strong></h2>
+                <h2 class="card-text"><strong><AnimatedCounter Value="@_vesselCount" /></strong></h2>
                 <a href="/vessel-management" class="btn btn-outline-primary mt-3">Manage Vessels <i class="fas fa-arrow-right ms-2"></i></a>
             </div>
         </div>
@@ -101,14 +103,7 @@
             <div class="card-body">
                 @if (_vesselTypeSummary != null)
                 {
-                    <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
-                        @foreach (var item in _vesselTypeSummary)
-                        {
-                            <div class="bar" style="height: @(item.Count * 20)px; background-color: @GetRandomColor();">
-                                <span class="bar-label">@item.VesselType (@item.Count)</span>
-                            </div>
-                        }
-                    </div>
+                    <VesselTypePolarAreaChart Data="@_vesselTypeSummary" />
                 }
                 else
                 {
@@ -126,7 +121,7 @@
                 Interactive Map
             </div>
             <div class="card-body map-container" style="height: 600px;">
-                <VesselMap @ref="vesselMap" />
+                <VesselMap @ref="vesselMap" OnTotalMapVesselCountChanged="OnVesselCountChanged" OnVisibleVesselTypeSummaryChanged="OnVesselTypeSummaryChanged" />
             </div>
         </div>
     </div>
@@ -147,8 +142,7 @@
             Console.WriteLine("Dashboard OnInitializedAsync started.");
             var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
 
-            Console.WriteLine("Fetching vessel, service request, and company data...");
-            var vesselTask = client.GetFromJsonAsync<Vessel[]>("api/vessel");
+            Console.WriteLine("Fetching service request, and company data...");
             var serviceRequestTask = client.GetFromJsonAsync<ServiceRequest[]>("api/servicerequest");
             var companyTask = client.GetFromJsonAsync<Company[]>("api/company");
 
@@ -156,10 +150,9 @@
             var serviceRequestStatusTask = client.GetFromJsonAsync<List<ServiceRequestStatusSummaryDto>>("api/dashboard/servicerequeststatus");
             var vesselTypeTask = client.GetFromJsonAsync<List<VesselTypeSummaryDto>>("api/dashboard/vesseltypes");
 
-            await Task.WhenAll(vesselTask, serviceRequestTask, companyTask, serviceRequestStatusTask, vesselTypeTask);
+            await Task.WhenAll(serviceRequestTask, companyTask, serviceRequestStatusTask, vesselTypeTask);
             Console.WriteLine("All data fetched.");
 
-            _vesselCount = vesselTask.Result?.Length ?? 0;
             _pendingServiceRequestCount = serviceRequestTask.Result?.Count(r => r.Status == ServiceRequestStatus.Pending) ?? 0;
             _companyCount = companyTask.Result?.Length ?? 0;
             _serviceRequestStatusSummary = serviceRequestStatusTask.Result;
@@ -186,6 +179,18 @@
         {
             Console.WriteLine($"Error in Dashboard OnInitializedAsync: {ex.Message}");
         }
+        StateHasChanged();
+    }
+
+    private void OnVesselCountChanged(int count)
+    {
+        _vesselCount = count;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnVesselTypeSummaryChanged(List<VesselTypeSummaryDto> summary)
+    {
+        _vesselTypeSummary = summary;
         StateHasChanged();
     }
 
@@ -232,3 +237,4 @@
         color: #333;
     }
 </style>
+

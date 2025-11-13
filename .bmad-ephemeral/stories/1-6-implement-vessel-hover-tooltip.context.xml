@@ -1,0 +1,82 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.6</storyId>
+    <title>Implement Vessel Hover Tooltip</title>
+    <status>Approved</status>
+    <generatedAt>2025-11-14</generatedAt>
+    <generator>BMad Story Context Workflow</generator>
+    <sourceStoryPath>/Users/marseillosatrian/Downloads/HarborFlow-dotnet-Suite-Marseillo-new/.bmad-ephemeral/stories/1-6-implement-vessel-hover-tooltip.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>to see key vessel information when I hover over a vessel on the map</iWant>
+    <soThat>I can quickly get details without clicking on each vessel</soThat>
+    <tasks>
+- [ ] Task 1: Design the content and layout of the vessel hover tooltip.
+- [ ] Task 2: Implement the front-end logic to display the tooltip on vessel hover.
+- [ ] Task 3: Integrate with vessel data services to populate tooltip content.
+- [ ] Task 4: Ensure the tooltip is responsive and performs well on various devices.
+- [ ] Task 5: Write unit and integration tests for the vessel hover tooltip functionality.
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Hovering over a vessel displays a tooltip with its name, IMO, and current status.
+2. The tooltip appears quickly and does not obstruct other map elements.
+3. The tooltip disappears when the mouse leaves the vessel area.
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epics and Stories for HarborFlow Suite</title>
+        <section>Epic 1: Real-time Vessel Tracking System</section>
+        <snippet>As a user, I want to see key vessel information when I hover over a vessel on the map.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>HarborFlowSuite/HarborFlowSuite.Client/Components/VesselMap.razor</path>
+        <kind>component</kind>
+        <symbol>VesselMap</symbol>
+        <lines></lines>
+        <reason>The map component will be modified to handle hover events and display the tooltip.</reason>
+      </file>
+      <file>
+        <path>HarborFlowSuite/HarborFlowSuite.Client/Components/VesselTooltip.razor</path>
+        <kind>component</kind>
+        <symbol>VesselTooltip</symbol>
+        <lines></lines>
+        <reason>A new component for the vessel tooltip.</reason>
+      </file>
+    </code>
+    <dependencies>
+        <dependency>
+            <name>MudBlazor</name>
+            <version>6.11.0</version>
+            <reason>Used for UI components.</reason>
+        </dependency>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>The application follows Clean Architecture principles.</constraint>
+    <constraint>The frontend is a Blazor WebAssembly PWA.</constraint>
+  </constraints>
+  <interfaces>
+  </interfaces>
+  <tests>
+    <standards>xUnit for unit and integration tests. Playwright for E2E tests. Aim for 80% code coverage on core logic.</standards>
+    <locations>
+        - HarborFlowSuite/HarborFlowSuite.Client.Tests/
+    </locations>
+    <ideas>
+        - Verify that hovering over a vessel displays the tooltip.
+        - Verify that the tooltip displays correct vessel information.
+        - Verify that the tooltip disappears on mouse leave.
+    </ideas>
+  </tests>
+</story-context>

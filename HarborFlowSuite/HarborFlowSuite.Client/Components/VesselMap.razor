@@ -12,7 +12,10 @@
     public string MapElementId { get; set; } = "map";
 
     [Parameter]
-    public EventCallback<int> OnVisibleVesselCountChanged { get; set; }
+    public EventCallback<int> OnTotalMapVesselCountChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<List<VesselTypeSummaryDto>> OnVisibleVesselTypeSummaryChanged { get; set; }
 
     private DotNetObjectReference<VesselMap> _dotNetHelper;
 
@@ -43,9 +46,15 @@
     }
 
     [JSInvokable]
-    public async Task UpdateVisibleVesselCount(int count)
+    public async Task UpdateTotalMapVesselCount(int count)
     {
-        await OnVisibleVesselCountChanged.InvokeAsync(count);
+        await OnTotalMapVesselCountChanged.InvokeAsync(count);
+    }
+
+    [JSInvokable]
+    public async Task UpdateVisibleVesselTypeSummary(List<VesselTypeSummaryDto> summary)
+    {
+        await OnVisibleVesselTypeSummaryChanged.InvokeAsync(summary);
     }
 
     public async ValueTask DisposeAsync()

@@ -1,0 +1,79 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.5</storyId>
+    <title>Implement Collapsible Sidebar for Map View</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-14</generatedAt>
+    <generator>BMad Story Context Workflow</generator>
+    <sourceStoryPath>/Users/marseillosatrian/Downloads/HarborFlow-dotnet-Suite-Marseillo-new/.bmad-ephemeral/stories/1-5-implement-collapsible-sidebar-for-map-view.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>to be able to collapse the main sidebar to have an immersive, full-screen map experience</iWant>
+    <soThat>I can have an immersive, full-screen map experience</soThat>
+    <tasks>
+- [x] Task 1: Add a collapse/expand button to the sidebar.
+- [x] Task 2: Implement the logic to toggle the sidebar's visibility.
+- [x] Task 3: Ensure the map component resizes correctly when the sidebar is collapsed or expanded.
+- [x] Task 4: Write unit and integration tests for the collapsible sidebar functionality.
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. The sidebar can be collapsed and expanded with a single click.
+2. The map content reflows to fill the available space.
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epics and Stories for HarborFlow Suite</title>
+        <section>Epic 1: Real-time Vessel Tracking System</section>
+        <snippet>As a user, I want to be able to collapse the main sidebar to have an immersive, full-screen map experience.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>HarborFlowSuite/HarborFlowSuite.Client/Layout/MainLayout.razor</path>
+        <kind>component</kind>
+        <symbol>MainLayout</symbol>
+        <lines></lines>
+        <reason>The main layout will be modified to support a collapsible sidebar.</reason>
+      </file>
+      <file>
+        <path>HarborFlowSuite/HarborFlowSuite.Client/Components/VesselMap.razor</path>
+        <kind>component</kind>
+        <symbol>VesselMap</symbol>
+        <lines></lines>
+        <reason>The map component will be modified to reflow when the sidebar is collapsed/expanded.</reason>
+      </file>
+    </code>
+    <dependencies>
+        <dependency>
+            <name>MudBlazor</name>
+            <version>6.11.0</version>
+            <reason>Used for UI components, including the collapsible drawer.</reason>
+        </dependency>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>The application follows Clean Architecture principles.</constraint>
+    <constraint>The frontend is a Blazor WebAssembly PWA.</constraint>
+  </constraints>
+  <interfaces>
+  </interfaces>
+  <tests>
+    <standards>xUnit for unit and integration tests. Playwright for E2E tests. Aim for 80% code coverage on core logic.</standards>
+    <locations>
+        - HarborFlowSuite/HarborFlowSuite.Client.Tests/
+    </locations>
+    <ideas>
+        - Verify that clicking the button collapses and expands the sidebar.
+        - Verify that the map resizes to fill the available space.
+    </ideas>
+  </tests>
+</story-context>

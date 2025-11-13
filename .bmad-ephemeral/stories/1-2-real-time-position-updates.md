@@ -57,7 +57,7 @@ so that I always have the most current information.
 
 ### Context Reference
 
-<!-- Path(s) to story context XML will be added here by context workflow -->
+- /Users/marseillosatrian/Downloads/HarborFlow-dotnet-Suite-Marseillo-new/.bmad-ephemeral/stories/1-2-real-time-position-updates.context.xml
 
 ### Agent Model Used
 
