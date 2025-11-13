@@ -47,7 +47,7 @@ namespace HarborFlowSuite.Server.Services
                         var subscriptionMessage = new
                         {
                             APIkey = _apiKey,
-                            BoundingBoxes = new[] { new[] { new[] { -11.2085669, 94.7717124 }, new[] { 6.92805288332, 141.0194444 } } },
+                            BoundingBoxes = new[] { new[] { new[] { -13.1816069, 94.7717124 }, new[] { 6.92805288332, 151.7489081 } } },
                             FilterMessageTypes = new[] { "PositionReport", "ShipStaticData" }
                         };
                         var messageBuffer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(subscriptionMessage));

@@ -1,0 +1,65 @@
+.layer-switcher-container {
+    z-index: 1000;
+    font-family: Arial, sans-serif;
+}
+
+.layer-switcher-toggle {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 8px 12px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px; /* Make it a square button */
+    height: 40px; /* Make it a square button */
+}
+
+.layer-switcher-toggle i {
+    font-size: 1.2em;
+    color: #333;
+}
+
+.layer-switcher-panel {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-top: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    padding: 5px;
+    width: 200px; /* Fixed width for the panel */
+}
+
+.layer-option {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    cursor: pointer;
+    border-radius: 3px;
+    margin-bottom: 3px;
+}
+
+.layer-option:hover {
+    background-color: #f0f0f0;
+}
+
+.layer-option.selected {
+    background-color: #e0e0e0;
+    font-weight: bold;
+}
+
+.layer-thumbnail {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+    border: 1px solid #eee;
+    border-radius: 3px;
+    object-fit: cover;
+}
+
+.layer-name {
+    flex-grow: 1;
+    color: #333;
+}

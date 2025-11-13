@@ -1,7 +1,21 @@
 window.HarborFlowMap = {
     map: null,
     vesselMarkers: {}, // Object to store markers by MMSI
+    portMarkers: [], // Array to store port markers
     dotNetHelper: null,
+    currentTileLayer: null,
+
+    tileLayers: {
+        openstreetmap: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }),
+        nasa_gibs: L.tileLayer('https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg', {
+            attribution: '&copy; <a href="https://earthdata.nasa.gov/eosdis/science-system-description/eosdis-components/global-imagery-browse-services-gibs">NASA GIBS</a>'
+        }),
+        esri_worldimagery: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        })
+    },
 
     initMap: function (elementId = 'map', dotNetHelper) {
         if (this.map) {
@@ -13,17 +27,65 @@ window.HarborFlowMap = {
             zoom: 12
         });
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(this.map);
+        this.currentTileLayer = this.tileLayers.openstreetmap;
+        this.currentTileLayer.addTo(this.map);
 
         this.map.on('moveend zoomend', () => this.reportVesselData());
         window.addEventListener('resize', () => this.invalidateMapSize());
         this.reportVesselData(); // Initial report
     },
 
+    switchLayer: function (layerName) {
+        if (this.map && this.tileLayers[layerName]) {
+            if (this.currentTileLayer) {
+                this.map.removeLayer(this.currentTileLayer);
+            }
+            this.currentTileLayer = this.tileLayers[layerName];
+            this.currentTileLayer.addTo(this.map);
+        }
+    },
+
+    addPortMarkers: function (ports) {
+        if (!this.map) return;
+
+        console.log("Received ports:", ports);
+
+        this.portMarkers.forEach(marker => this.map.removeLayer(marker));
+        this.portMarkers = [];
+
+        const portIcon = L.icon({
+            iconUrl: '/images/port-icon.png',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10],
+            popupAnchor: [0, -10]
+        });
+
+                    ports.forEach(port => {
+                        console.log("Processing port:", port);
+                        const marker = L.marker([port.LATITUDE, port.LONGITUDE], { icon: portIcon }).addTo(this.map);
+                        marker.bindPopup(`<b>City:</b> ${port.CITY}<br><b>STATE:</b> ${port.STATE}<br><b>Country:</b> ${port.COUNTRY}`);
+                        this.portMarkers.push(marker);
+        
+                        marker.on('click', function() {
+                            console.log('Port marker clicked:', port.CITY);
+                        });
+                    });    },
+
     updateVesselMarker: function (mmsi, lat, lng, heading, speed, name, type = 'HSC', metadata) {
         if (!this.map) return;
+
+        const vesselData = {
+            vesselId: mmsi, // Using MMSI as a unique ID for now
+            vesselName: name,
+            vesselType: type,
+            imo: metadata ? metadata.imoNumber : 'N/A',
+            vesselStatus: 'Active', // Placeholder, actual status would come from AIS data
+            latitude: lat,
+            longitude: lng,
+            heading: heading,
+            speed: speed,
+            recordedAt: new Date().toISOString() // Placeholder for current time
+        };
 
         const iconUrl = this.getIconUrl(type);
         const vesselIcon = L.divIcon({
@@ -53,12 +115,25 @@ window.HarborFlowMap = {
             this.vesselMarkers[mmsi].setIcon(vesselIcon);
             this.vesselMarkers[mmsi].setPopupContent(popupContent);
             this.vesselMarkers[mmsi].vesselType = type; // Update vessel type
+            this.vesselMarkers[mmsi].vesselData = vesselData; // Store full vessel data
         } else {
             // Create new marker
             const newMarker = L.marker([lat, lng], { icon: vesselIcon }).addTo(this.map);
             newMarker.bindPopup(popupContent);
             newMarker.vesselType = type; // Store vessel type
+            newMarker.vesselData = vesselData; // Store full vessel data
             this.vesselMarkers[mmsi] = newMarker;
+
+            newMarker.on('mouseover', (e) => {
+                if (this.dotNetHelper) {
+                    this.dotNetHelper.invokeMethodAsync('ShowVesselTooltip', newMarker.vesselData, e.originalEvent.clientX, e.originalEvent.clientY);
+                }
+            });
+            newMarker.on('mouseout', () => {
+                if (this.dotNetHelper) {
+                    this.dotNetHelper.invokeMethodAsync('HideVesselTooltip');
+                }
+            });
         }
         this.reportVesselData();
     },

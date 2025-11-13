@@ -1,0 +1,51 @@
+@using Microsoft.AspNetCore.Components
+@inject IJSRuntime JSRuntime
+
+<div class="layer-switcher-container">
+    <div class="layer-switcher-toggle" @onclick="ToggleSwitcher">
+        <i class="fas fa-layer-group"></i>
+    </div>
+    @if (_isExpanded)
+    {
+        <div class="layer-switcher-panel">
+            @foreach (var layer in Layers)
+            {
+                <div class="layer-option @(layer.Key == SelectedLayer ? "selected" : "")" @onclick="(() => SelectLayer(layer.Key))">
+                    <img src="@layer.Value.Thumbnail" alt="@layer.Value.Name" class="layer-thumbnail" />
+                    <span class="layer-name">@layer.Value.Name</span>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Dictionary<string, LayerInfo> Layers { get; set; }
+
+    [Parameter]
+    public string SelectedLayer { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnLayerSelected { get; set; }
+
+    private bool _isExpanded = false;
+
+    private void ToggleSwitcher()
+    {
+        _isExpanded = !_isExpanded;
+    }
+
+    private async Task SelectLayer(string layerKey)
+    {
+        SelectedLayer = layerKey;
+        _isExpanded = false; // Collapse after selection
+        await OnLayerSelected.InvokeAsync(layerKey);
+    }
+
+    public class LayerInfo
+    {
+        public string Name { get; set; }
+        public string Thumbnail { get; set; }
+    }
+}

@@ -1,5 +1,6 @@
 @using Microsoft.AspNetCore.Components.Web
 @using HarborFlowSuite.Core.DTOs
+@using HarborFlowSuite.Core.Models
 @using HarborFlowSuite.Client.Services
 @inject IJSRuntime JSRuntime
 @inject IVesselPositionSignalRService VesselPositionSignalRService
@@ -7,9 +8,15 @@
 
 <div id="@MapElementId" style="width: 100%; height: 600px;"></div>
 
+<VesselTooltip IsVisible="_isTooltipVisible" Vessel="_hoveredVessel" Position="_tooltipPosition" />
+
 @code {
     [Parameter]
     public string MapElementId { get; set; } = "map";
+
+    private bool _isTooltipVisible;
+    private VesselPositionDto? _hoveredVessel;
+    private System.Drawing.Point _tooltipPosition;
 
     [Parameter]
     public EventCallback<int> OnTotalMapVesselCountChanged { get; set; }
@@ -17,7 +24,11 @@
     [Parameter]
     public EventCallback<List<VesselTypeSummaryDto>> OnVisibleVesselTypeSummaryChanged { get; set; }
 
+    [Parameter]
+    public IEnumerable<Port> Ports { get; set; }
+
     private DotNetObjectReference<VesselMap> _dotNetHelper;
+    private IEnumerable<Port> _currentPorts;
 
     protected override async Task OnInitializedAsync()
     {
@@ -31,6 +42,15 @@
         if (firstRender)
         {
             await JSRuntime.InvokeVoidAsync("HarborFlowMap.initMap", MapElementId, _dotNetHelper);
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Ports != null && Ports.Any() && (Ports != _currentPorts))
+        {
+            _currentPorts = Ports;
+            await JSRuntime.InvokeVoidAsync("HarborFlowMap.addPortMarkers", _currentPorts);
         }
     }
 
@@ -55,6 +75,23 @@
     public async Task UpdateVisibleVesselTypeSummary(List<VesselTypeSummaryDto> summary)
     {
         await OnVisibleVesselTypeSummaryChanged.InvokeAsync(summary);
+    }
+
+    [JSInvokable]
+    public void ShowVesselTooltip(VesselPositionDto vessel, int x, int y)
+    {
+        _hoveredVessel = vessel;
+        _tooltipPosition = new System.Drawing.Point(x, y);
+        _isTooltipVisible = true;
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void HideVesselTooltip()
+    {
+        _isTooltipVisible = false;
+        _hoveredVessel = null;
+        StateHasChanged();
     }
 
     public async ValueTask DisposeAsync()

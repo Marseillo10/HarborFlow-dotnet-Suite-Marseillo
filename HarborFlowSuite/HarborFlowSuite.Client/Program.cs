@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using HarborFlowSuite.Client;
 using HarborFlowSuite.Client.Services;
+using HarborFlowSuite.Core.Services;
 using HarborFlowSuite.Client.Providers;
 using Microsoft.AspNetCore.Components.Authorization;
 using Blazored.Toast;
@@ -21,10 +22,12 @@ builder.Services.AddHttpClient("HarborFlowSuite.ServerAPI", client => client.Bas
 
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("HarborFlowSuite.ServerAPI"));
 
-builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+builder.Services.AddScoped<HarborFlowSuite.Client.Services.IAuthService, HarborFlowSuite.Client.Services.AuthService>();
 builder.Services.AddScoped<IVesselService, VesselService>();
-builder.Services.AddScoped<IServiceRequestService, ServiceRequestService>();
+builder.Services.AddScoped<HarborFlowSuite.Client.Services.IServiceRequestService, HarborFlowSuite.Client.Services.ServiceRequestService>();
 builder.Services.AddScoped<IVesselPositionSignalRService, VesselPositionSignalRService>();
+builder.Services.AddScoped<IPortService, PortService>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, FirebaseAuthenticationStateProvider>();
 builder.Services.AddBlazoredToast();
@@ -39,7 +42,7 @@ builder.Services.AddSingleton(sp =>
             {
                 using (var scope = scopeFactory.CreateScope())
                 {
-                    var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+                    var authService = scope.ServiceProvider.GetRequiredService<HarborFlowSuite.Client.Services.IAuthService>();
                     return await authService.GetCurrentUserToken();
                 }
             };

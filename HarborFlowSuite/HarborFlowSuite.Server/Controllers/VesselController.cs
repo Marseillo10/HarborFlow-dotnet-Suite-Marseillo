@@ -30,11 +30,11 @@ namespace HarborFlowSuite.Server.Controllers
         {
             var positions = new List<VesselPositionDto>
             {
-                new VesselPositionDto { VesselId = Guid.NewGuid(), VesselName = "Wanderer", VesselType = "Cargo", Latitude = 1.25m, Longitude = 103.9m, Heading = 110, Speed = 12, RecordedAt = DateTime.UtcNow },
-                new VesselPositionDto { VesselId = Guid.NewGuid(), VesselName = "Odyssey", VesselType = "Tanker", Latitude = 1.22m, Longitude = 103.85m, Heading = 240, Speed = 10, RecordedAt = DateTime.UtcNow },
-                new VesselPositionDto { VesselId = Guid.NewGuid(), VesselName = "Voyager", VesselType = "Passenger", Latitude = 1.28m, Longitude = 103.95m, Heading = 90, Speed = 20, RecordedAt = DateTime.UtcNow },
-                new VesselPositionDto { VesselId = Guid.NewGuid(), VesselName = "Sea Spirit", VesselType = "Fishing", Latitude = 1.20m, Longitude = 104.0m, Heading = 180, Speed = 7, RecordedAt = DateTime.UtcNow },
-                new VesselPositionDto { VesselId = Guid.NewGuid(), VesselName = "Wind Dancer", VesselType = "Sailing", Latitude = 1.26m, Longitude = 103.8m, Heading = 310, Speed = 5, RecordedAt = DateTime.UtcNow }
+                new VesselPositionDto { VesselId = Guid.NewGuid().ToString(), VesselName = "Wanderer", VesselType = "Cargo", Latitude = 1.25m, Longitude = 103.9m, Heading = 110, Speed = 12, RecordedAt = DateTime.UtcNow },
+                new VesselPositionDto { VesselId = Guid.NewGuid().ToString(), VesselName = "Odyssey", VesselType = "Tanker", Latitude = 1.22m, Longitude = 103.85m, Heading = 240, Speed = 10, RecordedAt = DateTime.UtcNow },
+                new VesselPositionDto { VesselId = Guid.NewGuid().ToString(), VesselName = "Voyager", VesselType = "Passenger", Latitude = 1.28m, Longitude = 103.95m, Heading = 90, Speed = 20, RecordedAt = DateTime.UtcNow },
+                new VesselPositionDto { VesselId = Guid.NewGuid().ToString(), VesselName = "Sea Spirit", VesselType = "Fishing", Latitude = 1.20m, Longitude = 104.0m, Heading = 180, Speed = 7, RecordedAt = DateTime.UtcNow },
+                new VesselPositionDto { VesselId = Guid.NewGuid().ToString(), VesselName = "Wind Dancer", VesselType = "Sailing", Latitude = 1.26m, Longitude = 103.8m, Heading = 310, Speed = 5, RecordedAt = DateTime.UtcNow }
             };
             return Task.FromResult<ActionResult<List<VesselPositionDto>>>(Ok(positions));
         }

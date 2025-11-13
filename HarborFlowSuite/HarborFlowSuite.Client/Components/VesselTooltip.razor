@@ -1,0 +1,20 @@
+@using HarborFlowSuite.Core.DTOs
+@if (IsVisible && Vessel != null)
+{
+    <MudCard Class="vessel-tooltip" Style="@($"left: {Position.X}px; top: {Position.Y}px;")">
+        <MudCardContent>
+            <MudText Typo="Typo.h6">@Vessel.VesselName</MudText>
+            <MudText Typo="Typo.body2">IMO: @Vessel.IMO</MudText>
+            <MudText Typo="Typo.body2">Status: @Vessel.VesselStatus</MudText>
+        </MudCardContent>
+    </MudCard>
+}
+
+<style>
+    .vessel-tooltip {
+        position: absolute;
+        z-index: 1000;
+        pointer-events: none; /* Allows interaction with map underneath */
+        white-space: nowrap;
+    }
+</style>
