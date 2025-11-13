@@ -9,7 +9,11 @@ using System.Text.Json;
 using System.Net;
 using System.Threading;
 using Moq.Protected;
-using System.Collections.Concurrent;
+using HarborFlowSuite.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using HarborFlowSuite.Core.Models;
+using System;
+using System.Collections.Generic;
 
 namespace HarborFlowSuite.Server.Tests
 {
@@ -18,17 +22,26 @@ namespace HarborFlowSuite.Server.Tests
         private readonly Mock<IConfiguration> _mockConfiguration;
         private readonly Mock<HttpMessageHandler> _mockHttpMessageHandler;
         private readonly HttpClient _httpClient;
-        private readonly GfwMetadataService _gfwMetadataService;
 
         public GfwMetadataServiceTests()
         {
             _mockConfiguration = new Mock<IConfiguration>();
             _mockConfiguration.Setup(c => c["GfwApiKey"]).Returns("test_gfw_api_key");
+            _mockConfiguration.Setup(c => c["GfwApiBaseUrl"]).Returns("https://gfw.api.com/"); // Mock base URL
 
             _mockHttpMessageHandler = new Mock<HttpMessageHandler>();
-            _httpClient = new HttpClient(_mockHttpMessageHandler.Object);
+            _httpClient = new HttpClient(_mockHttpMessageHandler.Object)
+            {
+                BaseAddress = new Uri("https://gfw.api.com/") // Set base address
+            };
+        }
 
-            _gfwMetadataService = new GfwMetadataService(_httpClient, _mockConfiguration.Object);
+        private ApplicationDbContext GetInMemoryDbContext()
+        {
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+            return new ApplicationDbContext(options);
         }
 
         [Fact]
@@ -36,35 +49,35 @@ namespace HarborFlowSuite.Server.Tests
         {
             // Arrange
             var mmsi = "123456789";
-            var gfwApiResponse = new { Entries = new[] { new { Flag = "USA", LengthM = 100.0, Imo = "IMO123" } } };
-            var jsonResponse = JsonSerializer.Serialize(gfwApiResponse);
+            var cachedEntry = new GfwMetadataCache
+            {
+                Mmsi = mmsi,
+                Flag = "USA",
+                Length = 100.0,
+                ImoNumber = "IMO123",
+                LastUpdated = DateTime.UtcNow.Subtract(TimeSpan.FromDays(1))
+            };
 
-            _mockHttpMessageHandler.Protected()
-                .Setup<Task<HttpResponseMessage>>(
-                    "SendAsync",
-                    ItExpr.IsAny<HttpRequestMessage>(),
-                    ItExpr.IsAny<CancellationToken>()
-                )
-                .ReturnsAsync(new HttpResponseMessage
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Content = new StringContent(jsonResponse)
-                });
+            var context = GetInMemoryDbContext();
+            context.GfwMetadataCache.Add(cachedEntry);
+            await context.SaveChangesAsync();
+
+            var service = new GfwMetadataService(_httpClient, _mockConfiguration.Object, context);
 
             // Act
-            var result1 = await _gfwMetadataService.GetVesselMetadataAsync(mmsi); // First call, should fetch and cache
-            var result2 = await _gfwMetadataService.GetVesselMetadataAsync(mmsi); // Second call, should be cached
+            var result = await service.GetVesselMetadataAsync(mmsi);
 
             // Assert
-            Assert.NotNull(result1);
-            Assert.NotNull(result2);
-            Assert.Equal(result1.ImoNumber, result2.ImoNumber);
+            Assert.NotNull(result);
+            Assert.Equal("USA", result.Flag);
+            Assert.Equal(100.0, result.Length);
+            Assert.Equal("IMO123", result.ImoNumber);
 
-            // Verify HTTP call was made only once
+            // Verify no HTTP call was made
             _mockHttpMessageHandler.Protected().Verify(
                 "SendAsync",
-                Times.Once(),
-                ItExpr.Is<HttpRequestMessage>(req => req.RequestUri.ToString().Contains($"mmsi={mmsi}")),
+                Times.Never(),
+                ItExpr.IsAny<HttpRequestMessage>(),
                 ItExpr.IsAny<CancellationToken>()
             );
         }
@@ -74,13 +87,16 @@ namespace HarborFlowSuite.Server.Tests
         {
             // Arrange
             var mmsi = "987654321";
+            var context = GetInMemoryDbContext();
+            var service = new GfwMetadataService(_httpClient, _mockConfiguration.Object, context);
+
             var gfwApiResponse = new { Entries = new[] { new { Flag = "GBR", LengthM = 150.5, Imo = "IMO456" } } };
             var jsonResponse = JsonSerializer.Serialize(gfwApiResponse);
 
             _mockHttpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>(
                     "SendAsync",
-                    ItExpr.Is<HttpRequestMessage>(req => req.RequestUri.ToString().Contains($"mmsi={mmsi}")),
+                    ItExpr.Is<HttpRequestMessage>(req => req.RequestUri.ToString().Contains($"query={mmsi}")),
                     ItExpr.IsAny<CancellationToken>()
                 )
                 .ReturnsAsync(new HttpResponseMessage
@@ -90,7 +106,7 @@ namespace HarborFlowSuite.Server.Tests
                 });
 
             // Act
-            var result = await _gfwMetadataService.GetVesselMetadataAsync(mmsi);
+            var result = await service.GetVesselMetadataAsync(mmsi);
 
             // Assert
             Assert.NotNull(result);
@@ -102,9 +118,14 @@ namespace HarborFlowSuite.Server.Tests
             _mockHttpMessageHandler.Protected().Verify(
                 "SendAsync",
                 Times.Once(),
-                ItExpr.Is<HttpRequestMessage>(req => req.RequestUri.ToString().Contains($"mmsi={mmsi}")),
+                ItExpr.Is<HttpRequestMessage>(req => req.RequestUri.ToString().Contains($"query={mmsi}")),
                 ItExpr.IsAny<CancellationToken>()
             );
+
+            // Verify that the data was cached
+            var cachedData = await context.GfwMetadataCache.FirstOrDefaultAsync(c => c.Mmsi == mmsi);
+            Assert.NotNull(cachedData);
+            Assert.Equal("GBR", cachedData.Flag);
         }
 
         [Fact]
@@ -112,6 +133,9 @@ namespace HarborFlowSuite.Server.Tests
         {
             // Arrange
             var mmsi = "111222333";
+            var context = GetInMemoryDbContext();
+            var service = new GfwMetadataService(_httpClient, _mockConfiguration.Object, context);
+
             _mockHttpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>(
                     "SendAsync",
@@ -124,7 +148,7 @@ namespace HarborFlowSuite.Server.Tests
                 });
 
             // Act
-            var result = await _gfwMetadataService.GetVesselMetadataAsync(mmsi);
+            var result = await service.GetVesselMetadataAsync(mmsi);
 
             // Assert
             Assert.Null(result);
@@ -136,8 +160,8 @@ namespace HarborFlowSuite.Server.Tests
             // Arrange
             var mmsi = "123456789";
             _mockConfiguration.Setup(c => c["GfwApiKey"]).Returns((string)null); // No API key
-
-            var serviceWithoutApiKey = new GfwMetadataService(_httpClient, _mockConfiguration.Object);
+            var context = GetInMemoryDbContext();
+            var serviceWithoutApiKey = new GfwMetadataService(_httpClient, _mockConfiguration.Object, context);
 
             // Act
             var result = await serviceWithoutApiKey.GetVesselMetadataAsync(mmsi);

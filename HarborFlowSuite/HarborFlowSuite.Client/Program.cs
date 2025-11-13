@@ -24,6 +24,7 @@ builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().Cre
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IVesselService, VesselService>();
 builder.Services.AddScoped<IServiceRequestService, ServiceRequestService>();
+builder.Services.AddScoped<IVesselPositionSignalRService, VesselPositionSignalRService>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, FirebaseAuthenticationStateProvider>();
 builder.Services.AddBlazoredToast();

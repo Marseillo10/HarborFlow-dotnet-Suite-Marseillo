@@ -7,28 +7,26 @@ namespace HarborFlowSuite.Client.Services
 {
     public class VesselPositionSignalRService : IVesselPositionSignalRService, IAsyncDisposable
     {
-        private HubConnection _hubConnection;
+        private readonly HubConnection _hubConnection;
 
-        public event Action<VesselPositionDto> OnPositionUpdateReceived;
+        public event Action<string, double, double, double, double, string, string, VesselMetadataDto> OnPositionUpdateReceived;
 
-        public VesselPositionSignalRService()
+        public VesselPositionSignalRService(HubConnection hubConnection)
         {
-            // HubConnection will be initialized in StartConnection
+            _hubConnection = hubConnection;
         }
 
-        public async Task StartConnection(string hubUrl)
+        public async Task StartConnection()
         {
-            _hubConnection = new HubConnectionBuilder()
-                .WithUrl(hubUrl)
-                .WithAutomaticReconnect()
-                .Build();
-
-            _hubConnection.On<VesselPositionDto>("ReceivePositionUpdate", (position) =>
+            _hubConnection.On<string, double, double, double, double, string, string, VesselMetadataDto>("ReceiveVesselPositionUpdate", (mmsi, lat, lon, heading, speed, name, vesselType, metadata) =>
             {
-                OnPositionUpdateReceived?.Invoke(position);
+                OnPositionUpdateReceived?.Invoke(mmsi, lat, lon, heading, speed, name, vesselType, metadata);
             });
 
-            await _hubConnection.StartAsync();
+            if (_hubConnection.State == HubConnectionState.Disconnected)
+            {
+                await _hubConnection.StartAsync();
+            }
         }
 
         public async Task StopConnection()

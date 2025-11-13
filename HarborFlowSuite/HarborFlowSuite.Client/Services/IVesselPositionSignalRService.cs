@@ -6,8 +6,8 @@ namespace HarborFlowSuite.Client.Services
 {
     public interface IVesselPositionSignalRService
     {
-        event Action<VesselPositionDto> OnPositionUpdateReceived;
-        Task StartConnection(string hubUrl);
+        event Action<string, double, double, double, double, string, string, VesselMetadataDto> OnPositionUpdateReceived;
+        Task StartConnection();
         Task StopConnection();
     }
 }

@@ -1,8 +1,9 @@
 @using Microsoft.AspNetCore.Components.Web
-@using Microsoft.AspNetCore.SignalR.Client
 @using HarborFlowSuite.Core.DTOs
+@using HarborFlowSuite.Client.Services
 @inject IJSRuntime JSRuntime
-@inject HubConnection HubConnection
+@inject IVesselPositionSignalRService VesselPositionSignalRService
+@implements IAsyncDisposable
 
 <div id="@MapElementId" style="width: 100%; height: 600px;"></div>
 
@@ -10,12 +11,30 @@
     [Parameter]
     public string MapElementId { get; set; } = "map";
 
+    [Parameter]
+    public EventCallback<int> OnVisibleVesselCountChanged { get; set; }
+
+    private DotNetObjectReference<VesselMap> _dotNetHelper;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _dotNetHelper = DotNetObjectReference.Create(this);
+        VesselPositionSignalRService.OnPositionUpdateReceived += OnPositionUpdateReceived;
+        await VesselPositionSignalRService.StartConnection();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await JSRuntime.InvokeVoidAsync("HarborFlowMap.initMap", MapElementId);
+            await JSRuntime.InvokeVoidAsync("HarborFlowMap.initMap", MapElementId, _dotNetHelper);
         }
+    }
+
+    private void OnPositionUpdateReceived(string mmsi, double lat, double lng, double heading, double speed, string name, string vesselType, VesselMetadataDto metadata)
+    {
+        UpdateVesselMarker(mmsi, lat, lng, heading, speed, name, vesselType, metadata);
+        StateHasChanged();
     }
 
     public async Task UpdateVesselMarker(string mmsi, double lat, double lng, double heading, double speed, string name, string vesselType, VesselMetadataDto metadata)
@@ -23,11 +42,16 @@
         await JSRuntime.InvokeVoidAsync("HarborFlowMap.updateVesselMarker", mmsi, lat, lng, heading, speed, name, vesselType, metadata);
     }
 
+    [JSInvokable]
+    public async Task UpdateVisibleVesselCount(int count)
+    {
+        await OnVisibleVesselCountChanged.InvokeAsync(count);
+    }
+
     public async ValueTask DisposeAsync()
     {
-        if (HubConnection is not null)
-        {
-            await HubConnection.DisposeAsync();
-        }
+        _dotNetHelper?.Dispose();
+        VesselPositionSignalRService.OnPositionUpdateReceived -= OnPositionUpdateReceived;
+        await VesselPositionSignalRService.StopConnection();
     }
 }

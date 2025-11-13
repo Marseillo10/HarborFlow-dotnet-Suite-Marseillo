@@ -14,7 +14,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ServiceRequest> ServiceRequests { get; set; }
     public DbSet<Company> Companies { get; set; }
     public DbSet<ApprovalHistory> ApprovalHistories { get; set; }
-    public DbSet<GfwMetadataCache> GfwMetadataCache { get; set; }
+    public virtual DbSet<GfwMetadataCache> GfwMetadataCache { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
