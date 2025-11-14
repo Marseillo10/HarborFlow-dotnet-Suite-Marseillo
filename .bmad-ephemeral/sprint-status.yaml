@@ -41,7 +41,7 @@ development_status:
   1-3-implement-vessel-detail-sliding-panel: done
   1-4-multiple-map-layer-support: done
   1-5-implement-collapsible-sidebar-for-map-view: in-progress
-  1-6-implement-vessel-hover-tooltip: in-progress
+  1-6-implement-vessel-hover-tooltip: review
   1-7-implement-map-search-highlighting: backlog
   1-8-handle-live-feed-interruption-state: backlog
   epic-1-retrospective: optional
