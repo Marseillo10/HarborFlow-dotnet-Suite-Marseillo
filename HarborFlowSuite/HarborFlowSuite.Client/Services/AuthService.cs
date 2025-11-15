@@ -14,12 +14,12 @@ public class AuthService : IClientAuthService
         _jsRuntime = jsRuntime;
     }
 
-    public async Task<string> GetCurrentUserToken()
+    public async Task<string?> GetCurrentUserToken()
     {
         return await _jsRuntime.InvokeAsync<string>("firebaseAuth.getCurrentUserToken");
     }
 
-    public async Task<string> SignIn(string email, string password)
+    public async Task<string?> SignIn(string email, string password)
     {
         try
         {

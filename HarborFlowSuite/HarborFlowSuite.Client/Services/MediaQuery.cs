@@ -7,11 +7,11 @@ namespace HarborFlowSuite.Client.Services
     public class MediaQuery
     {
         private readonly IJSRuntime _jsRuntime;
-        private DotNetObjectReference<MediaQuery> _dotNetObjectReference;
-        private IJSObjectReference _jsModule;
+        private DotNetObjectReference<MediaQuery>? _dotNetObjectReference;
+        private IJSObjectReference? _jsModule;
 
         public static bool IsDesktop { get; private set; }
-        public event Action OnMediaQueryChanged;
+        public event Action? OnMediaQueryChanged;
 
         public MediaQuery(IJSRuntime jsRuntime)
         {

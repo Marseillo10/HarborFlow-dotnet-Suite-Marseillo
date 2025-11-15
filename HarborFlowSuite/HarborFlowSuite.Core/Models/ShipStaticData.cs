@@ -8,14 +8,14 @@ namespace HarborFlowSuite.Core.Models
         public bool Valid { get; set; }
         public int AisVersion { get; set; }
         public int ImoNumber { get; set; }
-        public string CallSign { get; set; }
-        public string Name { get; set; }
+        public string? CallSign { get; set; }
+        public string? Name { get; set; }
         public int Type { get; set; }
-        public Dimension Dimension { get; set; }
+        public Dimension? Dimension { get; set; }
         public int FixType { get; set; }
-        public Eta Eta { get; set; }
+        public Eta? Eta { get; set; }
         public double MaximumStaticDraught { get; set; }
-        public string Destination { get; set; }
+        public string? Destination { get; set; }
         public bool Dte { get; set; }
         public bool Spare { get; set; }
     }

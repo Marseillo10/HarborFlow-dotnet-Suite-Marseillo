@@ -15,9 +15,9 @@ namespace HarborFlowSuite.Core.Models
         public int TrueHeading { get; set; }
         public int Timestamp { get; set; }
         public int Spare2 { get; set; }
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public int Type { get; set; } // This is the vessel type
-        public Dimension Dimension { get; set; }
+        public Dimension? Dimension { get; set; }
         public int FixType { get; set; }
         public bool Raim { get; set; }
         public bool Dte { get; set; }

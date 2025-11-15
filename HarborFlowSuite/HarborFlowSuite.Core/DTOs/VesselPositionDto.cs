@@ -4,7 +4,7 @@ namespace HarborFlowSuite.Core.DTOs
 {
     public class VesselPositionDto
     {
-        public string VesselId { get; set; }
+        public string? VesselId { get; set; }
         public string VesselName { get; set; } = string.Empty;
         public string VesselType { get; set; } = string.Empty;
         public string IMO { get; set; } = string.Empty; // Added IMO

@@ -4,7 +4,7 @@ namespace HarborFlowSuite.Client.Services
     {
         public bool IsCollapsed { get; private set; }
 
-        public event Action OnChange;
+        public event Action? OnChange;
 
         public void ToggleSidebar()
         {

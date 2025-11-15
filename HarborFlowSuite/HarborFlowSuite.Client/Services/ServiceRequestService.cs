@@ -17,24 +17,24 @@ namespace HarborFlowSuite.Client.Services
             _httpClient = httpClient;
         }
 
-        public async Task<List<ServiceRequest>> GetServiceRequests()
+        public async Task<List<ServiceRequest>?> GetServiceRequests()
         {
             return await _httpClient.GetFromJsonAsync<List<ServiceRequest>>("api/servicerequest");
         }
 
-        public async Task<ServiceRequest> GetServiceRequestById(Guid id)
+        public async Task<ServiceRequest?> GetServiceRequestById(Guid id)
         {
             return await _httpClient.GetFromJsonAsync<ServiceRequest>($"api/servicerequest/{id}");
         }
 
-        public async Task<ServiceRequest> CreateServiceRequest(ServiceRequest serviceRequest)
+        public async Task<ServiceRequest?> CreateServiceRequest(ServiceRequest serviceRequest)
         {
             var response = await _httpClient.PostAsJsonAsync("api/servicerequest", serviceRequest);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<ServiceRequest>();
         }
 
-        public async Task<ServiceRequest> UpdateServiceRequest(ServiceRequest serviceRequest)
+        public async Task<ServiceRequest?> UpdateServiceRequest(ServiceRequest serviceRequest)
         {
             var response = await _httpClient.PutAsJsonAsync($"api/servicerequest/{serviceRequest.Id}", serviceRequest);
             response.EnsureSuccessStatusCode();
@@ -48,14 +48,14 @@ namespace HarborFlowSuite.Client.Services
             return true;
         }
 
-        public async Task<ServiceRequest> ApproveServiceRequest(Guid id, Guid approverId, string comments)
+        public async Task<ServiceRequest?> ApproveServiceRequest(Guid id, Guid approverId, string comments)
         {
             var response = await _httpClient.PostAsJsonAsync($"api/servicerequest/{id}/approve", new { approverId, comments });
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<ServiceRequest>();
         }
 
-        public async Task<ServiceRequest> RejectServiceRequest(Guid id, Guid approverId, string comments)
+        public async Task<ServiceRequest?> RejectServiceRequest(Guid id, Guid approverId, string comments)
         {
             var response = await _httpClient.PostAsJsonAsync($"api/servicerequest/{id}/reject", new { approverId, comments });
             response.EnsureSuccessStatusCode();

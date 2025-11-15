@@ -5,7 +5,7 @@
     <div class="layer-switcher-toggle" @onclick="ToggleSwitcher">
         <i class="fas fa-layer-group"></i>
     </div>
-    @if (_isExpanded)
+    @if (_isExpanded && Layers != null)
     {
         <div class="layer-switcher-panel">
             @foreach (var layer in Layers)
@@ -21,10 +21,10 @@
 
 @code {
     [Parameter]
-    public Dictionary<string, LayerInfo> Layers { get; set; }
+    public Dictionary<string, LayerInfo>? Layers { get; set; }
 
     [Parameter]
-    public string SelectedLayer { get; set; }
+    public string? SelectedLayer { get; set; }
 
     [Parameter]
     public EventCallback<string> OnLayerSelected { get; set; }
@@ -45,7 +45,7 @@
 
     public class LayerInfo
     {
-        public string Name { get; set; }
-        public string Thumbnail { get; set; }
+        public string? Name { get; set; }
+        public string? Thumbnail { get; set; }
     }
 }

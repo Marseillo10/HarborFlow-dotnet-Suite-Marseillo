@@ -15,7 +15,7 @@ namespace HarborFlowSuite.Client.Services
             _httpClient = httpClient;
         }
 
-        public async Task<UserProfileDto> GetUserProfileAsync(string userId, string email)
+        public async Task<UserProfileDto?> GetUserProfileAsync(string userId, string email)
         {
             return await _httpClient.GetFromJsonAsync<UserProfileDto>("api/userprofile");
         }

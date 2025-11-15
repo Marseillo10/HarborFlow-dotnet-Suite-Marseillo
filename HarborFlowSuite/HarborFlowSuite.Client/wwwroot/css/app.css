@@ -1,5 +1,5 @@
 .profile-icon {
-    font-size: 1.5em; /* Adjust as needed */
+    font-size: 2.0em; /* Adjust as needed */
 }
 
 .home-nav-link .nav-link-text {
@@ -196,4 +196,14 @@ main {
 
 .d-block.d-md-none > div:not(.collapse) .nav-menu {
     background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+}
+
+.sidebar .nav-link,
+.sidebar .nav-link .bi,
+.sidebar .nav-link .fas {
+    color: white !important;
+}
+
+.logout-nav-link .nav-link-text {
+    font-size: 1.2em; /* Adjust as needed */
 }

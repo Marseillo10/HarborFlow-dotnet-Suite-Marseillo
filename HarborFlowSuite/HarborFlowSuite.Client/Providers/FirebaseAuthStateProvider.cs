@@ -63,17 +63,20 @@ namespace HarborFlowSuite.Client.Providers
             var jsonBytes = ParseBase64WithoutPadding(payload);
             var keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
 
-            if (keyValuePairs.TryGetValue(ClaimTypes.Name, out var name))
+            if (keyValuePairs != null)
             {
-                claims.Add(new Claim(ClaimTypes.Name, name.ToString()));
-            }
-            if (keyValuePairs.TryGetValue(ClaimTypes.Email, out var email))
-            {
-                claims.Add(new Claim(ClaimTypes.Email, email.ToString()));
-            }
-            if (keyValuePairs.TryGetValue("user_id", out var userId))
-            {
-                claims.Add(new Claim(ClaimTypes.NameIdentifier, userId.ToString()));
+                if (keyValuePairs.TryGetValue(ClaimTypes.Name, out var name) && name != null)
+                {
+                    claims.Add(new Claim(ClaimTypes.Name, name.ToString()!));
+                }
+                if (keyValuePairs.TryGetValue(ClaimTypes.Email, out var email) && email != null)
+                {
+                    claims.Add(new Claim(ClaimTypes.Email, email.ToString()!));
+                }
+                if (keyValuePairs.TryGetValue("user_id", out var userId) && userId != null)
+                {
+                    claims.Add(new Claim(ClaimTypes.NameIdentifier, userId.ToString()!));
+                }
             }
 
             return claims;

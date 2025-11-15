@@ -27,7 +27,7 @@
     private VesselPositionDto? _hoveredVessel;
     private System.Drawing.Point _tooltipPosition;
     private HubConnectionState _connectionState;
-    private string _connectionStatusMessage;
+    private string? _connectionStatusMessage;
 
     [Parameter]
     public EventCallback<int> OnTotalMapVesselCountChanged { get; set; }
@@ -39,10 +39,10 @@
     public EventCallback<List<VesselTypeSummaryDto>> OnVisibleVesselTypeSummaryChanged { get; set; }
 
     [Parameter]
-    public IEnumerable<Port> Ports { get; set; }
+    public IEnumerable<Port>? Ports { get; set; }
 
-    private DotNetObjectReference<VesselMap> _dotNetHelper;
-    private IEnumerable<Port> _currentPorts;
+    private DotNetObjectReference<VesselMap>? _dotNetHelper;
+    private IEnumerable<Port>? _currentPorts;
 
     protected override async Task OnInitializedAsync()
     {
@@ -74,9 +74,9 @@
         }
     }
 
-    private void OnPositionUpdateReceived(string mmsi, double lat, double lng, double heading, double speed, string name, string vesselType, VesselMetadataDto metadata)
+    private async void OnPositionUpdateReceived(string mmsi, double lat, double lng, double heading, double speed, string name, string vesselType, VesselMetadataDto metadata)
     {
-        UpdateVesselMarker(mmsi, lat, lng, heading, speed, name, vesselType, metadata);
+        await UpdateVesselMarker(mmsi, lat, lng, heading, speed, name, vesselType, metadata);
         StateHasChanged();
     }
 

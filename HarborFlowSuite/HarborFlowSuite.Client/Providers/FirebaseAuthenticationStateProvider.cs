@@ -38,10 +38,10 @@ public class FirebaseAuthenticationStateProvider : AuthenticationStateProvider
     }
 
     [JSInvokable]
-    public void OnAuthStateChanged(FirebaseUserDto userDto)
+    public void OnAuthStateChanged(FirebaseUserDto? userDto)
     {
         Console.WriteLine("OnAuthStateChanged called");
-        if (userDto == null)
+        if (userDto == null || userDto.Token == null)
         {
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_anonymous)));
             return;
@@ -90,8 +90,8 @@ public class FirebaseAuthenticationStateProvider : AuthenticationStateProvider
 
 public class FirebaseUserDto
 {
-    public string Email { get; set; }
-    public string Uid { get; set; }
-    public string Token { get; set; }
+    public string? Email { get; set; }
+    public string? Uid { get; set; }
+    public string? Token { get; set; }
 }
 

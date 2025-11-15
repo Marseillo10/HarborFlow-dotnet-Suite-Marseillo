@@ -86,7 +86,7 @@ else
                     <button type="button" class="btn-close" @onclick="CloseApprovalModal"></button>
                 </div>
                 <div class="modal-body">
-                    <p><strong>Request:</strong> @_selectedRequest.Title</p>
+                    <p><strong>Request:</strong> @_selectedRequest?.Title</p>
                     <textarea class="form-control" @bind="_approvalComments" placeholder="Enter comments..."></textarea>
                 </div>
                 <div class="modal-footer">
@@ -105,9 +105,9 @@ else
     private string _searchTerm = string.Empty;
     private bool _isPortAuthorityOfficer;
     private bool _showApprovalModal;
-    private ServiceRequest _selectedRequest;
+    private ServiceRequest? _selectedRequest;
     private bool _isApproving;
-    private string _approvalComments;
+    private string? _approvalComments;
 
     private string SearchTerm
     {
@@ -118,7 +118,7 @@ else
         }
     }
 
-    private List<ServiceRequest> FilteredServiceRequests => _serviceRequests?.Where(r => r.Title.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList() ?? new List<ServiceRequest>();
+    private List<ServiceRequest> FilteredServiceRequests => _serviceRequests?.Where(r => r.Title != null && r.Title.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList() ?? new List<ServiceRequest>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -157,11 +157,16 @@ else
 
     private async Task SubmitApproval()
     {
+        if (_selectedRequest == null || _approvalComments == null)
+        {
+            return;
+        }
+
         try
         {
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
-            var approverId = Guid.Parse(user.FindFirst(c => c.Type == "nameid")?.Value);
+            var approverId = Guid.Parse(user.FindFirst(c => c.Type == "nameid")?.Value ?? string.Empty);
 
             if (_isApproving)
             {

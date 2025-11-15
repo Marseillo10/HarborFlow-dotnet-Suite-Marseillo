@@ -44,7 +44,7 @@ namespace HarborFlowSuite.Client.Tests
         }
 
         [Fact]
-        public async Task OnPositionUpdateReceived_EventIsInvokedWhenMessageReceived()
+        public void OnPositionUpdateReceived_EventIsInvokedWhenMessageReceived()
         {
             // Arrange
             string mmsi = "123456789";

@@ -9,11 +9,11 @@
 
 @code {
     [Parameter]
-    public List<VesselTypeSummaryDto> Data { get; set; }
+    public List<VesselTypeSummaryDto>? Data { get; set; }
 
     private string _chartId = "vesselTypeChart-" + Guid.NewGuid().ToString();
-    private IJSObjectReference _chartModule;
-    private DotNetObjectReference<VesselTypePolarAreaChart> _dotNetObjectReference;
+    private IJSObjectReference? _chartModule;
+    private DotNetObjectReference<VesselTypePolarAreaChart>? _dotNetObjectReference;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

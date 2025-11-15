@@ -2,8 +2,9 @@
 @using HarborFlowSuite.Core.DTOs
 @using HarborFlowSuite.Abstractions.Services
 @using HarborFlowSuite.Client.Services
+@using Microsoft.AspNetCore.Components.Authorization
 @inject IClientAuthService AuthService
-@inject HttpClient Http
+@inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager NavigationManager
 
 <h3>User Profile</h3>
@@ -51,20 +52,46 @@ else
 }
 
 @code {
-    private UserProfileDto _userProfile;
+    private UserProfileDto? _userProfile;
+    private HttpClient? _httpClient;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationState { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        _userProfile = await Http.GetFromJsonAsync<UserProfileDto>("api/userprofile");
+        _httpClient = HttpClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
+
+        if (authenticationState != null)
+        {
+            var authState = await authenticationState;
+            var user = authState.User;
+
+            if (user.Identity != null && user.Identity.IsAuthenticated)
+            {
+                _userProfile = await _httpClient.GetFromJsonAsync<UserProfileDto>("api/userprofile");
+            }
+            else
+            {
+                // Optionally, redirect to login or show a message
+                NavigationManager.NavigateTo("/authentication/login");
+            }
+        }
     }
 
     private async Task HandleProfileUpdate()
     {
-        await Http.PutAsJsonAsync("api/userprofile", _userProfile);
+        if (_httpClient != null)
+        {
+            await _httpClient.PutAsJsonAsync("api/userprofile", _userProfile);
+        }
     }
 
     private async Task HandleChangePassword()
     {
-        await Http.PostAsync("api/userprofile/changepassword", null);
+        if (_httpClient != null)
+        {
+            await _httpClient.PostAsync("api/userprofile/changepassword", null);
+        }
     }
 }

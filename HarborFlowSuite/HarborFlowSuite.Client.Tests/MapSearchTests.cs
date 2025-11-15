@@ -19,7 +19,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace HarborFlowSuite.Client.Tests
 {
-    public class MapSearchTests : TestContext
+    public class MapSearchTests : BunitContext
     {
         private readonly Mock<IJSRuntime> _jsRuntimeMock;
         private readonly Mock<IPortService> _portServiceMock;

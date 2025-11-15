@@ -12,7 +12,7 @@ using Microsoft.JSInterop.Infrastructure;
 
 namespace HarborFlowSuite.Client.Tests
 {
-    public class VesselMapIntegrationTests : TestContext
+    public class VesselMapIntegrationTests : BunitContext
     {
         private readonly Mock<IJSRuntime> _jsRuntimeMock;
         private readonly Mock<IVesselPositionSignalRService> _vesselPositionSignalRServiceMock;

@@ -16,12 +16,12 @@ namespace HarborFlowSuite.Client.Services
             _httpClient = httpClient;
         }
 
-        public async Task<List<Vessel>> GetVessels()
+        public async Task<List<Vessel>?> GetVessels()
         {
             return await _httpClient.GetFromJsonAsync<List<Vessel>>("api/vessel");
         }
 
-        public async Task<List<VesselPositionDto>> GetVesselPositions()
+        public async Task<List<VesselPositionDto>?> GetVesselPositions()
         {
             return await _httpClient.GetFromJsonAsync<List<VesselPositionDto>>("api/vessel/positions");
         }

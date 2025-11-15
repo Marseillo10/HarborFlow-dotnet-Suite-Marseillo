@@ -8,7 +8,7 @@ namespace HarborFlowSuite.Client.Services
     {
         private readonly HubConnection _hubConnection;
 
-        public event Action<string, double, double, double, double, string> OnVesselPositionUpdate;
+        public event Action<string, double, double, double, double, string>? OnVesselPositionUpdate;
 
         public SignalRService(HubConnection hubConnection)
         {

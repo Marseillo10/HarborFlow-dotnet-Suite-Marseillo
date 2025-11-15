@@ -14,10 +14,10 @@ namespace HarborFlowSuite.Client.Services
         private readonly HashSet<string> _activeVessels = new HashSet<string>();
 
         public HubConnectionState ConnectionState => _hubConnection.State;
-        public event Action<HubConnectionState> OnConnectionStateChanged;
+        public event Action<HubConnectionState>? OnConnectionStateChanged;
 
-        public event Action<string, double, double, double, double, string, string, VesselMetadataDto> OnPositionUpdateReceived;
-        public event Action<int> OnTotalVesselCountChanged;
+        public event Action<string, double, double, double, double, string, string, VesselMetadataDto>? OnPositionUpdateReceived;
+        public event Action<int>? OnTotalVesselCountChanged;
 
         public int TotalVesselCount => _activeVessels.Count;
 
@@ -93,21 +93,21 @@ namespace HarborFlowSuite.Client.Services
             }
         }
 
-        private Task OnReconnecting(Exception error)
+        private Task OnReconnecting(Exception? error)
         {
             _logger.LogWarning("SignalR connection is reconnecting. Error: {Error}", error?.Message);
             OnConnectionStateChanged?.Invoke(_hubConnection.State);
             return Task.CompletedTask;
         }
 
-        private Task OnReconnected(string connectionId)
+        private Task OnReconnected(string? connectionId)
         {
             _logger.LogInformation("SignalR connection reconnected with ID: {ConnectionId}", connectionId);
             OnConnectionStateChanged?.Invoke(_hubConnection.State);
             return Task.CompletedTask;
         }
 
-        private Task OnClosed(Exception error)
+        private Task OnClosed(Exception? error)
         {
             _logger.LogError("SignalR connection closed. Error: {Error}", error?.Message);
             OnConnectionStateChanged?.Invoke(_hubConnection.State);

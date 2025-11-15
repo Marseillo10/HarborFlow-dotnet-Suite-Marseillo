@@ -7,7 +7,7 @@ namespace HarborFlowSuite.Client.Services
 {
     public interface IVesselService
     {
-        Task<List<Vessel>> GetVessels();
-        Task<List<VesselPositionDto>> GetVesselPositions();
+        Task<List<Vessel>?> GetVessels();
+        Task<List<VesselPositionDto>?> GetVesselPositions();
     }
 }
