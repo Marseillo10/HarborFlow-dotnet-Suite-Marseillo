@@ -1,13 +1,14 @@
+using HarborFlowSuite.Abstractions.Services;
 using HarborFlowSuite.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
-using FirebaseAdmin;
-using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using HarborFlowSuite.Application.Services;
-using HarborFlowSuite.Infrastructure.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Web;
 using HarborFlowSuite.Server.Hubs;
 using HarborFlowSuite.Server.Services;
+using HarborFlowSuite.Application.Services; // Added for service implementations
+using FirebaseAdmin; // Added for FirebaseApp
+using Google.Apis.Auth.OAuth2; // Added for GoogleCredential
+using Microsoft.IdentityModel.Tokens; // Added for TokenValidationParameters
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,9 +28,10 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddNpgsql<ApplicationDbContext>(connectionString);
 
 // Register services
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IDashboardService, DashboardService>();
-builder.Services.AddScoped<IServiceRequestService, ServiceRequestService>();
+builder.Services.AddScoped<IAuthService, HarborFlowSuite.Infrastructure.Services.AuthService>();
+builder.Services.AddScoped<IDashboardService, HarborFlowSuite.Infrastructure.Services.DashboardService>();
+builder.Services.AddScoped<IServiceRequestService, HarborFlowSuite.Infrastructure.Services.ServiceRequestService>();
+builder.Services.AddScoped<IUserProfileService, HarborFlowSuite.Application.Services.UserProfileService>();
 
 // Configure GFW API client
 builder.Services.AddHttpClient<IGfwMetadataService, GfwMetadataService>((serviceProvider, client) =>
@@ -83,7 +85,17 @@ if (app.Environment.IsDevelopment())
     using (var scope = app.Services.CreateScope())
     {
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        dbContext.Database.Migrate();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        try
+        {
+            logger.LogInformation("Attempting to connect to the database and apply migrations...");
+            dbContext.Database.Migrate();
+            logger.LogInformation("Database connection successful and migrations applied.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "An error occurred while migrating the database.");
+        }
     }
 }
 
@@ -91,11 +103,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowClient");
 
+app.UseBlazorFrameworkFiles();
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<AisHub>("/aisHub");
+app.MapFallbackToFile("index.html");
 
 app.Run();
 

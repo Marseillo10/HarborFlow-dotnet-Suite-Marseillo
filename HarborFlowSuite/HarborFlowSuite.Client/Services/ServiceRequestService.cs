@@ -1,4 +1,5 @@
 using HarborFlowSuite.Core.Models;
+using HarborFlowSuite.Abstractions.Services;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace HarborFlowSuite.Client.Services
 {
-    public class ServiceRequestService : IServiceRequestService
+    public class ServiceRequestService : IClientServiceRequestService
     {
         private readonly HttpClient _httpClient;
 

@@ -1,20 +1,22 @@
+using HarborFlowSuite.Abstractions.Services;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 using HarborFlowSuite.Client.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
-using System.Collections.Generic;
-using System;
-using System.Text.Json;
 
 namespace HarborFlowSuite.Client.Providers;
 
 public class FirebaseAuthenticationStateProvider : AuthenticationStateProvider
 {
-    private readonly IAuthService _authService;
+    private readonly IClientAuthService _authService;
     private ClaimsPrincipal _anonymous = new ClaimsPrincipal(new ClaimsIdentity());
 
-    public FirebaseAuthenticationStateProvider(IAuthService authService)
+    public FirebaseAuthenticationStateProvider(IClientAuthService authService)
     {
         _authService = authService;
     }

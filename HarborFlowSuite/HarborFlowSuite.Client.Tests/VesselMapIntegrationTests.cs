@@ -16,14 +16,17 @@ namespace HarborFlowSuite.Client.Tests
     {
         private readonly Mock<IJSRuntime> _jsRuntimeMock;
         private readonly Mock<IVesselPositionSignalRService> _vesselPositionSignalRServiceMock;
+        private readonly Mock<SidebarService> _sidebarServiceMock;
 
         public VesselMapIntegrationTests()
         {
             _jsRuntimeMock = new Mock<IJSRuntime>();
             _vesselPositionSignalRServiceMock = new Mock<IVesselPositionSignalRService>();
+            _sidebarServiceMock = new Mock<SidebarService>();
 
             Services.AddSingleton(_jsRuntimeMock.Object);
-            Services.AddSingleton(_vesselPositionSignalRServiceMock.Object);
+            Services.AddSingleton<IVesselPositionSignalRService>(_vesselPositionSignalRServiceMock.Object);
+            Services.AddSingleton(_sidebarServiceMock.Object);
         }
 
         [Fact]
@@ -50,9 +53,7 @@ namespace HarborFlowSuite.Client.Tests
 
             // Act
             var cut = Render<VesselMap>();
-
-            // Simulate a position update
-            onPositionUpdateReceived?.Invoke(mmsi, lat, lng, heading, speed, name, vesselType, metadata);
+            await cut.InvokeAsync(() => onPositionUpdateReceived?.Invoke(mmsi, lat, lng, heading, speed, name, vesselType, metadata));
 
             // Assert
             _vesselPositionSignalRServiceMock.Verify(s => s.StartConnection(), Times.Once);
@@ -74,13 +75,14 @@ namespace HarborFlowSuite.Client.Tests
             // Arrange
             _jsRuntimeMock.Setup(js => js.InvokeAsync<IJSVoidResult>("HarborFlowMap.initMap", It.IsAny<object[]>()))
                           .Returns(new ValueTask<IJSVoidResult>(Mock.Of<IJSVoidResult>()));
+            _vesselPositionSignalRServiceMock.Setup(s => s.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
             // Act
             var cut = Render<VesselMap>();
             cut.Dispose();
 
             // Assert
-            _vesselPositionSignalRServiceMock.Verify(s => s.StopConnection(), Times.Once);
+            _vesselPositionSignalRServiceMock.Verify(s => s.DisposeAsync(), Times.Once);
             _vesselPositionSignalRServiceMock.VerifyRemove(s => s.OnPositionUpdateReceived -= It.IsAny<Action<string, double, double, double, double, string, string, VesselMetadataDto>>(), Times.Once);
         }
     }

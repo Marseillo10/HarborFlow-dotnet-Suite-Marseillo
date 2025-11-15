@@ -35,6 +35,15 @@ window.HarborFlowMap = {
         this.reportVesselData(); // Initial report
     },
 
+    dispose: function () {
+        if (this.map) {
+            this.map.remove();
+            this.map = null;
+        }
+        this.dotNetHelper = null;
+        window.removeEventListener('resize', () => this.invalidateMapSize());
+    },
+
     switchLayer: function (layerName) {
         if (this.map && this.tileLayers[layerName]) {
             if (this.currentTileLayer) {
@@ -136,6 +145,44 @@ window.HarborFlowMap = {
             });
         }
         this.reportVesselData();
+    },
+
+    filterVessels: function (searchTerm) {
+        if (!this.map) return;
+
+        let filteredCount = 0;
+        const lowerCaseSearchTerm = searchTerm.toLowerCase();
+
+        for (const mmsi in this.vesselMarkers) {
+            const marker = this.vesselMarkers[mmsi];
+            const vesselData = marker.vesselData;
+
+            const isMatch = lowerCaseSearchTerm === '' ||
+                            vesselData.vesselName.toLowerCase().includes(lowerCaseSearchTerm) ||
+                            vesselData.vesselId.toLowerCase().includes(lowerCaseSearchTerm) ||
+                            vesselData.vesselType.toLowerCase().includes(lowerCaseSearchTerm);
+
+            if (isMatch) {
+                this.highlightMarker(marker, true);
+                filteredCount++;
+            } else {
+                this.highlightMarker(marker, false);
+            }
+        }
+
+        if (this.dotNetHelper) {
+            this.dotNetHelper.invokeMethodAsync('UpdateFilteredVesselCount', filteredCount);
+        }
+    },
+
+    highlightMarker: function (marker, shouldHighlight) {
+        if (shouldHighlight) {
+            marker.getElement().classList.add('highlight');
+            marker.setZIndexOffset(1000);
+        } else {
+            marker.getElement().classList.remove('highlight');
+            marker.setZIndexOffset(0);
+        }
     },
 
     reportVesselData: function () {

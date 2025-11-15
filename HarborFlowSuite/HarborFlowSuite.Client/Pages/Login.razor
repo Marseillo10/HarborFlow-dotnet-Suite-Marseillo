@@ -1,7 +1,9 @@
 @page "/login"
-@using HarborFlowSuite.Client.Services
+@using HarborFlowSuite.Abstractions.Services
+@using HarborFlowSuite.Client.Providers
 @using Microsoft.AspNetCore.Components.Authorization
-@inject IAuthService AuthService
+@using HarborFlowSuite.Client.Services
+@inject IClientAuthService AuthService
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -51,23 +53,13 @@
 
     private async Task HandleLogin()
     {
-        Console.WriteLine("HandleLogin called");
         try
         {
-            bool success = await AuthService.SignIn(_loginModel.Email, _loginModel.Password);
-            Console.WriteLine($"SignIn success: {success}");
-            if (success)
+            var token = await AuthService.SignIn(_loginModel.Email, _loginModel.Password);
+            if (!string.IsNullOrEmpty(token))
             {
-                var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-                Console.WriteLine($"IsAuthenticated: {authState.User.Identity?.IsAuthenticated}");
-                if (authState.User.Identity?.IsAuthenticated == true)
-                {
-                    NavigationManager.NavigateTo("/dashboard");
-                }
-                else
-                {
-                    _errorMessage = "Login successful, but authentication state not updated. Please try again.";
-                }
+                ((FirebaseAuthStateProvider)AuthenticationStateProvider).OnTokenChanged(token);
+                NavigationManager.NavigateTo("/dashboard");
             }
             else
             {
@@ -77,7 +69,6 @@
         catch (Exception ex)
         {
             _errorMessage = ex.Message;
-            Console.WriteLine($"Login exception: {ex.Message}");
         }
     }
 

@@ -4,7 +4,7 @@ using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using HarborFlowSuite.Application.Services;
+using HarborFlowSuite.Abstractions.Services;
 using HarborFlowSuite.Infrastructure.Services;
 using HarborFlowSuite.Server.Hubs;
 using HarborFlowSuite.Server.Services;

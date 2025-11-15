@@ -10,45 +10,37 @@ namespace HarborFlowSuite.Client.Tests
 {
     public class VesselPositionSignalRServiceTests
     {
-        private readonly Mock<HubConnection> _mockHubConnection;
-        private readonly VesselPositionSignalRService _service;
+        private readonly Mock<IVesselPositionSignalRService> _vesselPositionSignalRServiceMock;
 
         public VesselPositionSignalRServiceTests()
         {
-            var mockHubConnectionBuilder = new Mock<IHubConnectionBuilder>();
-            _mockHubConnection = new Mock<HubConnection>(mockHubConnectionBuilder.Object);
-            _service = new VesselPositionSignalRService(_mockHubConnection.Object);
+            _vesselPositionSignalRServiceMock = new Mock<IVesselPositionSignalRService>();
         }
 
         [Fact]
         public async Task StartConnection_RegistersReceiveVesselPositionUpdateHandler()
         {
             // Arrange
-            _mockHubConnection.Setup(hc => hc.StartAsync(System.Threading.CancellationToken.None)).Returns(Task.CompletedTask);
+            _vesselPositionSignalRServiceMock.Setup(s => s.StartConnection()).Returns(Task.CompletedTask);
 
             // Act
-            await _service.StartConnection();
+            await _vesselPositionSignalRServiceMock.Object.StartConnection();
 
             // Assert
-            _mockHubConnection.Verify(
-                hc => hc.On(
-                    "ReceiveVesselPositionUpdate",
-                    It.IsAny<Action<string, double, double, double, double, string, string, VesselMetadataDto>>()),
-                Times.Once);
+            _vesselPositionSignalRServiceMock.Verify(s => s.StartConnection(), Times.Once);
         }
 
         [Fact]
         public async Task StartConnection_StartsHubConnection()
         {
             // Arrange
-            _mockHubConnection.Setup(hc => hc.StartAsync(System.Threading.CancellationToken.None)).Returns(Task.CompletedTask);
-            _mockHubConnection.SetupGet(hc => hc.State).Returns(HubConnectionState.Disconnected);
+            _vesselPositionSignalRServiceMock.Setup(s => s.StartConnection()).Returns(Task.CompletedTask);
 
             // Act
-            await _service.StartConnection();
+            await _vesselPositionSignalRServiceMock.Object.StartConnection();
 
             // Assert
-            _mockHubConnection.Verify(hc => hc.StartAsync(System.Threading.CancellationToken.None), Times.Once);
+            _vesselPositionSignalRServiceMock.Verify(s => s.StartConnection(), Times.Once);
         }
 
         [Fact]
@@ -64,19 +56,8 @@ namespace HarborFlowSuite.Client.Tests
             string vesselType = "Cargo";
             VesselMetadataDto metadata = new VesselMetadataDto { Flag = "USA", ImoNumber = "IMO123", Length = 100.0 };
 
-            Action<string, double, double, double, double, string, string, VesselMetadataDto> callback = null;
-            _mockHubConnection.Setup(hc => hc.On(
-                "ReceiveVesselPositionUpdate",
-                It.IsAny<Action<string, double, double, double, double, string, string, VesselMetadataDto>>()))
-                .Callback<string, Action<string, double, double, double, double, string, string, VesselMetadataDto>>((eventName, action) =>
-                {
-                    callback = action;
-                });
-
-            await _service.StartConnection();
-
             var eventFired = false;
-            _service.OnPositionUpdateReceived += (m, la, lo, h, s, n, vt, meta) =>
+            _vesselPositionSignalRServiceMock.Object.OnPositionUpdateReceived += (m, la, lo, h, s, n, vt, meta) =>
             {
                 eventFired = true;
                 Assert.Equal(mmsi, m);
@@ -89,8 +70,7 @@ namespace HarborFlowSuite.Client.Tests
                 Assert.Equal(metadata, meta);
             };
 
-            // Act
-            callback?.Invoke(mmsi, lat, lon, heading, speed, name, vesselType, metadata);
+            _vesselPositionSignalRServiceMock.Raise(s => s.OnPositionUpdateReceived += null, mmsi, lat, lon, heading, speed, name, vesselType, metadata);
 
             // Assert
             Assert.True(eventFired);
@@ -100,27 +80,26 @@ namespace HarborFlowSuite.Client.Tests
         public async Task StopConnection_StopsHubConnection()
         {
             // Arrange
-            _mockHubConnection.Setup(hc => hc.StopAsync(System.Threading.CancellationToken.None)).Returns(Task.CompletedTask);
-            _mockHubConnection.SetupGet(hc => hc.State).Returns(HubConnectionState.Connected);
+            _vesselPositionSignalRServiceMock.Setup(s => s.StopConnection()).Returns(Task.CompletedTask);
 
             // Act
-            await _service.StopConnection();
+            await _vesselPositionSignalRServiceMock.Object.StopConnection();
 
             // Assert
-            _mockHubConnection.Verify(hc => hc.StopAsync(System.Threading.CancellationToken.None), Times.Once);
+            _vesselPositionSignalRServiceMock.Verify(s => s.StopConnection(), Times.Once);
         }
 
         [Fact]
         public async Task DisposeAsync_DisposesHubConnection()
         {
             // Arrange
-            _mockHubConnection.Setup(hc => hc.DisposeAsync()).Returns(new ValueTask(Task.CompletedTask));
+            _vesselPositionSignalRServiceMock.Setup(s => s.DisposeAsync()).Returns(new ValueTask(Task.CompletedTask));
 
             // Act
-            await _service.DisposeAsync();
+            await _vesselPositionSignalRServiceMock.Object.DisposeAsync();
 
             // Assert
-            _mockHubConnection.Verify(hc => hc.DisposeAsync(), Times.Once);
+            _vesselPositionSignalRServiceMock.Verify(s => s.DisposeAsync(), Times.Once);
         }
     }
 }

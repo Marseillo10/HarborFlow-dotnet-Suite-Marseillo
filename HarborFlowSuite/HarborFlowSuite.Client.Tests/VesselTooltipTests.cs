@@ -17,14 +17,17 @@ namespace HarborFlowSuite.Client.Tests
     {
         private readonly Mock<IJSRuntime> _jsRuntimeMock;
         private readonly Mock<IVesselPositionSignalRService> _vesselPositionSignalRServiceMock;
+        private readonly Mock<SidebarService> _sidebarServiceMock;
 
         public VesselTooltipTests()
         {
             _jsRuntimeMock = new Mock<IJSRuntime>();
             _vesselPositionSignalRServiceMock = new Mock<IVesselPositionSignalRService>();
+            _sidebarServiceMock = new Mock<SidebarService>();
 
             Services.AddSingleton(_jsRuntimeMock.Object);
             Services.AddSingleton(_vesselPositionSignalRServiceMock.Object);
+            Services.AddSingleton(_sidebarServiceMock.Object);
 
             // Setup JSInterop mock for initMap, as VesselMap will call it
             _jsRuntimeMock.Setup(js => js.InvokeAsync<IJSVoidResult>("HarborFlowMap.initMap", It.IsAny<object[]>()))

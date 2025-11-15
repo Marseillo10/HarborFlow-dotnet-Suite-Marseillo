@@ -1,0 +1,12 @@
+.connection-status-banner {
+    background-color: #ffc107; /* Warning color */
+    color: #333;
+    text-align: center;
+    padding: 8px;
+    font-weight: 500;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}

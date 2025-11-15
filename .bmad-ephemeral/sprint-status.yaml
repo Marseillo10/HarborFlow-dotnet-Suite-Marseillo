@@ -42,12 +42,12 @@ development_status:
   1-4-multiple-map-layer-support: done
   1-5-implement-collapsible-sidebar-for-map-view: in-progress
   1-6-implement-vessel-hover-tooltip: review
-  1-7-implement-map-search-highlighting: backlog
-  1-8-handle-live-feed-interruption-state: backlog
-  epic-1-retrospective: optional
+  1-7-implement-map-search-highlighting: done
+  1-8-handle-live-feed-interruption-state: done
+  epic-1-retrospective: completed
   epic-2: backlog
-  2-1-firebase-authentication-integration: backlog
-  2-2-jwt-token-validation: backlog
+  2-1-firebase-authentication-integration: done
+  2-2-jwt-token-validation: in-progress
   2-3-session-management: backlog
   2-4-user-profile-management: backlog
   2-5-account-recovery: backlog

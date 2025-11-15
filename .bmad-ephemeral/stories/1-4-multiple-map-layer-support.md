@@ -16,7 +16,7 @@ so that I can customize my map experience.
 ## Tasks / Subtasks
 
 - [x] Task 1: Identify available map layer providers and their APIs.
-  - [x] Subtask 1.1: Research popular map tile providers (e.g., OpenStreetMap, Google Maps, ESRI).
+  - [x] Subtask 1.1: Research popular map tile providers (e.g., OpenStreetMap, NASA (GIBS), ESRI).
   - [x] Subtask 1.2: Understand their licensing and API usage.
   - [x] Subtask 1.3: Research and implement advanced map layers from NASA GIBS (Blue Marble, Sea Surface Temperature) and add a placeholder for Copernicus.
 - [x] Task 2: Implement UI for selecting different map layers.

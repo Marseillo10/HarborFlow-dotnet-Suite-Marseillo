@@ -1,7 +1,7 @@
 using HarborFlowSuite.Core.DTOs;
 using System.Threading.Tasks;
 
-namespace HarborFlowSuite.Core.Services
+namespace HarborFlowSuite.Abstractions.Services
 {
     public interface IUserProfileService
     {

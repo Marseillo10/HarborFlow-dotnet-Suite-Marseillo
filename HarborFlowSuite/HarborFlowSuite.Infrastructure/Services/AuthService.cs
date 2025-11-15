@@ -1,4 +1,4 @@
-using HarborFlowSuite.Application.Services;
+using HarborFlowSuite.Abstractions.Services;
 using HarborFlowSuite.Core.Models;
 using HarborFlowSuite.Infrastructure.Persistence;
 

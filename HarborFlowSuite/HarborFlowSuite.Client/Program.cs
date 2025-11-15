@@ -10,6 +10,8 @@ using Blazored.Toast;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging; // Add this using directive
+using MudBlazor.Services;
+using HarborFlowSuite.Abstractions.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -23,14 +25,18 @@ builder.Services.AddHttpClient("HarborFlowSuite.ServerAPI", client => client.Bas
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("HarborFlowSuite.ServerAPI"));
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-builder.Services.AddScoped<HarborFlowSuite.Client.Services.IAuthService, HarborFlowSuite.Client.Services.AuthService>();
+builder.Services.AddSingleton<TokenService>();
+builder.Services.AddSingleton<IClientAuthService, AuthService>();
 builder.Services.AddScoped<IVesselService, VesselService>();
-builder.Services.AddScoped<HarborFlowSuite.Client.Services.IServiceRequestService, HarborFlowSuite.Client.Services.ServiceRequestService>();
-builder.Services.AddScoped<IVesselPositionSignalRService, VesselPositionSignalRService>();
+builder.Services.AddScoped<IClientServiceRequestService, ServiceRequestService>();
 builder.Services.AddScoped<IPortService, PortService>();
+builder.Services.AddScoped<IClientUserProfileService, UserProfileService>();
+builder.Services.AddSingleton<MediaQuery>();
 builder.Services.AddAuthorizationCore();
-builder.Services.AddScoped<AuthenticationStateProvider, FirebaseAuthenticationStateProvider>();
+builder.Services.AddSingleton<AuthenticationStateProvider, FirebaseAuthStateProvider>();
+builder.Services.AddSingleton<SidebarService>();
 builder.Services.AddBlazoredToast();
+builder.Services.AddMudServices();
 
 builder.Services.AddSingleton(sp =>
 {
@@ -42,7 +48,7 @@ builder.Services.AddSingleton(sp =>
             {
                 using (var scope = scopeFactory.CreateScope())
                 {
-                    var authService = scope.ServiceProvider.GetRequiredService<HarborFlowSuite.Client.Services.IAuthService>();
+                    var authService = scope.ServiceProvider.GetRequiredService<IClientAuthService>();
                     return await authService.GetCurrentUserToken();
                 }
             };
@@ -51,6 +57,14 @@ builder.Services.AddSingleton(sp =>
         .Build();
     return hubConnection;
 });
+
+builder.Services.AddScoped<IVesselPositionSignalRService, VesselPositionSignalRService>(sp =>
+{
+    var hubConnection = sp.GetRequiredService<HubConnection>();
+    var logger = sp.GetRequiredService<ILogger<VesselPositionSignalRService>>();
+    return new VesselPositionSignalRService(hubConnection, logger);
+});
+
 
 // Set log level to Debug for all categories
 builder.Logging.SetMinimumLevel(LogLevel.Debug);

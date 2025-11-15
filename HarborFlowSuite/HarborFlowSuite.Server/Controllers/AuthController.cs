@@ -1,8 +1,8 @@
+using HarborFlowSuite.Abstractions.Services;
 using Microsoft.AspNetCore.Mvc;
 using HarborFlowSuite.Core.DTOs;
 using HarborFlowSuite.Core.Models;
 using FirebaseAdmin.Auth;
-using HarborFlowSuite.Application.Services;
 
 namespace HarborFlowSuite.Server.Controllers;
 
@@ -51,12 +51,16 @@ public class AuthController : ControllerBase
         catch (FirebaseAuthException ex)
         {
             _logger.LogError(ex, "Error registering user with Firebase");
+            if (ex.AuthErrorCode == AuthErrorCode.EmailAlreadyExists)
+            {
+                return BadRequest(new { message = "The email address is already in use by another account." });
+            }
             return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "An unexpected error occurred during registration");
-            return StatusCode(500, "An unexpected error occurred");
+            return StatusCode(500, new { message = "An unexpected error occurred" });
         }
     }
 }

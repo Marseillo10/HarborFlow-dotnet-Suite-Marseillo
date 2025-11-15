@@ -65,8 +65,16 @@
             }
             else
             {
-                var error = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-                _errorMessage = error != null && error.ContainsKey("message") ? error["message"] : "An unknown error occurred.";
+                var errorContent = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    var error = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(errorContent);
+                    _errorMessage = error != null && error.ContainsKey("message") ? error["message"] : "An unknown error occurred.";
+                }
+                catch (System.Text.Json.JsonException)
+                {
+                    _errorMessage = errorContent;
+                }
             }
         }
         catch (Exception ex)

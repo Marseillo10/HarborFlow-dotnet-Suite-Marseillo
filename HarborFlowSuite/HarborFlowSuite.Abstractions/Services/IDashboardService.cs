@@ -2,7 +2,7 @@ using HarborFlowSuite.Core.DTOs;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace HarborFlowSuite.Application.Services
+namespace HarborFlowSuite.Abstractions.Services
 {
     public interface IDashboardService
     {

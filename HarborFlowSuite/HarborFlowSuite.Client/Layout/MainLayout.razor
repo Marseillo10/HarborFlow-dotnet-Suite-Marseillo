@@ -1,15 +1,34 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @inherits LayoutComponentBase
 @inject HubConnection HubConnection
+@inject HarborFlowSuite.Client.Services.SidebarService SidebarService
+@inject HarborFlowSuite.Client.Services.MediaQuery MediaQuery
+@implements IAsyncDisposable
 
 <div class="page">
-    <div class="sidebar">
+    <div class="d-block d-md-none">
+        <div class="top-nav">
+            <button class="nav-link btn btn-link" @onclick="ToggleSidebar">
+                <span aria-hidden="true">☰</span>
+            </button>
+        </div>
+        <div class="@NavMenuCssClass">
+            <NavMenu />
+        </div>
+    </div>
+
+    <div class="@SidebarClass d-none d-md-block">
         <NavMenu />
+        <div class="collapse-button-container">
+            <button class="nav-link btn btn-link collapse-button" @onclick="ToggleSidebar">
+                <span aria-hidden="true">☰</span>
+            </button>
+        </div>
     </div>
 
     <main>
         <div class="top-row px-4">
-            
+            <LoginDisplay />
         </div>
 
         <article class="content px-4">
@@ -19,11 +38,44 @@
 </div>
 
 @code {
+    private bool _navMenuCollapsed = true;
+    private string? NavMenuCssClass => _navMenuCollapsed ? "collapse" : null;
+    private string SidebarClass => SidebarService.IsCollapsed ? "sidebar sidebar-collapsed" : "sidebar";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await MediaQuery.Initialize();
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        SidebarService.OnChange += StateHasChanged;
+        MediaQuery.OnMediaQueryChanged += StateHasChanged;
         if (HubConnection.State == HubConnectionState.Disconnected)
         {
             await HubConnection.StartAsync();
         }
+    }
+
+    private void ToggleSidebar()
+    {
+        if (HarborFlowSuite.Client.Services.MediaQuery.IsDesktop)
+        {
+            SidebarService.ToggleSidebar();
+        }
+        else
+        {
+            _navMenuCollapsed = !_navMenuCollapsed;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        SidebarService.OnChange -= StateHasChanged;
+        MediaQuery.OnMediaQueryChanged -= StateHasChanged;
+        await MediaQuery.CleanupAsync();
     }
 }

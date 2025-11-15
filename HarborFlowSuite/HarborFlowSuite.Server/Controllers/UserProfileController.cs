@@ -1,9 +1,10 @@
+using HarborFlowSuite.Abstractions.Services;
 using HarborFlowSuite.Core.DTOs;
-using HarborFlowSuite.Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using FirebaseAdmin.Auth;
 
 namespace HarborFlowSuite.Server.Controllers
 {
@@ -13,10 +14,12 @@ namespace HarborFlowSuite.Server.Controllers
     public class UserProfileController : ControllerBase
     {
         private readonly IUserProfileService _userProfileService;
+        private readonly ILogger<UserProfileController> _logger;
 
-        public UserProfileController(IUserProfileService userProfileService)
+        public UserProfileController(IUserProfileService userProfileService, ILogger<UserProfileController> logger)
         {
             _userProfileService = userProfileService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -45,6 +48,29 @@ namespace HarborFlowSuite.Server.Controllers
 
             await _userProfileService.UpdateUserProfileAsync(userId, userProfileDto);
             return NoContent();
+        }
+
+        [HttpPost("changepassword")]
+        public async Task<IActionResult> ChangePassword()
+        {
+            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            if (string.IsNullOrEmpty(email))
+            {
+                return Unauthorized();
+            }
+
+            try
+            {
+                var link = await FirebaseAuth.DefaultInstance.GeneratePasswordResetLinkAsync(email);
+                _logger.LogInformation($"Password reset link for {email}: {link}");
+                // In a real application, you would email this link to the user.
+                return Ok();
+            }
+            catch (FirebaseAuthException ex)
+            {
+                _logger.LogError(ex, "Error generating password reset link");
+                return StatusCode(500, "An unexpected error occurred while generating the password reset link.");
+            }
         }
     }
 }

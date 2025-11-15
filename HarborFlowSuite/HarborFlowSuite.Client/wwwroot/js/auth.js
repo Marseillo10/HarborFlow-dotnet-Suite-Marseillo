@@ -2,11 +2,12 @@ console.log("auth.js loaded");
 window.firebaseAuth = {
     signIn: async function (email, password) {
         try {
-            await firebase.auth().signInWithEmailAndPassword(email, password);
-            return true;
+            const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+            const token = await userCredential.user.getIdToken();
+            return token;
         } catch (error) {
             console.error("Firebase sign-in error:", error);
-            return false;
+            return null;
         }
     },
     signOut: function () {
@@ -17,19 +18,24 @@ window.firebaseAuth = {
             const unsubscribe = firebase.auth().onAuthStateChanged(user => {
                 unsubscribe();
                 if (user) {
-                    console.log("getCurrentUserToken: User found:", user);
                     user.getIdToken().then(token => {
-                        console.log("getCurrentUserToken: Token retrieved:", token);
                         resolve(token);
                     }, error => {
-                        console.error("getCurrentUserToken: Error getting token:", error);
                         reject(error);
                     });
                 } else {
-                    console.log("getCurrentUserToken: No user found in onAuthStateChanged.");
                     resolve(null);
                 }
             });
         });
     },
+    onTokenChanged: function (dotNetObjectReference) {
+        firebase.auth().onIdTokenChanged(async (user) => {
+            let token = null;
+            if (user) {
+                token = await user.getIdToken();
+            }
+            dotNetObjectReference.invokeMethodAsync('OnTokenChanged', token);
+        });
+    }
 };

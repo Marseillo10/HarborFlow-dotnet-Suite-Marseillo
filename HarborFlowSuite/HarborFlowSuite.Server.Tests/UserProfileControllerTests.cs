@@ -1,8 +1,9 @@
 using HarborFlowSuite.Core.DTOs;
-using HarborFlowSuite.Core.Services;
+using HarborFlowSuite.Abstractions.Services;
 using HarborFlowSuite.Server.Controllers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -14,7 +15,8 @@ namespace HarborFlowSuite.Server.Tests
     {
         private UserProfileController CreateController(IUserProfileService userProfileService, string userId, string email)
         {
-            var controller = new UserProfileController(userProfileService);
+            var mockLogger = new Mock<ILogger<UserProfileController>>();
+            var controller = new UserProfileController(userProfileService, mockLogger.Object);
             if (!string.IsNullOrEmpty(userId))
             {
                 var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]

@@ -4,6 +4,7 @@ using HarborFlowSuite.Core.Models;
 using HarborFlowSuite.Core.DTOs;
 using HarborFlowSuite.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace HarborFlowSuite.Server.Controllers;
 
@@ -13,16 +14,29 @@ namespace HarborFlowSuite.Server.Controllers;
 public class CompanyController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly ILogger<CompanyController> _logger;
 
-    public CompanyController(ApplicationDbContext context)
+    public CompanyController(ApplicationDbContext context, ILogger<CompanyController> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Company>>> GetCompanies()
     {
-        return await _context.Companies.ToListAsync();
+        _logger.LogInformation("Getting all companies");
+        try
+        {
+            var companies = await _context.Companies.ToListAsync();
+            _logger.LogInformation("Successfully retrieved all companies");
+            return companies;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while getting all companies");
+            return StatusCode(500, "Internal server error");
+        }
     }
 
     [HttpPost]

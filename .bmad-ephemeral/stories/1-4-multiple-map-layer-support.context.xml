@@ -15,7 +15,7 @@
     <soThat>I can customize my map experience</soThat>
     <tasks>
 - [ ] Task 1: Identify available map layer providers and their APIs.
-  - [ ] Subtask 1.1: Research popular map tile providers (e.g., OpenStreetMap, Google Maps, ESRI).
+  - [ ] Subtask 1.1: Research popular map tile providers (e.g., OpenStreetMap, ESRI, NASA (GIBS)).
   - [ ] Subtask 1.2: Understand their licensing and API usage.
 - [ ] Task 2: Implement UI for selecting different map layers.
   - [ ] Subtask 2.1: Design a dropdown or button group for layer selection.

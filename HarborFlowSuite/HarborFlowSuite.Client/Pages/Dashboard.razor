@@ -21,7 +21,7 @@
 
 @inject IHttpClientFactory ClientFactory
 
-@inject HubConnection HubConnection
+@inject IVesselPositionSignalRService VesselPositionSignalRService
 
 @inject IJSRuntime JSRuntime
 
@@ -243,133 +243,163 @@
 
             <div class="card-header d-flex justify-content-between align-items-center">
 
-                <h5 class="mb-0">Interactive Map</h5>
+                            <h5 class="mb-0">Interactive Map</h5>
 
-                <LayerSwitcher Layers="_mapLayers" SelectedLayer="_selectedLayer" OnLayerSelected="OnLayerSelected" />
+                            <div class="d-flex align-items-center">
+
+                                <MapSearchInput OnSearchTermChanged="OnSearchTermChanged" />
+
+                                <LayerSwitcher Layers="_mapLayers" SelectedLayer="_selectedLayer" OnLayerSelected="OnLayerSelected" />
+
+                            </div>
+
+                        </div>
+
+                        <div class="card-body map-container" style="height: 600px;">
+
+                            <VesselMap @ref="vesselMap" OnTotalMapVesselCountChanged="OnVesselCountChanged" OnVisibleVesselTypeSummaryChanged="OnVesselTypeSummaryChanged" Ports="@_ports" />
+
+                        </div>
+
+                    </div>
+
+                </div>
 
             </div>
 
-            <div class="card-body map-container" style="height: 600px;">
+            
 
-                <VesselMap @ref="vesselMap" OnTotalMapVesselCountChanged="OnVesselCountChanged" OnVisibleVesselTypeSummaryChanged="OnVesselTypeSummaryChanged" Ports="@_ports" />
+            @code {
 
-            </div>
+                private int _vesselCount;
 
-        </div>
+                private int _pendingServiceRequestCount;
 
-    </div>
+                private int _companyCount;
 
-</div>
+                private List<ServiceRequestStatusSummaryDto> _serviceRequestStatusSummary;
 
+                private List<VesselTypeSummaryDto> _vesselTypeSummary;
 
+                private VesselMap? vesselMap;
 
-@code {
+                private string _selectedLayer = "openstreetmap";
 
-    private int _vesselCount;
+                private Dictionary<string, LayerSwitcher.LayerInfo> _mapLayers;
 
-    private int _pendingServiceRequestCount;
+                private IEnumerable<Port> _ports;
 
-    private int _companyCount;
+            
 
-    private List<ServiceRequestStatusSummaryDto> _serviceRequestStatusSummary;
+                protected override async Task OnInitializedAsync()
 
-    private List<VesselTypeSummaryDto> _vesselTypeSummary;
+                {
 
-    private VesselMap? vesselMap;
+                    try
 
-    private string _selectedLayer = "openstreetmap";
+                    {
 
-    private Dictionary<string, LayerSwitcher.LayerInfo> _mapLayers;
+                        _mapLayers = new Dictionary<string, LayerSwitcher.LayerInfo>
 
-    private IEnumerable<Port> _ports;
+                        {
 
+                            { "openstreetmap", new LayerSwitcher.LayerInfo { Name = "OpenStreetMap", Thumbnail = "/images/map_thumbnails/openstreetmap.png" } },
 
+                            { "nasa_gibs", new LayerSwitcher.LayerInfo { Name = "NASA GIBS", Thumbnail = "/images/map_thumbnails/nasa_gibs.png" } },
 
-    protected override async Task OnInitializedAsync()
+                            { "esri_worldimagery", new LayerSwitcher.LayerInfo { Name = "Esri World Imagery", Thumbnail = "/images/map_thumbnails/esri_worldimagery.png" } }
 
-    {
+                        };
 
-        try
+            
 
-        {
+                        Console.WriteLine("Dashboard OnInitializedAsync started.");
 
-            _mapLayers = new Dictionary<string, LayerSwitcher.LayerInfo>
+                        var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
 
-            {
+            
 
-                { "openstreetmap", new LayerSwitcher.LayerInfo { Name = "OpenStreetMap", Thumbnail = "/images/map_thumbnails/openstreetmap.png" } },
+                        var countries = new[] { "Indonesia", "Singapore", "Brunei", "Papua New Guinea", "Timor-Leste", "Malaysia" };
 
-                { "nasa_gibs", new LayerSwitcher.LayerInfo { Name = "NASA GIBS", Thumbnail = "/images/map_thumbnails/nasa_gibs.png" } },
+                        var portsTask = PortService.GetPortsAsync(countries);
 
-                { "esri_worldimagery", new LayerSwitcher.LayerInfo { Name = "Esri World Imagery", Thumbnail = "/images/map_thumbnails/esri_worldimagery.png" } }
+            
 
-            };
+                        Console.WriteLine("Fetching service request, and company data...");
 
+                        var serviceRequestTask = client.GetFromJsonAsync<ServiceRequest[]>("api/servicerequest");
 
+                        var companyTask = client.GetFromJsonAsync<Company[]>("api/company");
 
-            Console.WriteLine("Dashboard OnInitializedAsync started.");
+            
 
-            var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
+                        Console.WriteLine("Fetching dashboard summary data...");
 
+                        var serviceRequestStatusTask = client.GetFromJsonAsync<List<ServiceRequestStatusSummaryDto>>("api/dashboard/servicerequeststatus");
 
+                        var vesselTypeTask = client.GetFromJsonAsync<List<VesselTypeSummaryDto>>("api/dashboard/vesseltypes");
 
-            var countries = new[] { "Indonesia", "Singapore", "Brunei", "Papua New Guinea", "Timor-Leste", "Malaysia" };
+            
 
-            var portsTask = PortService.GetPortsAsync(countries);
+                        await Task.WhenAll(serviceRequestTask, companyTask, serviceRequestStatusTask, vesselTypeTask, portsTask);
 
+                        Console.WriteLine("All data fetched.");
 
+            
 
-            Console.WriteLine("Fetching service request, and company data...");
+                        _ports = portsTask.Result;
 
-            var serviceRequestTask = client.GetFromJsonAsync<ServiceRequest[]>("api/servicerequest");
+                        _pendingServiceRequestCount = serviceRequestTask.Result?.Count(r => r.Status == ServiceRequestStatus.Pending) ?? 0;
 
-            var companyTask = client.GetFromJsonAsync<Company[]>("api/company");
+                        _companyCount = companyTask.Result?.Length ?? 0;
 
+                        _serviceRequestStatusSummary = serviceRequestStatusTask.Result;
 
+                        _vesselTypeSummary = vesselTypeTask.Result;
 
-            Console.WriteLine("Fetching dashboard summary data...");
+            
 
-            var serviceRequestStatusTask = client.GetFromJsonAsync<List<ServiceRequestStatusSummaryDto>>("api/dashboard/servicerequeststatus");
+                        Console.WriteLine("Dashboard data processed.");
 
-            var vesselTypeTask = client.GetFromJsonAsync<List<VesselTypeSummaryDto>>("api/dashboard/vesseltypes");
+            
 
+                        await VesselPositionSignalRService.StartConnection();
 
+            
 
-            await Task.WhenAll(serviceRequestTask, companyTask, serviceRequestStatusTask, vesselTypeTask, portsTask);
+                        VesselPositionSignalRService.OnPositionUpdateReceived += async (mmsi, lat, lng, heading, speed, name, vesselType, metadata) =>
 
-            Console.WriteLine("All data fetched.");
+                            {
 
+                                if (vesselMap != null)
 
+                                {
 
-            _ports = portsTask.Result;
+                                    await vesselMap.UpdateVesselMarker(mmsi, lat, lng, heading, speed, name, vesselType, metadata);
 
-            _pendingServiceRequestCount = serviceRequestTask.Result?.Count(r => r.Status == ServiceRequestStatus.Pending) ?? 0;
+                                    await InvokeAsync(StateHasChanged);
 
-            _companyCount = companyTask.Result?.Length ?? 0;
+                                }
 
-            _serviceRequestStatusSummary = serviceRequestStatusTask.Result;
+                            };
 
-            _vesselTypeSummary = vesselTypeTask.Result;
+                    }
 
+                    catch (Exception ex)
 
+                    {
 
-            Console.WriteLine("Dashboard data processed.");
+                        Console.WriteLine($"Error in Dashboard OnInitializedAsync: {ex.Message}");
 
+                    }
 
+                    StateHasChanged();
 
-            if (HubConnection.State == HubConnectionState.Disconnected)
+                }
 
-            {
+            
 
-                await HubConnection.StartAsync();
-
-            }
-
-
-
-            HubConnection.On<string, double, double, double, double, string, string, VesselMetadataDto>("ReceiveVesselPositionUpdate",
-
-                async (mmsi, lat, lng, heading, speed, name, vesselType, metadata) =>
+                private async Task OnSearchTermChanged(string searchTerm)
 
                 {
 
@@ -377,99 +407,83 @@
 
                     {
 
-                        await vesselMap.UpdateVesselMarker(mmsi, lat, lng, heading, speed, name, vesselType, metadata);
-
-                        await InvokeAsync(StateHasChanged);
+                        await vesselMap.FilterVessels(searchTerm);
 
                     }
 
-                });
+                }
 
-        }
+            
 
-        catch (Exception ex)
+                private void OnVesselCountChanged(int count)
 
-        {
+                {
 
-            Console.WriteLine($"Error in Dashboard OnInitializedAsync: {ex.Message}");
+                    _vesselCount = count;
 
-        }
+                    InvokeAsync(StateHasChanged);
 
-        StateHasChanged();
+                }
 
-    }
+            
 
+                private void OnVesselTypeSummaryChanged(List<VesselTypeSummaryDto> summary)
 
+                {
 
-    private void OnVesselCountChanged(int count)
+                    _vesselTypeSummary = summary;
 
-    {
+                    StateHasChanged();
 
-        _vesselCount = count;
+                }
 
-        InvokeAsync(StateHasChanged);
+            
 
-    }
+                private async Task OnLayerSelected(string layerKey)
 
+                {
 
+                    _selectedLayer = layerKey;
 
-    private void OnVesselTypeSummaryChanged(List<VesselTypeSummaryDto> summary)
+                    await JSRuntime.InvokeVoidAsync("HarborFlowMap.switchLayer", layerKey);
 
-    {
+                }
 
-        _vesselTypeSummary = summary;
+            
 
-        StateHasChanged();
+                private string GetStatusColor(string status)
 
-    }
+                {
 
+                    return status.ToLower() switch
 
+                    {
 
-    private async Task OnLayerSelected(string layerKey)
+                        "pending" => "#ffc107",
 
-    {
+                        "approved" => "#28a745",
 
-        _selectedLayer = layerKey;
+                        "rejected" => "#dc3545",
 
-        await JSRuntime.InvokeVoidAsync("HarborFlowMap.switchLayer", layerKey);
+                        _ => "#6c757d",
 
-    }
+                    };
 
+                }
 
+            
 
-    private string GetStatusColor(string status)
+                private string GetRandomColor()
 
-    {
+                {
 
-        return status.ToLower() switch
+                    var random = new Random();
 
-        {
+                    return String.Format("#{0:X6}", random.Next(0x1000000));
 
-            "pending" => "#ffc107",
+                }
 
-            "approved" => "#28a745",
-
-            "rejected" => "#dc3545",
-
-            _ => "#6c757d",
-
-        };
-
-    }
-
-
-
-    private string GetRandomColor()
-
-    {
-
-        var random = new Random();
-
-        return String.Format("#{0:X6}", random.Next(0x1000000));
-
-    }
-
-}
+            }
 
 <style>
 

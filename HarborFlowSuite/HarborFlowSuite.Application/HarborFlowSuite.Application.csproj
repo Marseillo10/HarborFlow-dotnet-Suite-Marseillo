@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HarborFlowSuite.Core\HarborFlowSuite.Core.csproj" />
+    <ProjectReference Include="..\HarborFlowSuite.Abstractions\HarborFlowSuite.Abstractions.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
