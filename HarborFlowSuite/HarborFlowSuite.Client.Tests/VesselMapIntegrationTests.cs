@@ -70,7 +70,7 @@ namespace HarborFlowSuite.Client.Tests
         }
 
         [Fact]
-        public async Task VesselMap_DisposesSignalRServiceOnDispose()
+        public void VesselMap_DisposesSignalRServiceOnDispose()
         {
             // Arrange
             _jsRuntimeMock.Setup(js => js.InvokeAsync<IJSVoidResult>("HarborFlowMap.initMap", It.IsAny<object[]>()))
@@ -79,7 +79,7 @@ namespace HarborFlowSuite.Client.Tests
 
             // Act
             var cut = Render<VesselMap>();
-            cut.Dispose();
+            this.Dispose();
 
             // Assert
             _vesselPositionSignalRServiceMock.Verify(s => s.DisposeAsync(), Times.Once);
