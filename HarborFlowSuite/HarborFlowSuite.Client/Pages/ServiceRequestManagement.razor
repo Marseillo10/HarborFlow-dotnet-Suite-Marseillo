@@ -8,116 +8,90 @@
 @inject IJSRuntime JSRuntime
 @inject IToastService ToastService
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IDialogService DialogService
 
 @attribute [Authorize]
 
 <PageTitle>Service Request Management</PageTitle>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Service Request Management</h1>
-    <button class="btn btn-success" @onclick='() => NavigationManager.NavigateTo("/add-service-request")'>
-        <span class="bi bi-plus-circle-fill" aria-hidden="true"></span> Add Service Request
-    </button>
-</div>
-
-<p>This page displays a list of service requests.</p>
-
-<div class="mb-3">
-    <input type="text" class="form-control" placeholder="Search by title..." @bind="SearchTerm" @bind:event="oninput" />
-</div>
-
-@if (_serviceRequests == null)
-{
-    <p><em>Loading...</em></p>
-}
-else if (FilteredServiceRequests.Any())
-{
-    <table class="table table-striped table-hover">
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th>Priority</th>
-                <th>Requested At</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var request in FilteredServiceRequests)
-            {
-                <tr>
-                    <td>@request.Title</td>
-                    <td>@request.Description</td>
-                    <td>
-                        <span class="badge @GetStatusBadgeClass(request.Status)">@request.Status.ToString()</span>
-                    </td>
-                    <td>
-                        <span class="badge @GetPriorityBadgeClass(request.Priority)">@request.Priority</span>
-                    </td>
-                    <td>@request.RequestedAt.ToShortDateString()</td>
-                    <td>
-                        <a href="/edit-service-request/@request.Id" class="btn btn-sm btn-primary"><span class="bi bi-pencil-square" aria-hidden="true"></span> Edit</a>
-                        <button class="btn btn-sm btn-danger" @onclick='() => ToastService.ShowInfo("Delete functionality not implemented in mock service.")'><span class="bi bi-trash-fill" aria-hidden="true"></span> Delete</button>
-                        @if (_isPortAuthorityOfficer && request.Status == ServiceRequestStatus.Pending)
-                        {
-                            <button class="btn btn-sm btn-success" @onclick="() => OpenApprovalModal(request, true)">Approve</button>
-                            <button class="btn btn-sm btn-warning" @onclick="() => OpenApprovalModal(request, false)">Reject</button>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <p>No service requests found matching your criteria.</p>
-}
-
-@if (_showApprovalModal)
-{
-    <div class="modal fade show" style="display:block" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">@(_isApproving ? "Approve" : "Reject") Service Request</h5>
-                    <button type="button" class="btn-close" @onclick="CloseApprovalModal"></button>
-                </div>
-                <div class="modal-body">
-                    <p><strong>Request:</strong> @_selectedRequest.Title</p>
-                    <textarea class="form-control" @bind="_approvalComments" placeholder="Enter comments..."></textarea>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="CloseApprovalModal">Cancel</button>
-                    <button type="button" class="btn @(_isApproving ? "btn-success" : "btn-danger")" @onclick="SubmitApproval">Submit</button>
-                </div>
-            </div>
-        </div>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <MudText Typo="Typo.h4">Service Request Management</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.AddCircle"
+            OnClick='() => NavigationManager.NavigateTo("/add-service-request")'>
+            Add Service Request
+        </MudButton>
     </div>
-    <div class="modal-backdrop fade show"></div>
-}
 
+    <MudText Typo="Typo.body1" Class="mb-4">This page displays a list of service requests.</MudText>
+
+    <MudCard Elevation="4" Class="glass-card rounded-xl animate-fade-in-up">
+        <MudCardContent Class="pa-0">
+            <MudTable Items="@_serviceRequests" Dense="true" Hover="true" Filter="new Func<ServiceRequest,bool>(FilterFunc1)"
+                @bind-SelectedItem="_selectedRequest" Loading="@_loading" Class="glass-table" Elevation="0">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6" Class="ml-2">Requests</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="_searchTerm" Placeholder="Search" Adornment="Adornment.Start"
+                        AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0 mr-2"></MudTextField>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Title</MudTh>
+                    <MudTh>Description</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Priority</MudTh>
+                    <MudTh>Requested At</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Title">@context.Title</MudTd>
+                    <MudTd DataLabel="Description">@context.Description</MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small" Variant="Variant.Filled">@context.Status</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Priority">
+                        <MudChip T="string" Color="@GetPriorityColor(context.Priority)" Size="Size.Small" Variant="Variant.Outlined">@context.Priority
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Requested At">@context.RequestedAt.ToShortDateString()</MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
+                            Href="@($"/edit-service-request/{context.Id}")" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                            OnClick="@(async () => await DeleteServiceRequest(context.Id))" />
+                        @if (_isPortAuthorityOfficer && context.Status == ServiceRequestStatus.Pending)
+                        {
+                            <MudTooltip Text="Approve">
+                                <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small"
+                                    OnClick="() => OpenApprovalDialog(context, true)" />
+                            </MudTooltip>
+                            <MudTooltip Text="Reject">
+                                <MudIconButton Icon="@Icons.Material.Filled.Cancel" Color="Color.Warning" Size="Size.Small"
+                                    OnClick="() => OpenApprovalDialog(context, false)" />
+                            </MudTooltip>
+                        }
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+<style>
+    .glass-table {
+        background-color: transparent !important;
+    }
+</style>
 
 @code {
-    private List<ServiceRequest>? _serviceRequests;
-    private string _searchTerm = string.Empty;
+    private List<ServiceRequest> _serviceRequests = new();
+    private bool _loading = true;
+    private string _searchTerm = "";
     private bool _isPortAuthorityOfficer;
-    private bool _showApprovalModal;
     private ServiceRequest _selectedRequest;
-    private bool _isApproving;
-    private string _approvalComments;
-
-    private string SearchTerm
-    {
-        get => _searchTerm;
-        set
-        {
-            _searchTerm = value;
-        }
-    }
-
-    private List<ServiceRequest> FilteredServiceRequests => _serviceRequests?.Where(r => r.Title.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList() ?? new List<ServiceRequest>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -129,47 +103,69 @@ else
 
     private async Task LoadServiceRequests()
     {
+        _loading = true;
         try
         {
-            _serviceRequests = await ServiceRequestService.GetServiceRequests();
+            _serviceRequests = await ServiceRequestService.GetServiceRequests() ?? new List<ServiceRequest>();
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
             ToastService.ShowError(ex.Message);
         }
+        finally
+        {
+            _loading = false;
+        }
     }
 
-    private void OpenApprovalModal(ServiceRequest request, bool isApproving)
+    private bool FilterFunc1(ServiceRequest element) => FilterFunc(element, _searchTerm);
+
+    private bool FilterFunc(ServiceRequest element, string searchString)
     {
-        _selectedRequest = request;
-        _isApproving = isApproving;
-        _showApprovalModal = true;
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Title.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if ($"{element.Status}".Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
     }
 
-    private void CloseApprovalModal()
+    private async Task OpenApprovalDialog(ServiceRequest request, bool isApproving)
     {
-        _showApprovalModal = false;
-        _selectedRequest = null;
-        _approvalComments = string.Empty;
+        var parameters = new DialogParameters
+{
+{ "ContentText", $"Are you sure you want to {(isApproving ? "approve" : "reject")} this request?" },
+{ "ButtonText", isApproving ? "Approve" : "Reject" },
+{ "Color", isApproving ? Color.Success : Color.Error }
+};
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<ApprovalDialog>("Approve/Reject Request", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            string comments = result.Data as string ?? "";
+            await SubmitApproval(request, isApproving, comments);
+        }
     }
 
-    private async Task SubmitApproval()
+    private async Task SubmitApproval(ServiceRequest request, bool isApproving, string comments)
     {
         try
         {
-            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            var user = authState.User;
-            var approverId = Guid.Parse(user.FindFirst(c => c.Type == "nameid")?.Value);
-
-            if (_isApproving)
+            if (isApproving)
             {
-                await ServiceRequestService.ApproveServiceRequest(_selectedRequest.Id, approverId, _approvalComments);
+                await ServiceRequestService.ApproveServiceRequest(request.Id, comments);
                 ToastService.ShowSuccess("Service request approved.");
             }
             else
             {
-                await ServiceRequestService.RejectServiceRequest(_selectedRequest.Id, approverId, _approvalComments);
+                await ServiceRequestService.RejectServiceRequest(request.Id, comments);
                 ToastService.ShowSuccess("Service request rejected.");
             }
         }
@@ -179,34 +175,62 @@ else
         }
         finally
         {
-            CloseApprovalModal();
             await LoadServiceRequests();
             StateHasChanged();
         }
     }
 
-    private string GetStatusBadgeClass(ServiceRequestStatus status)
+    private Color GetStatusColor(ServiceRequestStatus status)
     {
         return status switch
         {
-            ServiceRequestStatus.Pending => "bg-warning text-dark",
-            ServiceRequestStatus.Approved => "bg-success",
-            ServiceRequestStatus.Rejected => "bg-danger",
-            ServiceRequestStatus.InProgress => "bg-info text-dark",
-            ServiceRequestStatus.Completed => "bg-primary",
-            ServiceRequestStatus.Cancelled => "bg-secondary",
-            _ => "bg-light text-dark"
+            ServiceRequestStatus.Pending => Color.Warning,
+            ServiceRequestStatus.Approved => Color.Success,
+            ServiceRequestStatus.Rejected => Color.Error,
+            ServiceRequestStatus.InProgress => Color.Info,
+            ServiceRequestStatus.Completed => Color.Primary,
+            ServiceRequestStatus.Cancelled => Color.Secondary,
+            _ => Color.Default
         };
     }
 
-    private string GetPriorityBadgeClass(int priority)
+    private Color GetPriorityColor(int priority)
     {
         return priority switch
         {
-            1 => "bg-danger",
-            2 => "bg-warning text-dark",
-            3 => "bg-info text-dark",
-            _ => "bg-light text-dark"
+            1 => Color.Error,
+            2 => Color.Warning,
+            3 => Color.Info,
+            _ => Color.Default
         };
+    }
+
+    private async Task DeleteServiceRequest(Guid id)
+    {
+        var parameters = new DialogParameters<ApprovalDialog>
+        {
+            { x => x.ContentText, "Are you sure you want to delete this service request? This action cannot be undone." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error }
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var dialog = await DialogService.ShowAsync<ApprovalDialog>("Delete Service Request", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                await ServiceRequestService.DeleteServiceRequest(id);
+                ToastService.ShowSuccess("Service request deleted successfully.");
+                await LoadServiceRequests();
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError($"Error deleting service request: {ex.Message}");
+            }
+        }
     }
 }

@@ -21,6 +21,26 @@ namespace HarborFlowSuite.Client.Services
             return await _httpClient.GetFromJsonAsync<List<Vessel>>("api/vessel");
         }
 
+        public async Task<Vessel> GetVessel(Guid id)
+        {
+            return await _httpClient.GetFromJsonAsync<Vessel>($"api/vessel/{id}");
+        }
+
+        public async Task CreateVessel(Vessel vessel)
+        {
+            await _httpClient.PostAsJsonAsync("api/vessel", vessel);
+        }
+
+        public async Task UpdateVessel(Vessel vessel)
+        {
+            await _httpClient.PutAsJsonAsync($"api/vessel/{vessel.Id}", vessel);
+        }
+
+        public async Task DeleteVessel(Guid id)
+        {
+            await _httpClient.DeleteAsync($"api/vessel/{id}");
+        }
+
         public async Task<List<VesselPositionDto>> GetVesselPositions()
         {
             return await _httpClient.GetFromJsonAsync<List<VesselPositionDto>>("api/vessel/positions");

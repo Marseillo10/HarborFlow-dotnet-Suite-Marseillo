@@ -2,35 +2,121 @@
 @inherits LayoutComponentBase
 @inject HubConnection HubConnection
 
-<div class="page">
-    <div class="sidebar @(_isSidebarCollapsed ? "collapsed" : "")">
-        <NavMenu IsCollapsed="_isSidebarCollapsed" OnToggleSidebar="ToggleSidebar" />
-    </div>
+<MudThemeProvider Theme="_theme" IsDarkMode="_isDarkMode" />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
-    <main>
-        <div class="top-row px-4">
-            
-        </div>
-
-        <article class="content px-4">
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
+            OnClick="@((e) => DrawerToggle())" />
+        <MudText Typo="Typo.h5" Class="ml-3">HarborFlow</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Brightness4" Color="@(_isDarkMode ? Color.Inherit : Color.Primary)"
+            OnClick="@((e) => _isDarkMode = !_isDarkMode)" />
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+        <NavMenu />
+    </MudDrawer>
+    <MudMainContent Style="@GetMainContentStyle()" Class="@(_isDarkMode ? "theme-dark" : "theme-light")">
+        <MudContainer MaxWidth="MaxWidth.Large" Class="my-4 pt-4">
             @Body
-        </article>
-    </main>
-</div>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
 
 @code {
-    private bool _isSidebarCollapsed = false;
-
-    private void ToggleSidebar()
+    bool _drawerOpen = true;
+    bool _isDarkMode = true;
+    MudTheme _theme = new MudTheme()
     {
-        _isSidebarCollapsed = !_isSidebarCollapsed;
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#0EA5E9", // Sky 500 - Vibrant, modern blue
+            Secondary = "#10B981", // Emerald 500
+            AppbarBackground = "rgba(255, 255, 255, 0.8)", // Glassy white
+            Background = "#F0F9FF", // Sky 50 - Very subtle light blue tint
+            DrawerBackground = "#FFFFFF",
+            Surface = "rgba(255, 255, 255, 0.7)", // Glassy white
+            TextPrimary = "#0F172A", // Slate 900 - Deep dark blue/gray
+            TextSecondary = "#475569", // Slate 600
+            ActionDefault = "#64748B",
+            ActionDisabled = "#94A3B8",
+            Divider = "#E2E8F0",
+            TableLines = "#E2E8F0",
+        },
+        PaletteDark = new PaletteDark()
+        {
+            Primary = "#3B82F6", // Bright Blue
+            Secondary = "#14B8A6", // Teal
+            Background = "#0F172A", // Slate 900
+            AppbarBackground = "#0F172A",
+            DrawerBackground = "#0F172A",
+            Surface = "#1E293B", // Slate 800
+            TextPrimary = "#F3F4F6",
+            TextSecondary = "#9CA3AF",
+            ActionDefault = "#E5E7EB",
+            ActionDisabled = "#4B5563",
+            Divider = "#334155",
+            TableLines = "#334155",
+        }
+    };
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
     }
+
+    [Inject] IJSRuntime JSRuntime { get; set; }
+    [Inject] IDialogService DialogService { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         if (HubConnection.State == HubConnectionState.Disconnected)
         {
-            await HubConnection.StartAsync();
+            try
+            {
+                await HubConnection.StartAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error starting SignalR connection: {ex.Message}");
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var dotNetHelper = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("registerCommandPaletteShortcut", dotNetHelper);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OpenCommandPalette()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            NoHeader = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+        await DialogService.ShowAsync<Components.CommandPalette>("", options);
+    }
+
+    private string GetMainContentStyle()
+    {
+        if (_isDarkMode)
+        {
+            return "background: linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.95)), url('/images/background-map.png'); background-size: cover; background-position: center; background-attachment: fixed; min-height: 100vh;";
+        }
+        else
+        {
+            // Premium Light Mode Background: Subtle gradient with abstract overlay
+            return "background: linear-gradient(rgba(255, 255, 255, 0.85), rgba(240, 249, 255, 0.9)), url('/images/light_mode_bg.png'); background-size: cover; background-position: center; background-attachment: fixed; min-height: 100vh;";
         }
     }
 }

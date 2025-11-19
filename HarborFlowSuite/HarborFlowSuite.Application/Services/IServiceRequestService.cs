@@ -12,7 +12,7 @@ namespace HarborFlowSuite.Application.Services
         Task<ServiceRequest> CreateServiceRequest(ServiceRequest serviceRequest, string firebaseUid);
         Task<ServiceRequest> UpdateServiceRequest(ServiceRequest serviceRequest);
         Task<bool> DeleteServiceRequest(Guid id);
-        Task<ServiceRequest> ApproveServiceRequest(Guid id, Guid approverId, string comments);
-        Task<ServiceRequest> RejectServiceRequest(Guid id, Guid approverId, string comments);
+        Task<ServiceRequest> ApproveServiceRequest(Guid id, string firebaseUid, string comments);
+        Task<ServiceRequest> RejectServiceRequest(Guid id, string firebaseUid, string comments);
     }
 }

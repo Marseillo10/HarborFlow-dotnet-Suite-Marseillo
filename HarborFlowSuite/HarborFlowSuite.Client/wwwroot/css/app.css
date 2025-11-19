@@ -64,50 +64,120 @@ a,
     content: "An error has occurred."
 }
 
-.loading-progress {
-    position: relative;
-    display: block;
-    width: 8rem;
-    height: 8rem;
-    margin: 20vh auto 1rem auto;
-}
-
-.loading-progress circle {
-    fill: none;
-    stroke: #e0e0e0;
-    stroke-width: 0.6rem;
-    transform-origin: 50% 50%;
-    transform: rotate(-90deg);
-}
-
-.loading-progress circle:last-child {
-    stroke: #1b6ec2;
-    stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
-    transition: stroke-dasharray 0.05s ease-in-out;
-}
-
-.loading-progress-text {
-    position: absolute;
-    text-align: center;
-    font-weight: bold;
-    inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
-}
-
-.loading-progress-text:after {
-    content: var(--blazor-load-percentage-text, "Loading");
-}
-
 code {
     color: #c02d76;
 }
 
-.form-floating>.form-control-plaintext::placeholder,
-.form-floating>.form-control::placeholder {
-    color: var(--bs-secondary-color);
-    text-align: end;
+.glass-table .mud-table-head .mud-table-cell {
+    background-color: rgba(31, 41, 55, 0.8) !important;
+    color: #e0e0e0 !important;
+    font-weight: bold;
 }
 
-.form-floating>.form-control-plaintext:focus::placeholder,
-.form-floating>.form-control:focus::placeholder {
-    text-align: start;
+.theme-light .glass-table .mud-table-head .mud-table-cell {
+    background-color: rgba(255, 255, 255, 0.75) !important;
+    color: #1e293b !important;
+    /* Slate 800 */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+.glass-table .mud-table-cell {
+    color: #d1d5db !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.theme-light .glass-table .mud-table-cell {
+    color: #334155 !important;
+    /* Slate 700 */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+.glass-table .mud-table-hover .mud-table-row:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.theme-light .glass-table .mud-table-hover .mud-table-row:hover {
+    background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 40px, 0);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.animate-fade-in-up {
+    animation-duration: 0.8s;
+    animation-fill-mode: both;
+    animation-name: fadeInUp;
+}
+
+/* Light Mode Text Contrast & Design Improvements */
+.theme-light {
+    color: #0f172a !important;
+    /* Slate 900 */
+    background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('/images/light_mode_bg.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+.theme-light .mud-typography {
+    color: #0f172a !important;
+}
+
+.theme-light .mud-typography-caption {
+    color: #475569 !important;
+    /* Slate 600 */
+}
+
+.theme-light .mud-icon-root {
+    color: #0f172a !important;
+}
+
+/* Refined Palette for Light Mode - Nautical Professional */
+.theme-light .text-primary {
+    color: #0369a1 !important;
+    /* Sky 700 */
+}
+
+.theme-light .text-secondary {
+    color: #0f766e !important;
+    /* Teal 700 */
+}
+
+.theme-light .text-success {
+    color: #15803d !important;
+    /* Green 700 */
+}
+
+.theme-light .text-warning {
+    color: #b45309 !important;
+    /* Amber 700 */
+}
+
+.theme-light .text-info {
+    color: #0284c7 !important;
+    /* Sky 600 */
+}
+
+.theme-light .text-danger {
+    color: #b91c1c !important;
+    /* Red 700 */
+}
+
+/* Toggle Button Visibility */
+.theme-light .mud-appbar .mud-icon-button {
+    color: #0f172a !important;
+}
+
+/* Ensure background image is visible */
+.theme-light.mud-main-content {
+    background-color: transparent !important;
 }

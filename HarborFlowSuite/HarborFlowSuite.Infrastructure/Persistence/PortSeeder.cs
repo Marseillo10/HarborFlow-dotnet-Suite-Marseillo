@@ -15,13 +15,11 @@ public class PortSeeder
     public async Task SeedAsync()
     {
         Console.WriteLine("PortSeeder: SeedAsync started.");
-        
-        // Clear existing ports to ensure a fresh seed
+
         if (_context.Ports.Any())
         {
-            Console.WriteLine("PortSeeder: Deleting existing ports.");
-            _context.Ports.RemoveRange(_context.Ports);
-            await _context.SaveChangesAsync();
+            Console.WriteLine("PortSeeder: Database already contains ports. Skipping seed.");
+            return; // Already seeded
         }
 
         var portsJsonPath = Path.Combine(AppContext.BaseDirectory, "ports.json");

@@ -2,10 +2,29 @@
 
 <PageTitle>Nautical Chart</PageTitle>
 
-<h1>Nautical Chart</h1>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">Nautical Chart</MudText>
+    <MudText Typo="Typo.body1" Class="mb-4">Explore the OpenSeaMap for detailed nautical information.</MudText>
 
-<p>This page displays the OpenSeaMap in an iframe.</p>
+    <MudCard Elevation="4" Class="glass-card rounded-xl overflow-hidden">
+        <MudCardContent Class="pa-0">
+            <div style="width: 100%; height: 80vh; background-color: #f0f0f0; position: relative;">
+                <iframe src="https://map.openseamap.org/" style="width: 100%; height: 100%; border: none;"
+                    loading="lazy" title="OpenSeaMap Nautical Chart"
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms" allowfullscreen
+                    referrerpolicy="no-referrer">
+                </iframe>
+            </div>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
 
-<div style="width: 100%; height: 600px; border: 1px solid #ccc; background-color: #f0f0f0;">
-    <iframe src="https://map.openseamap.org/" style="width: 100%; height: 100%; border: none;" loading="lazy"></iframe>
-</div>
+<style>
+    .glass-card {
+        background: rgba(30, 41, 59, 0.7) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+</style>

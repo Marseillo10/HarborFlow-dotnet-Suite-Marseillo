@@ -1,269 +1,204 @@
-
 @page "/dashboard"
-
 @using Microsoft.AspNetCore.Authorization
-
 @using HarborFlowSuite.Core.Models
-
 @using HarborFlowSuite.Core.DTOs
-
 @using System.Net.Http
-
 @using System.Net.Http.Json
-
 @using HarborFlowSuite.Client.Components
-
 @using HarborFlowSuite.Client.Services
-
 @using HarborFlowSuite.Core.Services
-
 @using Microsoft.AspNetCore.SignalR.Client
-
 @inject IHttpClientFactory ClientFactory
-
 @inject HubConnection HubConnection
-
 @inject IJSRuntime JSRuntime
-
 @inject HarborFlowSuite.Core.Services.IPortService PortService
-
-
-
+@inject ILogger<Dashboard> Logger
 @attribute [Authorize]
-
-
 
 <PageTitle>Dashboard</PageTitle>
 
-
-
-<div class="d-flex justify-content-between align-items-center mb-4">
-
-    <h1 class="mb-0">Dashboard Overview</h1>
-
-    <button class="btn btn-primary">
-
-        <i class="fas fa-plus me-2"></i> Quick Action
-
-    </button>
-
-</div>
-
-
-
-<div class="row">
-
-    <div class="col-md-4">
-
-        <div class="card mb-4 shadow-sm">
-
-            <div class="card-body">
-
-                <div class="d-flex align-items-center mb-3">
-
-                    <i class="fas fa-ship fa-2x text-primary me-3"></i>
-
-                    <div>
-
-                        <h5 class="card-title mb-0">Vessels</h5>
-
-                        <p class="card-text text-muted">Total number of vessels:</p>
-
-                    </div>
-
-                </div>
-
-                <h2 class="card-text"><strong><AnimatedCounter Value="@_vesselCount" /></strong></h2>
-
-                <a href="/vessel-management" class="btn btn-outline-primary mt-3">Manage Vessels <i class="fas fa-arrow-right ms-2"></i></a>
-
-            </div>
-
-        </div>
-
+<MudContainer MaxWidth="MaxWidth.Large">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <MudText Typo="Typo.h4">Dashboard Overview</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">Quick Action
+        </MudButton>
     </div>
 
-    <div class="col-md-4">
-
-        <div class="card mb-4 shadow-sm">
-
-            <div class="card-body">
-
-                <div class="d-flex align-items-center mb-3">
-
-                    <i class="fas fa-clipboard-list fa-2x text-success me-3"></i>
-
-                    <div>
-
-                        <h5 class="card-title mb-0">Service Requests</h5>
-
-                        <p class="card-text text-muted">Total pending requests:</p>
-
-                    </div>
-
-                </div>
-
-                <h2 class="card-text"><strong>@_pendingServiceRequestCount</strong></h2>
-
-                <a href="/service-request-management" class="btn btn-outline-success mt-3">Manage Requests <i class="fas fa-arrow-right ms-2"></i></a>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <div class="col-md-4">
-
-        <div class="card mb-4 shadow-sm">
-
-            <div class="card-body">
-
-                <div class="d-flex align-items-center mb-3">
-
-                    <i class="fas fa-building fa-2x text-info me-3"></i>
-
-                    <div>
-
-                        <h5 class="card-title mb-0">Companies</h5>
-
-                        <p class="card-text text-muted">Total registered companies:</p>
-
-                    </div>
-
-                </div>
-
-                <h2 class="card-text"><strong>@_companyCount</strong></h2>
-
-                <a href="/company-management" class="btn btn-outline-info mt-3">Manage Companies <i class="fas fa-arrow-right ms-2"></i></a>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-
-<div class="row mt-4">
-
-    <div class="col-md-6">
-
-        <div class="card shadow-sm">
-
-            <div class="card-header">
-
-                Service Request Status
-
-            </div>
-
-            <div class="card-body">
-
-                @if (_serviceRequestStatusSummary != null)
-
-                {
-
-                        <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
-
-                        @foreach (var item in _serviceRequestStatusSummary)
-
-                        {
-
-                                    <div class="bar" style="height: @(item.Count * 20)px; background-color: @GetStatusColor(item.Status);">
-
-                                        <span class="bar-label">@item.Status (@item.Count)</span>
-
+    <MudGrid Class="animate-fade-in-up" Spacing="4">
+        <!-- Summary Cards Row -->
+        <MudItem xs="12" md="4">
+            <MudGrid Spacing="4">
+                <MudItem xs="12">
+                    <MudCard Elevation="4" Class="glass-card rounded-xl pa-4" Style="height: 350px;">
+                        <MudCardContent>
+                            <div class="d-flex justify-space-between align-center">
+                                <div>
+                                    <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mb-1">Total Vessels
+                                    </MudText>
+                                    <MudText Typo="Typo.h3" Class="font-weight-bold text-primary">
+                                        <AnimatedCounter Value="@_vesselCount" />
+                                    </MudText>
+                                </div>
+                                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large"
+                                    Class="rounded-lg shadow-lg">
+                                    <MudIcon Icon="@Icons.Material.Filled.DirectionsBoat" Size="Size.Medium" />
+                                </MudAvatar>
+                            </div>
+                            <MudText Typo="Typo.caption" Class="mt-2 d-block text-success font-weight-bold">
+                                <MudIcon Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" Class="mr-1" />
+                                Active in port
+                            </MudText>
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary"
+                                EndIcon="@Icons.Material.Filled.ArrowForward" Href="/vessel-management" FullWidth="true"
+                                Class="hover-underline">View
+                                Details</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudCard Elevation="4" Class="glass-card rounded-xl" Style="height: 350px;">
+                        <MudCardContent Class="d-flex flex-column relative h-100">
+                            <div class="d-flex justify-space-between align-center w-100 z-10">
+                                <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mb-1">Vessel Types</MudText>
+                                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large"
+                                    Class="rounded-lg shadow-lg">
+                                    <MudIcon Icon="@Icons.Material.Filled.DirectionsBoat" Size="Size.Medium" />
+                                </MudAvatar>
+                            </div>
+                            @if (_vesselTypeSummary != null)
+                            {
+                                <div class="relative d-flex align-center justify-center flex-grow-1"
+                                    style="width: 100%; min-height: 0;">
+                                    <MudChart ChartType="ChartType.Donut" InputData="@_vesselTypeData"
+                                        InputLabels="@_vesselTypeLabels" Width="100%" Height="200px"
+                                        ChartOptions="@_vesselChartOptions" LegendPosition="Position.Bottom" />
+                                    <div class="absolute-center text-center pointer-events-none">
+                                        <MudText Typo="Typo.h4" Class="font-weight-bold">@_vesselTypeData.Sum()</MudText>
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Vessels</MudText>
                                     </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="d-flex justify-center align-center flex-grow-1">
+                                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                                </div>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudItem>
 
-                        }
+        <MudItem xs="12" md="8">
+            <MudCard Elevation="4" Class="glass-card rounded-xl overflow-hidden h-100">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6" Class="font-weight-bold">Live Port Operations</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Real-time vessel tracking</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <LayerSwitcher Layers="_mapLayers" SelectedLayer="_selectedLayer"
+                            OnLayerSelected="OnLayerSelected" />
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent Class="pa-0">
+                    <div class="map-container" style="height: 650px;">
+                        <VesselMap @ref="vesselMap" OnTotalMapVesselCountChanged="OnVesselCountChanged"
+                            OnVisibleVesselTypeSummaryChanged="OnVesselTypeSummaryChanged" Ports="@_ports"
+                            OnVesselClick="OnVesselSelected" />
+                    </div>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
 
+        <!-- Main Content Row -->
+        <!-- Left Column: Charts (Smaller) -->
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Elevation="4" Class="glass-card rounded-xl" Style="height: 350px;">
+                <MudCardContent Class="d-flex flex-column h-100">
+                    <div class="d-flex justify-space-between align-center w-100 mb-2">
+                        <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mb-1">Service Request Analytics
+                        </MudText>
+                        <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large"
+                            Class="rounded-lg shadow-lg">
+                            <MudIcon Icon="@Icons.Material.Filled.Build" Size="Size.Medium" />
+                        </MudAvatar>
+                    </div>
+                    @if (_serviceRequestStatusSummary != null)
+                    {
+                        <div class="d-flex align-center justify-center flex-grow-1" style="min-height: 0;">
+                            <MudChart ChartType="ChartType.Bar" ChartSeries="@_serviceRequestSeries"
+                                XAxisLabels="@_serviceRequestLabels" Width="100%" Height="200px"></MudChart>
                         </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex justify-center align-center flex-grow-1">
+                            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                        </div>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
 
-                }
+        <!-- Right Column: Map (Larger) -->
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Elevation="4" Class="glass-card rounded-xl pa-4" Style="height: 350px;">
+                <MudCardContent>
+                    <div class="d-flex justify-space-between align-center">
+                        <div>
+                            <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mb-1">Pending Requests</MudText>
+                            <MudText Typo="Typo.h3" Class="font-weight-bold text-warning">@_pendingServiceRequestCount
+                            </MudText>
+                        </div>
+                        <MudAvatar Color="Color.Warning" Variant="Variant.Filled" Size="Size.Large"
+                            Class="rounded-lg shadow-lg">
+                            <MudIcon Icon="@Icons.Material.Filled.Assignment" Size="Size.Medium" />
+                        </MudAvatar>
+                    </div>
+                    <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">
+                        Requires attention
+                    </MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Text" Color="Color.Warning"
+                        EndIcon="@Icons.Material.Filled.ArrowForward" Href="/service-request-management"
+                        FullWidth="true" Class="hover-underline">Manage Requests</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
 
-                else
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Elevation="4" Class="glass-card rounded-xl pa-4" Style="height: 350px;">
+                <MudCardContent>
+                    <div class="d-flex justify-space-between align-center">
+                        <div>
+                            <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mb-1">Registered Companies
+                            </MudText>
+                            <MudText Typo="Typo.h3" Class="font-weight-bold text-info">@_companyCount</MudText>
+                        </div>
+                        <MudAvatar Color="Color.Info" Variant="Variant.Filled" Size="Size.Large"
+                            Class="rounded-lg shadow-lg">
+                            <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Medium" />
+                        </MudAvatar>
+                    </div>
+                    <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">
+                        Partner ecosystem
+                    </MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Text" Color="Color.Info" EndIcon="@Icons.Material.Filled.ArrowForward"
+                        Href="/company-management" FullWidth="true" Class="hover-underline">Directory</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
 
-                {
-
-                        <p>Loading service request status...</p>
-
-                }
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <div class="col-md-6">
-
-        <div class="card shadow-sm">
-
-            <div class="card-header">
-
-                Vessel Count by Type
-
-            </div>
-
-            <div class="card-body">
-
-                @if (_vesselTypeSummary != null)
-
-                {
-
-                        <VesselTypePolarAreaChart Data="@_vesselTypeSummary" />
-
-                }
-
-                else
-
-                {
-
-                        <p>Loading vessel type summary...</p>
-
-                }
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-
-<div class="row mt-4">
-
-    <div class="col-12">
-
-        <div class="card shadow-sm">
-
-            <div class="card-header d-flex justify-content-between align-items-center">
-
-                <h5 class="mb-0">Interactive Map</h5>
-
-                <LayerSwitcher Layers="_mapLayers" SelectedLayer="_selectedLayer" OnLayerSelected="OnLayerSelected" />
-
-            </div>
-
-            <div class="card-body map-container" style="height: 600px;">
-
-                <VesselMap @ref="vesselMap" OnTotalMapVesselCountChanged="OnVesselCountChanged" OnVisibleVesselTypeSummaryChanged="OnVesselTypeSummaryChanged" Ports="@_ports" />
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-
-@inject ILogger<Dashboard> Logger
+    <VesselDetailPanel @bind-Open="_isDetailPanelOpen" Vessel="_selectedVessel" Metadata="_selectedMetadata" />
+</MudContainer>
 
 @code {
     private int _vesselCount;
@@ -276,16 +211,35 @@
     private Dictionary<string, LayerSwitcher.LayerInfo> _mapLayers;
     private IEnumerable<Port> _ports;
 
+    private bool _isDetailPanelOpen;
+    private VesselDetailPanel.VesselPositionDto _selectedVessel;
+    private VesselMetadataDto _selectedMetadata;
+    private Dictionary<string, (VesselDetailPanel.VesselPositionDto Info, VesselMetadataDto Metadata)> _vesselCache = new();
+
+    // Chart Data
+    private List<ChartSeries> _serviceRequestSeries = new();
+    private string[] _serviceRequestLabels = { };
+    private double[] _vesselTypeData = { };
+    private string[] _vesselTypeLabels = { };
+    private ChartOptions _vesselChartOptions = new ChartOptions
+        {
+            ChartPalette = new[] { "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#6366F1", "#14B8A6",
+"#F97316", "#84CC16" },
+            LineStrokeWidth = 5
+        };
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
             _mapLayers = new Dictionary<string, LayerSwitcher.LayerInfo>
-            {
-                { "openstreetmap", new LayerSwitcher.LayerInfo { Name = "OpenStreetMap", Thumbnail = "/images/map_thumbnails/openstreetmap.png" } },
-                { "nasa_gibs", new LayerSwitcher.LayerInfo { Name = "NASA GIBS", Thumbnail = "/images/map_thumbnails/nasa_gibs.png" } },
-                { "esri_worldimagery", new LayerSwitcher.LayerInfo { Name = "Esri World Imagery", Thumbnail = "/images/map_thumbnails/esri_worldimagery.png" } }
-            };
+{
+{ "openstreetmap", new LayerSwitcher.LayerInfo { Name = "OpenStreetMap", Thumbnail =
+"/images/map_thumbnails/openstreetmap.png" } },
+{ "nasa_gibs", new LayerSwitcher.LayerInfo { Name = "NASA GIBS", Thumbnail = "/images/map_thumbnails/nasa_gibs.png" } },
+{ "esri_worldimagery", new LayerSwitcher.LayerInfo { Name = "Esri World Imagery", Thumbnail =
+"/images/map_thumbnails/esri_worldimagery.png" } }
+};
 
             Logger.LogInformation("Dashboard OnInitializedAsync started.");
             var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
@@ -297,7 +251,8 @@
             var companyTask = client.GetFromJsonAsync<Company[]>("api/company");
 
             Logger.LogInformation("Fetching dashboard summary data...");
-            var serviceRequestStatusTask = client.GetFromJsonAsync<List<ServiceRequestStatusSummaryDto>>("api/dashboard/servicerequeststatus");
+            var serviceRequestStatusTask =
+            client.GetFromJsonAsync<List<ServiceRequestStatusSummaryDto>>("api/dashboard/servicerequeststatus");
             var vesselTypeTask = client.GetFromJsonAsync<List<VesselTypeSummaryDto>>("api/dashboard/vesseltypes");
 
             await Task.WhenAll(serviceRequestTask, companyTask, serviceRequestStatusTask, vesselTypeTask, portsTask);
@@ -310,22 +265,58 @@
             _serviceRequestStatusSummary = serviceRequestStatusTask.Result;
             _vesselTypeSummary = vesselTypeTask.Result;
 
+            // Prepare Chart Data
+            if (_serviceRequestStatusSummary != null)
+            {
+                _serviceRequestLabels = _serviceRequestStatusSummary.Select(x => x.Status).ToArray();
+                _serviceRequestSeries = new List<ChartSeries>
+{
+new ChartSeries { Name = "Requests", Data = _serviceRequestStatusSummary.Select(x => (double)x.Count).ToArray() }
+};
+            }
+
+            if (_vesselTypeSummary != null)
+            {
+                _vesselTypeLabels = _vesselTypeSummary.Select(x => x.VesselType).ToArray();
+                _vesselTypeData = _vesselTypeSummary.Select(x => (double)x.Count).ToArray();
+            }
+
             Logger.LogInformation("Dashboard data processed.");
 
             if (HubConnection.State == HubConnectionState.Disconnected)
             {
-                await HubConnection.StartAsync();
+                try
+                {
+                    await HubConnection.StartAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error starting SignalR connection: {ex.Message}");
+                }
             }
 
-            HubConnection.On<string, double, double, double, double, string, string, VesselMetadataDto>("ReceiveVesselPositionUpdate",
-                async (mmsi, lat, lng, heading, speed, name, vesselType, metadata) =>
-                {
-                    if (vesselMap != null)
+            HubConnection.On<string, double, double, double, double, string, string,
+            VesselMetadataDto>("ReceiveVesselPositionUpdate",
+            async (mmsi, lat, lng, heading, speed, name, vesselType, metadata) =>
+            {
+                var vesselInfo = new VesselDetailPanel.VesselPositionDto
                     {
-                        await vesselMap.UpdateVesselMarker(mmsi, lat, lng, heading, speed, name, vesselType, metadata);
-                        await InvokeAsync(StateHasChanged);
-                    }
-                });
+                        MMSI = mmsi,
+                        Name = name,
+                        Latitude = lat,
+                        Longitude = lng,
+                        Heading = heading,
+                        Speed = speed,
+                        Type = vesselType
+                    };
+                _vesselCache[mmsi] = (vesselInfo, metadata);
+
+                if (vesselMap != null)
+                {
+                    await vesselMap.UpdateVesselMarker(mmsi, lat, lng, heading, speed, name, vesselType, metadata);
+                    await InvokeAsync(StateHasChanged);
+                }
+            });
         }
         catch (Exception ex)
         {
@@ -334,129 +325,123 @@
         StateHasChanged();
     }
 
-
+    private void OnVesselSelected(string mmsi)
+    {
+        if (_vesselCache.TryGetValue(mmsi, out var data))
+        {
+            _selectedVessel = data.Info;
+            _selectedMetadata = data.Metadata;
+            _isDetailPanelOpen = true;
+            StateHasChanged();
+        }
+    }
 
     private void OnVesselCountChanged(int count)
-
     {
-
         _vesselCount = count;
-
         InvokeAsync(StateHasChanged);
-
     }
-
-
 
     private void OnVesselTypeSummaryChanged(List<VesselTypeSummaryDto> summary)
-
     {
-
         _vesselTypeSummary = summary;
-
+        // Update chart data dynamically if needed
+        if (_vesselTypeSummary != null)
+        {
+            _vesselTypeLabels = _vesselTypeSummary.Select(x => x.VesselType).ToArray();
+            _vesselTypeData = _vesselTypeSummary.Select(x => (double)x.Count).ToArray();
+        }
         StateHasChanged();
-
     }
-
-
 
     private async Task OnLayerSelected(string layerKey)
-
     {
-
         _selectedLayer = layerKey;
-
         await JSRuntime.InvokeVoidAsync("HarborFlowMap.switchLayer", layerKey);
-
     }
-
-
-
-    private string GetStatusColor(string status)
-
-    {
-
-        return status.ToLower() switch
-
-        {
-
-            "pending" => "#ffc107",
-
-            "approved" => "#28a745",
-
-            "rejected" => "#dc3545",
-
-            _ => "#6c757d",
-
-        };
-
-    }
-
-
-
-    private string GetRandomColor()
-
-    {
-
-        var random = new Random();
-
-        return String.Format("#{0:X6}", random.Next(0x1000000));
-
-    }
-
 }
 
 <style>
-
-    .chart-container {
-
-        display: flex;
-
-        justify-content: space-around;
-
-        align-items: flex-end;
-
-        border-bottom: 1px solid #ccc;
-
-        padding-bottom: 10px;
-
+    .glass-card {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
+    /* Dark Mode Styles */
+    ::deep .theme-dark .glass-card,
+    .theme-dark .glass-card {
+        background: rgba(30, 41, 59, 0.7) !important;
+        /* Slate 800 with opacity */
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
 
+    ::deep .theme-dark .glass-card:hover,
+    .theme-dark .glass-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+        border-color: rgba(59, 130, 246, 0.4);
+        /* Primary color border on hover */
+        background: rgba(30, 41, 59, 0.85) !important;
+    }
 
-    .bar {
+    /* Light Mode Styles */
+    ::deep .theme-light .glass-card,
+    .theme-light .glass-card {
+        background: rgba(255, 255, 255, 0.7) !important;
+        /* White with opacity */
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    }
 
-        width: 50px;
+    ::deep .theme-light .glass-card:hover,
+    .theme-light .glass-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.05);
+        border-color: rgba(59, 130, 246, 0.5);
+        /* Primary color border on hover */
+        background: rgba(255, 255, 255, 0.9) !important;
+    }
 
-        text-align: center;
+    .shadow-lg {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
 
-        color: white;
+    .hover-underline:hover {
+        text-decoration: underline;
+    }
 
+    .animate-fade-in-up {
+        animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        opacity: 0;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .relative {
         position: relative;
-
-        transition: height 0.3s ease-in-out;
-
     }
 
-
-
-    .bar-label {
-
+    .absolute-center {
         position: absolute;
-
-        bottom: -25px;
-
-        width: 100%;
-
-        text-align: center;
-
-        font-size: 12px;
-
-        color: #333;
-
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 0;
     }
 
+    .pointer-events-none {
+        pointer-events: none;
+    }
 </style>
-
-
-

@@ -2,53 +2,110 @@
 @using HarborFlowSuite.Client.Services
 @using HarborFlowSuite.Client.Models
 @using Microsoft.AspNetCore.Components.Authorization
+@using HarborFlowSuite.Client.Layout
+@layout AuthLayout
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ILogger<Login> Logger
 
-<h3>Login</h3>
-
-<div class="card">
-    <div class="card-body">
+<MudCard Elevation="4" Class="glass-card rounded-xl pa-4 animate-fade-in-up" Style="width: 100%; max-width: 400px;">
+    <MudCardHeader Class="d-flex justify-center">
+        <CardHeaderContent>
+            <div class="d-flex flex-column align-center">
+                <MudIcon Icon="@Icons.Material.Filled.Anchor" Size="Size.Large" Color="Color.Primary" Class="mb-2" />
+                <MudText Typo="Typo.h4" Class="font-weight-bold">Welcome Back</MudText>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">Sign in to HarborFlow</MudText>
+            </div>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
         <EditForm Model="@_loginModel" OnValidSubmit="HandleLogin">
             <DataAnnotationsValidator />
-            <ValidationSummary />
 
-            <div class="form-group">
-                <label for="email">Email</label>
-                <InputText id="email" class="form-control" @bind-Value="_loginModel.Email" />
-            </div>
+            <MudTextField @bind-Value="_loginModel.Email" Label="Email" Variant="Variant.Outlined"
+                Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Email" Class="mb-4"
+                FullWidth="true" />
 
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="input-group">
-                    <InputText id="password" type="@(_showPassword ? "text" : "password")" class="form-control" @bind-Value="_loginModel.Password" />
-                    <div class="input-group-append">
-                        <span class="input-group-text" @onclick="TogglePasswordVisibility" style="cursor: pointer; font-size: 1.2rem; color: #6c757d;" title="@(_showPassword ? "Hide password" : "Show password")">
-                            <i class="fas @(_showPassword ? "fa-eye-slash" : "fa-eye")"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
+            <MudTextField @bind-Value="_loginModel.Password" Label="Password" Variant="Variant.Outlined"
+                InputType="@_passwordInputType" Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon"
+                OnAdornmentClick="TogglePasswordVisibility" Class="mb-4" FullWidth="true" />
 
-            <button type="submit" class="btn btn-primary">Login</button>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                Size="Size.Large" Class="mt-2 shadow-lg">
+                Login
+            </MudButton>
+
             @if (!string.IsNullOrEmpty(_errorMessage))
             {
-                <div class="alert alert-danger mt-3">@_errorMessage</div>
+                <MudAlert Severity="Severity.Error" Class="mt-4" Dense="true">@_errorMessage</MudAlert>
             }
         </EditForm>
-    </div>
-</div>
+    </MudCardContent>
+    <MudCardActions Class="d-flex justify-center pb-4">
+        <MudText Typo="Typo.body2">Don't have an account? <MudLink Href="/register" Color="Color.Primary"
+                Underline="Underline.Hover">Register here</MudLink>
+        </MudText>
+    </MudCardActions>
+</MudCard>
+
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.1) !important;
+        /* Default for light mode compatibility */
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    }
+
+    /* Dark mode specific override handled by MudBlazor theme or parent class if needed, 
+       but glassmorphism usually works well with semi-transparent white/black */
+
+    .mud-theme-dark .glass-card {
+        background: rgba(30, 41, 59, 0.7) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        opacity: 0;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
 
 @code {
     private readonly LoginModel _loginModel = new() { Email = "", Password = "" };
     private string? _errorMessage;
-    private bool _showPassword;
+    private bool _isShow;
+    private InputType _passwordInputType = InputType.Password;
+    private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
 
     private void TogglePasswordVisibility()
     {
-        _showPassword = !_showPassword;
+        if (_isShow)
+        {
+            _isShow = false;
+            _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+            _passwordInputType = InputType.Password;
+        }
+        else
+        {
+            _isShow = true;
+            _passwordInputIcon = Icons.Material.Filled.Visibility;
+            _passwordInputType = InputType.Text;
+        }
     }
 
     private async Task HandleLogin()

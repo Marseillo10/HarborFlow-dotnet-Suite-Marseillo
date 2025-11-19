@@ -20,6 +20,9 @@
     public EventCallback<List<VesselTypeSummaryDto>> OnVisibleVesselTypeSummaryChanged { get; set; }
 
     [Parameter]
+    public EventCallback<string> OnVesselClick { get; set; }
+
+    [Parameter]
     public IEnumerable<Port> Ports { get; set; }
 
     private DotNetObjectReference<VesselMap> _dotNetHelper;
@@ -37,50 +40,40 @@
     {
         if (firstRender)
         {
-            Console.WriteLine("VesselMap: OnAfterRenderAsync (firstRender). Initializing map...");
             await JSRuntime.InvokeVoidAsync("HarborFlowMap.initMap", MapElementId, _dotNetHelper);
             _isMapInitialized = true;
-            Console.WriteLine("VesselMap: Map initialized.");
-            
+
             if (_currentPorts != null && _currentPorts.Any())
             {
-                Console.WriteLine($"VesselMap: Initial ports available ({_currentPorts.Count()}). Invoking addPortMarkers.");
                 await JSRuntime.InvokeVoidAsync("HarborFlowMap.addPortMarkers", _currentPorts);
-            }
-            else
-            {
-                Console.WriteLine("VesselMap: No initial ports to add.");
             }
         }
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        Console.WriteLine($"VesselMap: OnParametersSetAsync called. Ports count: {(Ports != null ? Ports.Count() : 0)}");
         if (Ports != null && Ports.Any() && (Ports != _currentPorts))
         {
             _currentPorts = Ports;
             if (_isMapInitialized)
             {
-                Console.WriteLine($"VesselMap: Map is initialized. Invoking addPortMarkers with {_currentPorts.Count()} ports.");
                 await JSRuntime.InvokeVoidAsync("HarborFlowMap.addPortMarkers", _currentPorts);
-            }
-            else
-            {
-                Console.WriteLine("VesselMap: Map is NOT yet initialized. Skipping addPortMarkers.");
             }
         }
     }
 
-    private void OnPositionUpdateReceived(string mmsi, double lat, double lng, double heading, double speed, string name, string vesselType, VesselMetadataDto metadata)
+    private async void OnPositionUpdateReceived(string mmsi, double lat, double lng, double heading, double speed, string
+    name,
+    string vesselType, VesselMetadataDto metadata)
     {
-        UpdateVesselMarker(mmsi, lat, lng, heading, speed, name, vesselType, metadata);
-        StateHasChanged();
+        await UpdateVesselMarker(mmsi, lat, lng, heading, speed, name, vesselType, metadata);
     }
 
-    public async Task UpdateVesselMarker(string mmsi, double lat, double lng, double heading, double speed, string name, string vesselType, VesselMetadataDto metadata)
+    public async Task UpdateVesselMarker(string mmsi, double lat, double lng, double heading, double speed, string name,
+    string vesselType, VesselMetadataDto metadata)
     {
-        await JSRuntime.InvokeVoidAsync("HarborFlowMap.updateVesselMarker", mmsi, lat, lng, heading, speed, name, vesselType, metadata);
+        await JSRuntime.InvokeVoidAsync("HarborFlowMap.updateVesselMarker", mmsi, lat, lng, heading, speed, name, vesselType,
+        metadata);
     }
 
     [JSInvokable]
@@ -93,6 +86,15 @@
     public async Task UpdateVisibleVesselTypeSummary(List<VesselTypeSummaryDto> summary)
     {
         await OnVisibleVesselTypeSummaryChanged.InvokeAsync(summary);
+    }
+
+    [JSInvokable]
+    public async Task OnVesselSelected(string mmsi)
+    {
+        if (OnVesselClick.HasDelegate)
+        {
+            await OnVesselClick.InvokeAsync(mmsi);
+        }
     }
 
 

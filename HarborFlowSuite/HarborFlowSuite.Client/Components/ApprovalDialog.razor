@@ -1,0 +1,25 @@
+@using MudBlazor
+
+<MudDialog>
+    <DialogContent>
+        <MudText>@ContentText</MudText>
+        <MudTextField T="string" Label="Comments" Lines="3" @bind-Value="Comments" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="@Color" Variant="Variant.Filled" OnClick="Submit">@ButtonText</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public string ContentText { get; set; }
+    [Parameter] public string ButtonText { get; set; }
+    [Parameter] public Color Color { get; set; }
+
+    public string Comments { get; set; }
+
+    void Submit() => MudDialog.Close(DialogResult.Ok(Comments));
+    void Cancel() => MudDialog.Cancel();
+}

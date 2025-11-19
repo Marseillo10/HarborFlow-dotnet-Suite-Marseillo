@@ -1,0 +1,86 @@
+@using MudBlazor
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+
+<MudDialog Class="command-palette-dialog" Gutters="false">
+    <DialogContent>
+        <MudTextField @bind-Value="_searchString" Placeholder="Type a command or search..." Adornment="Adornment.Start"
+            AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-3" Immediate="true" TextChanged="OnSearch" />
+        <MudList T="string" Clickable="true">
+            @foreach (var item in _filteredItems)
+            {
+                <MudListItem OnClick="@(() => ExecuteCommand(item))">
+                    <div class="d-flex align-items-center">
+                        <MudIcon Icon="@item.Icon" Class="mr-3" />
+                        <MudText>@item.Title</MudText>
+                        <MudSpacer />
+                        @if (!string.IsNullOrEmpty(item.Shortcut))
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@item.Shortcut</MudChip>
+                        }
+                    </div>
+                </MudListItem>
+            }
+        </MudList>
+    </DialogContent>
+</MudDialog>
+
+<style>
+    .command-palette-dialog .mud-dialog-content {
+        padding: 16px;
+    }
+</style>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+
+    private string _searchString = "";
+    private List<CommandItem> _items = new();
+    private List<CommandItem> _filteredItems = new();
+
+    protected override void OnInitialized()
+    {
+        _items = new List<CommandItem>
+{
+new CommandItem { Title = "Dashboard", Icon = Icons.Material.Filled.Dashboard, Action = () =>
+NavigationManager.NavigateTo("/dashboard") },
+new CommandItem { Title = "Vessel Management", Icon = Icons.Material.Filled.DirectionsBoat, Action = () =>
+NavigationManager.NavigateTo("/vessel-management") },
+new CommandItem { Title = "Service Requests", Icon = Icons.Material.Filled.Assignment, Action = () =>
+NavigationManager.NavigateTo("/service-request-management") },
+new CommandItem { Title = "Company Management", Icon = Icons.Material.Filled.Business, Action = () =>
+NavigationManager.NavigateTo("/company-management") },
+new CommandItem { Title = "Profile", Icon = Icons.Material.Filled.Person, Action = () =>
+NavigationManager.NavigateTo("/profile") },
+new CommandItem { Title = "Logout", Icon = Icons.Material.Filled.Logout, Action = () =>
+NavigationManager.NavigateTo("/logout") },
+};
+        _filteredItems = _items;
+    }
+
+    private void OnSearch(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            _filteredItems = _items;
+        }
+        else
+        {
+            _filteredItems = _items.Where(x => x.Title.Contains(text, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+    }
+
+    private void ExecuteCommand(CommandItem item)
+    {
+        MudDialog.Close(DialogResult.Ok(true));
+        item.Action?.Invoke();
+    }
+
+    public class CommandItem
+    {
+        public string Title { get; set; }
+        public string Icon { get; set; }
+        public string Shortcut { get; set; }
+        public Action Action { get; set; }
+    }
+}

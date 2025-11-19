@@ -6,87 +6,85 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 @inject IToastService ToastService
+@inject IDialogService DialogService
 
 @attribute [Authorize]
 
 <PageTitle>Vessel Management</PageTitle>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Vessel Management</h1>
-    <button class="btn btn-success" @onclick='() => NavigationManager.NavigateTo("/add-vessel")'>
-        <span class="bi bi-plus-circle-fill" aria-hidden="true"></span> Add Vessel
-    </button>
-</div>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <MudText Typo="Typo.h4">Vessel Management</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.AddCircle"
+            OnClick='() => NavigationManager.NavigateTo("/add-vessel")'>
+            Add Vessel
+        </MudButton>
+    </div>
 
-<p>This page displays a list of vessels.</p>
+    <MudText Typo="Typo.body1" Class="mb-4">This page displays a list of vessels.</MudText>
 
-<div class="mb-3">
-    <input type="text" class="form-control" placeholder="Search by vessel name..." @bind="SearchTerm" @bind:event="oninput" />
-</div>
-
-@if (_vessels == null)
-{
-    <p><em>Loading...</em></p>
-}
-else if (FilteredVessels.Any())
-{
-    <table class="table table-striped table-hover">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>IMO Number</th>
-                <th>Type</th>
-                <th>Length</th>
-                <th>Width</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var vessel in FilteredVessels)
-            {
-                <tr>
-                    <td>@vessel.Name</td>
-                    <td>@vessel.ImoNumber</td>
-                    <td>@vessel.VesselType</td>
-                    <td>@vessel.Length m</td>
-                    <td>@vessel.Width m</td>
-                    <td>
-                        @if (vessel.IsActive)
-                        {                            <span class="badge bg-success">Active</span>
+    <MudCard Elevation="4" Class="glass-card rounded-xl animate-fade-in-up">
+        <MudCardContent Class="pa-0">
+            <MudTable Items="@_vessels" Dense="true" Hover="true" Filter="new Func<Vessel,bool>(FilterFunc1)"
+                Loading="@(_vessels == null)" Class="glass-table" Elevation="0">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6" Class="ml-2">Vessels</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="_searchTerm" Placeholder="Search by vessel name..."
+                        Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"
+                        Class="mt-0 mr-2"></MudTextField>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>IMO Number</MudTh>
+                    <MudTh>Type</MudTh>
+                    <MudTh>Length</MudTh>
+                    <MudTh>Width</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="IMO Number">@context.ImoNumber</MudTd>
+                    <MudTd DataLabel="Type">@context.VesselType</MudTd>
+                    <MudTd DataLabel="Length">@context.Length m</MudTd>
+                    <MudTd DataLabel="Width">@context.Width m</MudTd>
+                    <MudTd DataLabel="Status">
+                        @if (context.IsActive)
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Active
+                            </MudChip>
                         }
                         else
-                        {                            <span class="badge bg-danger">Inactive</span>
+                        {
+                            <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled">Inactive
+                            </MudChip>
                         }
-                    </td>
-                    <td>
-                        <a href="/edit-vessel/@vessel.Id" class="btn btn-sm btn-primary"><span class="bi bi-pencil-square" aria-hidden="true"></span> Edit</a>
-                        <button class="btn btn-sm btn-danger" @onclick='() => ToastService.ShowInfo("Delete functionality not implemented in mock service.")'><span class="bi bi-trash-fill" aria-hidden="true"></span> Delete</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <p>No vessels found matching your criteria.</p>
-}
+                    </MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
+                            Href="@($"/edit-vessel/{context.Id}")" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                            OnClick="@(async () => await DeleteVessel(context.Id))" />
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+<style>
+    .glass-table {
+        background-color: transparent !important;
+    }
+</style>
 
 @code {
     private List<Vessel>? _vessels;
-    private string _searchTerm = string.Empty;
-
-    private string SearchTerm
-    {
-        get => _searchTerm;
-        set
-        {
-            _searchTerm = value;
-        }
-    }
-
-    private List<Vessel> FilteredVessels => _vessels?.Where(v => v.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList() ?? new List<Vessel>();
+    private string _searchTerm = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -103,6 +101,50 @@ else
         {
             Console.WriteLine(ex.Message);
             ToastService.ShowError(ex.Message);
+        }
+    }
+
+    private bool FilterFunc1(Vessel element) => FilterFunc(element, _searchTerm);
+
+    private bool FilterFunc(Vessel element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.ImoNumber.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.VesselType.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private async Task DeleteVessel(Guid id)
+    {
+        var parameters = new DialogParameters<ApprovalDialog>
+{
+{ x => x.ContentText, "Are you sure you want to delete this vessel? This action cannot be undone." },
+{ x => x.ButtonText, "Delete" },
+{ x => x.Color, Color.Error }
+};
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var dialog = await DialogService.ShowAsync<ApprovalDialog>("Delete Vessel", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                await VesselService.DeleteVessel(id);
+                ToastService.ShowSuccess("Vessel deleted successfully.");
+                await LoadVessels();
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError($"Error deleting vessel: {ex.Message}");
+            }
         }
     }
 }

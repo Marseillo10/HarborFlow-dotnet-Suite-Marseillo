@@ -47,16 +47,16 @@ namespace HarborFlowSuite.Client.Services
             return true;
         }
 
-        public async Task<ServiceRequest> ApproveServiceRequest(Guid id, Guid approverId, string comments)
+        public async Task<ServiceRequest> ApproveServiceRequest(Guid id, string comments)
         {
-            var response = await _httpClient.PostAsJsonAsync($"api/servicerequest/{id}/approve", new { approverId, comments });
+            var response = await _httpClient.PostAsJsonAsync($"api/servicerequest/{id}/approve", new { comments });
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<ServiceRequest>();
         }
 
-        public async Task<ServiceRequest> RejectServiceRequest(Guid id, Guid approverId, string comments)
+        public async Task<ServiceRequest> RejectServiceRequest(Guid id, string comments)
         {
-            var response = await _httpClient.PostAsJsonAsync($"api/servicerequest/{id}/reject", new { approverId, comments });
+            var response = await _httpClient.PostAsJsonAsync($"api/servicerequest/{id}/reject", new { comments });
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<ServiceRequest>();
         }

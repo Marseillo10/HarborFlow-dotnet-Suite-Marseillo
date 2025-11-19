@@ -9,7 +9,8 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Blazored.Toast;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging; // Add this using directive
+using Microsoft.Extensions.Logging;
+using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -30,6 +31,7 @@ builder.Services.AddScoped<IPortService, PortService>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, FirebaseAuthenticationStateProvider>();
 builder.Services.AddBlazoredToast();
+builder.Services.AddMudServices();
 
 builder.Services.AddSingleton(sp =>
 {
@@ -52,7 +54,7 @@ builder.Services.AddSingleton(sp =>
 });
 
 // Set log level to Debug for all categories
-builder.Logging.SetMinimumLevel(LogLevel.Debug);
+builder.Logging.SetMinimumLevel(LogLevel.Warning);
 
 var app = builder.Build();
 

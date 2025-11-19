@@ -1,0 +1,69 @@
+@inherits LayoutComponentBase
+@using HarborFlowSuite.Client.Layout
+
+<MudThemeProvider Theme="_theme" @bind-IsDarkMode="_isDarkMode" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudMainContent Style="@GetMainContentStyle()">
+        <MudContainer MaxWidth="MaxWidth.False" Class="d-flex justify-center align-center" Style="height: 100vh;">
+            <div style="position: absolute; top: 1rem; right: 1rem;">
+                <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.Brightness7 : Icons.Material.Filled.Brightness4)" 
+                               Color="Color.Inherit" 
+                               OnClick="@((e) => _isDarkMode = !_isDarkMode)" />
+            </div>
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    bool _isDarkMode = true;
+    MudTheme _theme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#2563EB", // Royal Blue
+            Secondary = "#0D9488", // Teal
+            AppbarBackground = "#FFFFFF",
+            Background = "#F3F4F6", // Cool Gray
+            DrawerBackground = "#FFFFFF",
+            Surface = "#FFFFFF",
+            TextPrimary = "#111827",
+            TextSecondary = "#4B5563",
+            ActionDefault = "#4B5563",
+            ActionDisabled = "#9CA3AF",
+            Divider = "#E5E7EB",
+            TableLines = "#E5E7EB",
+        },
+        PaletteDark = new PaletteDark()
+        {
+            Primary = "#3B82F6", // Bright Blue
+            Secondary = "#14B8A6", // Teal
+            Background = "#0F172A", // Slate 900
+            AppbarBackground = "#0F172A",
+            DrawerBackground = "#0F172A",
+            Surface = "#1E293B", // Slate 800
+            TextPrimary = "#F3F4F6",
+            TextSecondary = "#9CA3AF",
+            ActionDefault = "#E5E7EB",
+            ActionDisabled = "#4B5563",
+            Divider = "#334155",
+            TableLines = "#334155",
+        }
+    };
+
+    private string GetMainContentStyle()
+    {
+        if (_isDarkMode)
+        {
+            return "background: linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.95)), url('/images/background-map.png'); background-size: cover; background-position: center; background-attachment: fixed; min-height: 100vh;";
+        }
+        else
+        {
+            // Improved Light Mode Background: Lighter, fresher gradient
+            return "background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh;";
+        }
+    }
+}

@@ -10,7 +10,8 @@ window.HarborFlowMap = {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }),
         nasa_gibs: L.tileLayer('https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg', {
-            attribution: '&copy; <a href="https://earthdata.nasa.gov/eosdis/science-system-description/eosdis-components/global-imagery-browse-services-gibs">NASA GIBS</a>'
+            attribution: '&copy; <a href="https://earthdata.nasa.gov/eosdis/science-system-description/eosdis-components/global-imagery-browse-services-gibs">NASA GIBS</a>',
+            maxNativeZoom: 8
         }),
         esri_worldimagery: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
@@ -18,7 +19,6 @@ window.HarborFlowMap = {
     },
 
     initMap: function (elementId = 'map', dotNetHelper) {
-        console.log("Initializing map with id:", elementId);
         if (this.map) {
             this.map.remove();
         }
@@ -28,7 +28,6 @@ window.HarborFlowMap = {
                 center: [1.352083, 103.819836],
                 zoom: 12
             });
-            console.log("Map initialized successfully:", this.map);
 
             this.currentTileLayer = this.tileLayers.openstreetmap;
             this.currentTileLayer.addTo(this.map);
@@ -56,8 +55,6 @@ window.HarborFlowMap = {
             console.error("Map is not initialized. Cannot add port markers.");
             return;
         }
-
-        console.log("addPortMarkers called with:", ports);
 
         try {
             this.portMarkers.forEach(marker => this.map.removeLayer(marker));
@@ -92,38 +89,38 @@ window.HarborFlowMap = {
                         this.portMarkers.push(marker);
 
                         marker.on('click', function () {
-                            console.log('Port marker clicked:', port.CITY);
                             // Future: Invoke DotNet method to show detailed modal
                         });
                     } else {
                         console.warn("Skipping port with invalid coordinates:", port);
                     }
                 });
-                console.log(`Added ${this.portMarkers.length} port markers to the map.`);
-            } else {
-                console.log("No ports to add.");
             }
         } catch (error) {
             console.error("Error in addPortMarkers:", error);
         }
     },
 
+    reportTimeout: null,
+
     updateVesselMarker: function (mmsi, lat, lng, heading, speed, name, type = 'HSC', metadata) {
         if (!this.map) return;
 
         const vesselData = {
-            vesselId: mmsi, // Using MMSI as a unique ID for now
+            vesselId: mmsi,
             vesselName: name,
             vesselType: type,
             imo: metadata ? metadata.imoNumber : 'N/A',
-            vesselStatus: 'Active', // Placeholder, actual status would come from AIS data
+            vesselStatus: 'Active',
             latitude: lat,
             longitude: lng,
             heading: heading,
             speed: speed,
-            recordedAt: new Date().toISOString() // Placeholder for current time
+            recordedAt: new Date().toISOString()
         };
 
+        // Optimization: Only create icon if needed or if rotation changed significantly
+        // For now, we'll keep the icon update but ensure we throttle the reporting
         const iconUrl = this.getIconUrl(type);
         const vesselIcon = L.divIcon({
             className: 'custom-vessel-icon',
@@ -148,29 +145,47 @@ window.HarborFlowMap = {
 
         if (this.vesselMarkers[mmsi]) {
             // Update existing marker
-            this.vesselMarkers[mmsi].setLatLng([lat, lng]);
-            this.vesselMarkers[mmsi].setIcon(vesselIcon);
-            this.vesselMarkers[mmsi].setPopupContent(popupContent);
-            this.vesselMarkers[mmsi].vesselType = type; // Update vessel type
-            this.vesselMarkers[mmsi].vesselData = vesselData; // Store full vessel data
+            const marker = this.vesselMarkers[mmsi];
+            marker.setLatLng([lat, lng]);
+            marker.setIcon(vesselIcon);
+            marker.setPopupContent(popupContent);
+            marker.vesselType = type;
+            marker.vesselData = vesselData;
         } else {
             // Create new marker
             const newMarker = L.marker([lat, lng], { icon: vesselIcon }).addTo(this.map);
             newMarker.bindPopup(popupContent);
-            newMarker.vesselType = type; // Store vessel type
-            newMarker.vesselData = vesselData; // Store full vessel data
+            newMarker.vesselType = type;
+            newMarker.vesselData = vesselData;
+
+            newMarker.on('click', () => {
+                this.dotNetHelper.invokeMethodAsync('OnVesselSelected', mmsi);
+            });
+
             this.vesselMarkers[mmsi] = newMarker;
         }
+
+        // Throttle the reporting to avoid spamming .NET
         this.reportVesselData();
     },
 
     reportVesselData: function () {
+        if (this.reportTimeout) return;
+
+        this.reportTimeout = setTimeout(() => {
+            this._executeReportVesselData();
+            this.reportTimeout = null;
+        }, 1000); // Update stats max once per second
+    },
+
+    _executeReportVesselData: function () {
         if (!this.map || !this.dotNetHelper) return;
 
-        const bounds = this.map.getBounds();
         const allVesselTypes = {};
+        let totalVesselCount = 0;
 
         for (const mmsi in this.vesselMarkers) {
+            totalVesselCount++;
             const vessel = this.vesselMarkers[mmsi];
             const type = vessel.vesselType || 'Other';
             allVesselTypes[type] = (allVesselTypes[type] || 0) + 1;
@@ -179,8 +194,6 @@ window.HarborFlowMap = {
         const allVesselTypeSummary = Object.keys(allVesselTypes).map(key => {
             return { VesselType: key, Count: allVesselTypes[key] };
         }).sort((a, b) => a.VesselType.localeCompare(b.VesselType));
-
-        const totalVesselCount = Object.keys(this.vesselMarkers).length;
 
         this.dotNetHelper.invokeMethodAsync('UpdateTotalMapVesselCount', totalVesselCount);
         this.dotNetHelper.invokeMethodAsync('UpdateVisibleVesselTypeSummary', allVesselTypeSummary);

@@ -43,7 +43,10 @@ namespace HarborFlowSuite.Server.Services
                 {
                     Flag = cachedMetadata.Flag,
                     Length = cachedMetadata.Length,
-                    ImoNumber = cachedMetadata.ImoNumber
+                    ImoNumber = cachedMetadata.ImoNumber,
+                    ShipName = cachedMetadata.ShipName,
+                    Callsign = cachedMetadata.Callsign,
+                    Geartype = cachedMetadata.Geartype
                 };
             }
 
@@ -70,7 +73,10 @@ namespace HarborFlowSuite.Server.Services
                     {
                         Flag = vesselEntry.Flag,
                         Length = (double)(vesselEntry.LengthM ?? 0.0),
-                        ImoNumber = vesselEntry.Imo
+                        ImoNumber = vesselEntry.Imo,
+                        ShipName = vesselEntry.Shipname,
+                        Callsign = vesselEntry.Callsign,
+                        Geartype = vesselEntry.Geartype
                     };
 
                     if (cachedMetadata != null)
@@ -78,6 +84,9 @@ namespace HarborFlowSuite.Server.Services
                         cachedMetadata.Flag = metadata.Flag;
                         cachedMetadata.Length = metadata.Length;
                         cachedMetadata.ImoNumber = metadata.ImoNumber;
+                        cachedMetadata.ShipName = metadata.ShipName;
+                        cachedMetadata.Callsign = metadata.Callsign;
+                        cachedMetadata.Geartype = metadata.Geartype;
                         cachedMetadata.LastUpdated = DateTime.UtcNow;
                     }
                     else
@@ -88,6 +97,9 @@ namespace HarborFlowSuite.Server.Services
                             Flag = metadata.Flag,
                             Length = metadata.Length,
                             ImoNumber = metadata.ImoNumber,
+                            ShipName = metadata.ShipName,
+                            Callsign = metadata.Callsign,
+                            Geartype = metadata.Geartype,
                             LastUpdated = DateTime.UtcNow
                         });
                     }
@@ -117,6 +129,9 @@ namespace HarborFlowSuite.Server.Services
             public string Flag { get; set; }
             public double? LengthM { get; set; }
             public string Imo { get; set; }
+            public string Shipname { get; set; }
+            public string Callsign { get; set; }
+            public string Geartype { get; set; }
         }
     }
 }

@@ -1,0 +1,96 @@
+@using HarborFlowSuite.Core.DTOs
+@using HarborFlowSuite.Core.Models
+
+<MudDrawer @bind-Open="@Open" Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary" Width="400px">
+    <MudDrawerHeader>
+        <MudText Typo="Typo.h6">Vessel Details</MudText>
+    </MudDrawerHeader>
+    <MudDrawerContainer>
+        @if (Vessel != null)
+        {
+            <MudList T="string">
+                <MudListItem Icon="@Icons.Material.Filled.DirectionsBoat">
+                    <MudText Typo="Typo.subtitle2">Name</MudText>
+                    <MudText Typo="Typo.body1">@Vessel.Name</MudText>
+                </MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.Numbers">
+                    <MudText Typo="Typo.subtitle2">MMSI</MudText>
+                    <MudText Typo="Typo.body1">@Vessel.MMSI</MudText>
+                </MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.Category">
+                    <MudText Typo="Typo.subtitle2">Type</MudText>
+                    <MudText Typo="Typo.body1">@Vessel.Type</MudText>
+                </MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.Speed">
+                    <MudText Typo="Typo.subtitle2">Speed</MudText>
+                    <MudText Typo="Typo.body1">@Vessel.Speed knots</MudText>
+                </MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.Explore">
+                    <MudText Typo="Typo.subtitle2">Heading</MudText>
+                    <MudText Typo="Typo.body1">@Vessel.Heading °</MudText>
+                </MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.LocationOn">
+                    <MudText Typo="Typo.subtitle2">Coordinates</MudText>
+                    <MudText Typo="Typo.body2">Lat: @Vessel.Latitude.ToString("F4")</MudText>
+                    <MudText Typo="Typo.body2">Lng: @Vessel.Longitude.ToString("F4")</MudText>
+                </MudListItem>
+            </MudList>
+
+            @if (Metadata != null)
+            {
+                <MudDivider />
+                <MudText Typo="Typo.h6" Class="mt-4 ml-4">Metadata</MudText>
+                <MudList T="string">
+                    <MudListItem Icon="@Icons.Material.Filled.Flag">
+                        <MudText Typo="Typo.subtitle2">Flag</MudText>
+                        <MudText Typo="Typo.body1">@Metadata.Flag</MudText>
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Straighten">
+                        <MudText Typo="Typo.subtitle2">Length</MudText>
+                        <MudText Typo="Typo.body1">@Metadata.Length m</MudText>
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.Fingerprint">
+                        <MudText Typo="Typo.subtitle2">IMO</MudText>
+                        <MudText Typo="Typo.body1">@Metadata.ImoNumber</MudText>
+                    </MudListItem>
+                </MudList>
+            }
+
+            <div class="pa-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                    Href="@($"/vessel-details/{Vessel.MMSI}")">View Full Details</MudButton>
+            </div>
+        }
+        else
+        {
+            <div class="d-flex justify-content-center align-items-center" style="height: 100%;">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            </div>
+        }
+    </MudDrawerContainer>
+</MudDrawer>
+
+@code {
+    [Parameter]
+    public bool Open { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OpenChanged { get; set; }
+
+    [Parameter]
+    public VesselPositionDto Vessel { get; set; }
+
+    [Parameter]
+    public VesselMetadataDto Metadata { get; set; }
+
+    public class VesselPositionDto
+    {
+        public string MMSI { get; set; }
+        public string Name { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public double Heading { get; set; }
+        public double Speed { get; set; }
+        public string Type { get; set; }
+    }
+}

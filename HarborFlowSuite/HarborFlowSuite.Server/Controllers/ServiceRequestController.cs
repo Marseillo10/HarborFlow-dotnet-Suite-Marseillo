@@ -50,8 +50,8 @@ namespace HarborFlowSuite.Server.Controllers
         [HttpPost("{id}/approve")]
         public async Task<IActionResult> Approve(Guid id, [FromBody] ApprovalDto approvalDto)
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var result = await _serviceRequestService.ApproveServiceRequest(id, userId, approvalDto.Comments);
+            var firebaseUid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await _serviceRequestService.ApproveServiceRequest(id, firebaseUid, approvalDto.Comments);
             if (result == null)
             {
                 return NotFound();
@@ -62,8 +62,8 @@ namespace HarborFlowSuite.Server.Controllers
         [HttpPost("{id}/reject")]
         public async Task<IActionResult> Reject(Guid id, [FromBody] ApprovalDto approvalDto)
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var result = await _serviceRequestService.RejectServiceRequest(id, userId, approvalDto.Comments);
+            var firebaseUid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await _serviceRequestService.RejectServiceRequest(id, firebaseUid, approvalDto.Comments);
             if (result == null)
             {
                 return NotFound();

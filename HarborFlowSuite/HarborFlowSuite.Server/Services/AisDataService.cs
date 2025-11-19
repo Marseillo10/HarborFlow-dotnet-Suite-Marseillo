@@ -1,3 +1,4 @@
+#nullable enable
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Net.WebSockets;
@@ -21,6 +22,7 @@ namespace HarborFlowSuite.Server.Services
         private ClientWebSocket _webSocket;
         private readonly string _apiKey;
         private readonly ConcurrentDictionary<string, string> _vesselTypes = new ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<string, DateTime> _lastGfwFetchTime = new ConcurrentDictionary<string, DateTime>();
 
         public AisDataService(IHubContext<AisHub> hubContext, IConfiguration configuration, IServiceScopeFactory serviceScopeFactory)
         {
@@ -28,7 +30,11 @@ namespace HarborFlowSuite.Server.Services
             _configuration = configuration;
             _serviceScopeFactory = serviceScopeFactory;
             _webSocket = new ClientWebSocket();
-            _apiKey = _configuration["AisStreamApiKey"];
+            _apiKey = _configuration["AisStreamApiKey"] ?? string.Empty;
+            if (string.IsNullOrEmpty(_apiKey))
+            {
+                Console.WriteLine("WARNING: AisStreamApiKey is missing in configuration. AIS data will not be fetched.");
+            }
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -50,7 +56,9 @@ namespace HarborFlowSuite.Server.Services
                             BoundingBoxes = new[] { new[] { new[] { -13.1816069, 94.7717124 }, new[] { 6.92805288332, 151.7489081 } } },
                             FilterMessageTypes = new[] { "PositionReport", "ShipStaticData" }
                         };
-                        var messageBuffer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(subscriptionMessage));
+                        var jsonMsg = JsonSerializer.Serialize(subscriptionMessage);
+                        Console.WriteLine($"Sending subscription (Length: {jsonMsg.Length})");
+                        var messageBuffer = Encoding.UTF8.GetBytes(jsonMsg);
                         await _webSocket.SendAsync(new ArraySegment<byte>(messageBuffer), WebSocketMessageType.Text, true, stoppingToken);
                         Console.WriteLine("Subscribed to AIS Stream.");
                     }
@@ -72,7 +80,7 @@ namespace HarborFlowSuite.Server.Services
 
         private async Task ReceiveLoop(CancellationToken stoppingToken)
         {
-            var buffer = new byte[1024 * 4];
+            var buffer = new byte[1024 * 16]; // Increased buffer size to 16KB
             while (_webSocket.State == WebSocketState.Open && !stoppingToken.IsCancellationRequested)
             {
                 var result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), stoppingToken);
@@ -84,7 +92,16 @@ namespace HarborFlowSuite.Server.Services
                 }
 
                 var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                var aisMessage = JsonSerializer.Deserialize<AisMessage>(message);
+                AisMessage? aisMessage = null;
+                try
+                {
+                    aisMessage = JsonSerializer.Deserialize<AisMessage>(message);
+                }
+                catch (JsonException ex)
+                {
+                    Console.WriteLine($"JSON Deserialization error: {ex.Message}");
+                    continue; // Skip this message
+                }
 
                 if (aisMessage?.MessageType == "ShipStaticData")
                 {
@@ -111,13 +128,17 @@ namespace HarborFlowSuite.Server.Services
                     // Fetch metadata in the background
                     _ = Task.Run(async () =>
                     {
-                        using (var scope = _serviceScopeFactory.CreateScope())
+                        if (!_lastGfwFetchTime.TryGetValue(mmsi, out var lastFetch) || DateTime.UtcNow - lastFetch > TimeSpan.FromHours(1))
                         {
-                            var gfwMetadataService = scope.ServiceProvider.GetRequiredService<IGfwMetadataService>();
-                            var metadata = await gfwMetadataService.GetVesselMetadataAsync(mmsi);
-                            if (metadata != null)
+                            _lastGfwFetchTime[mmsi] = DateTime.UtcNow;
+                            using (var scope = _serviceScopeFactory.CreateScope())
                             {
-                                await _hubContext.Clients.All.SendAsync("ReceiveVesselMetadataUpdate", mmsi, metadata, stoppingToken);
+                                var gfwMetadataService = scope.ServiceProvider.GetRequiredService<IGfwMetadataService>();
+                                var metadata = await gfwMetadataService.GetVesselMetadataAsync(mmsi);
+                                if (metadata != null)
+                                {
+                                    await _hubContext.Clients.All.SendAsync("ReceiveVesselMetadataUpdate", mmsi, metadata, stoppingToken);
+                                }
                             }
                         }
                     }, stoppingToken);

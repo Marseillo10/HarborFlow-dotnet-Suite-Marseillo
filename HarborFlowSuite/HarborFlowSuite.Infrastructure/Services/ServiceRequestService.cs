@@ -17,7 +17,7 @@ namespace HarborFlowSuite.Infrastructure.Services
             _context = context;
         }
 
-        public async Task<ServiceRequest> ApproveServiceRequest(Guid id, Guid approverId, string comments)
+        public async Task<ServiceRequest> ApproveServiceRequest(Guid id, string firebaseUid, string comments)
         {
             var serviceRequest = await _context.ServiceRequests.FindAsync(id);
             if (serviceRequest == null)
@@ -28,10 +28,13 @@ namespace HarborFlowSuite.Infrastructure.Services
             serviceRequest.Status = ServiceRequestStatus.Approved;
             serviceRequest.UpdatedAt = DateTime.UtcNow;
 
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
+            if (user == null) return null;
+
             var approvalHistory = new ApprovalHistory
             {
                 ServiceRequestId = id,
-                ApproverId = approverId,
+                ApproverId = user.Id,
                 Action = "Approved",
                 Comments = comments,
                 ActionAt = DateTime.UtcNow,
@@ -105,7 +108,7 @@ namespace HarborFlowSuite.Infrastructure.Services
             }
         }
 
-        public async Task<ServiceRequest> RejectServiceRequest(Guid id, Guid approverId, string comments)
+        public async Task<ServiceRequest> RejectServiceRequest(Guid id, string firebaseUid, string comments)
         {
             var serviceRequest = await _context.ServiceRequests.FindAsync(id);
             if (serviceRequest == null)
@@ -116,10 +119,13 @@ namespace HarborFlowSuite.Infrastructure.Services
             serviceRequest.Status = ServiceRequestStatus.Rejected;
             serviceRequest.UpdatedAt = DateTime.UtcNow;
 
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
+            if (user == null) return null;
+
             var approvalHistory = new ApprovalHistory
             {
                 ServiceRequestId = id,
-                ApproverId = approverId,
+                ApproverId = user.Id,
                 Action = "Rejected",
                 Comments = comments,
                 ActionAt = DateTime.UtcNow,
