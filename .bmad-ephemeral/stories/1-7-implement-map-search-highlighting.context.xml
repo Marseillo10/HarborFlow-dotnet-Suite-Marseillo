@@ -1,0 +1,83 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.7</storyId>
+    <title>Implement Map Search Highlighting</title>
+    <status>Approved</status>
+    <generatedAt>2025-11-14</generatedAt>
+    <generator>BMad Story Context Workflow</generator>
+    <sourceStoryPath>/Users/marseillosatrian/Downloads/HarborFlow-dotnet-Suite-Marseillo-new/.bmad-ephemeral/stories/1-7-implement-map-search-highlighting.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>user</asA>
+    <iWant>to easily locate vessels on the map based on search queries</iWant>
+    <soThat>I can quickly find specific vessels or groups of vessels</soThat>
+    <tasks>
+- [ ] Task 1: Implement a search input field in the map interface.
+- [ ] Task 2: Develop logic to filter and highlight vessels on the map based on search input (e.g., vessel name, IMO, type).
+- [ ] Task 3: Ensure search results are visually distinct (e.g., different marker color, pulsating effect).
+- [ ] Task 4: Optimize search performance for large numbers of vessels.
+- [ ] Task 5: Write unit and integration tests for the map search and highlighting functionality.
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Entering text in the search field filters and highlights matching vessels on the map.
+2. Non-matching vessels are de-emphasized or hidden.
+3. The highlighting is clear and easily visible.
+4. Search is responsive and provides results quickly.
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epics and Stories for HarborFlow Suite</title>
+        <section>Epic 1: Real-time Vessel Tracking System</section>
+        <snippet>As a user, I want to easily locate vessels on the map based on search queries.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>HarborFlowSuite/HarborFlowSuite.Client/Components/VesselMap.razor</path>
+        <kind>component</kind>
+        <symbol>VesselMap</symbol>
+        <lines></lines>
+        <reason>The map component will be modified to integrate search and highlighting.</reason>
+      </file>
+      <file>
+        <path>HarborFlowSuite/HarborFlowSuite.Client/Components/MapSearchInput.razor</path>
+        <kind>component</kind>
+        <symbol>MapSearchInput</symbol>
+        <lines></lines>
+        <reason>A new component for the search input field.</reason>
+      </file>
+    </code>
+    <dependencies>
+        <dependency>
+            <name>MudBlazor</name>
+            <version>6.11.0</version>
+            <reason>Used for UI components.</reason>
+        </dependency>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>The application follows Clean Architecture principles.</constraint>
+    <constraint>The frontend is a Blazor WebAssembly PWA.</constraint>
+  </constraints>
+  <interfaces>
+  </interfaces>
+  <tests>
+    <standards>xUnit for unit and integration tests. Playwright for E2E tests. Aim for 80% code coverage on core logic.</standards>
+    <locations>
+        - HarborFlowSuite/HarborFlowSuite.Client.Tests/
+    </locations>
+    <ideas>
+        - Verify that entering a search term highlights matching vessels.
+        - Verify that clearing the search term removes highlighting.
+        - Verify search performance with a large dataset.
+    </ideas>
+  </tests>
+</story-context>

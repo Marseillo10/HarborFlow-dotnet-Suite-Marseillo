@@ -14,6 +14,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ServiceRequest> ServiceRequests { get; set; }
     public DbSet<Company> Companies { get; set; }
     public DbSet<ApprovalHistory> ApprovalHistories { get; set; }
+    public DbSet<Port> Ports { get; set; }
     public virtual DbSet<GfwMetadataCache> GfwMetadataCache { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -26,6 +27,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<ServiceRequest>().HasKey(sr => sr.Id);
         modelBuilder.Entity<Company>().HasKey(c => c.Id);
         modelBuilder.Entity<ApprovalHistory>().HasKey(ah => ah.Id);
+        modelBuilder.Entity<Port>().HasKey(p => p.Id);
 
         // Configure relationships
         modelBuilder.Entity<User>()
@@ -56,7 +58,7 @@ public class ApplicationDbContext : DbContext
             .HasOne(u => u.Role)
             .WithMany()
             .HasForeignKey(u => u.RoleId);
-            
+
         modelBuilder.Entity<ApprovalHistory>()
             .HasOne(ah => ah.ServiceRequest)
             .WithMany(sr => sr.ApprovalHistories)
@@ -73,7 +75,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<ServiceRequest>()
             .Property(sr => sr.Status)
             .HasConversion<string>();
-            
+
         modelBuilder.Entity<ApprovalHistory>()
             .Property(ah => ah.Status)
             .HasConversion<string>();

@@ -30,6 +30,7 @@ builder.Services.AddNpgsql<ApplicationDbContext>(connectionString);
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IServiceRequestService, ServiceRequestService>();
+builder.Services.AddScoped<IVesselService, VesselService>();
 
 // Configure GFW API client
 builder.Services.AddHttpClient<IGfwMetadataService, GfwMetadataService>((serviceProvider, client) =>
@@ -49,13 +50,13 @@ FirebaseApp.Create(new AppOptions()
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = "https://securetoken.google.com/harborflow-aef5d";
+        options.Authority = $"https://securetoken.google.com/{builder.Configuration["Firebase:ProjectId"]}";
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = "https://securetoken.google.com/harborflow-aef5d",
+            ValidIssuer = $"https://securetoken.google.com/{builder.Configuration["Firebase:ProjectId"]}",
             ValidateAudience = true,
-            ValidAudience = "harborflow-aef5d",
+            ValidAudience = builder.Configuration["Firebase:ProjectId"],
             ValidateLifetime = true
         };
     });
@@ -84,6 +85,9 @@ if (app.Environment.IsDevelopment())
     {
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         dbContext.Database.Migrate();
+        
+        var portSeeder = new PortSeeder(dbContext);
+        await portSeeder.SeedAsync();
     }
 }
 

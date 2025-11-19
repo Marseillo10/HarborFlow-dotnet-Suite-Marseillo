@@ -1,9 +1,11 @@
 @page "/login"
 @using HarborFlowSuite.Client.Services
+@using HarborFlowSuite.Client.Models
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<Login> Logger
 
 <h3>Login</h3>
 
@@ -51,15 +53,15 @@
 
     private async Task HandleLogin()
     {
-        Console.WriteLine("HandleLogin called");
+        Logger.LogInformation("HandleLogin called");
         try
         {
             bool success = await AuthService.SignIn(_loginModel.Email, _loginModel.Password);
-            Console.WriteLine($"SignIn success: {success}");
+            Logger.LogInformation("SignIn success: {Success}", success);
             if (success)
             {
                 var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-                Console.WriteLine($"IsAuthenticated: {authState.User.Identity?.IsAuthenticated}");
+                Logger.LogInformation("IsAuthenticated: {IsAuthenticated}", authState.User.Identity?.IsAuthenticated);
                 if (authState.User.Identity?.IsAuthenticated == true)
                 {
                     NavigationManager.NavigateTo("/dashboard");
@@ -77,13 +79,7 @@
         catch (Exception ex)
         {
             _errorMessage = ex.Message;
-            Console.WriteLine($"Login exception: {ex.Message}");
+            Logger.LogError(ex, "Login exception: {Message}", ex.Message);
         }
-    }
-
-    public class LoginModel
-    {
-        public required string Email { get; set; }
-        public required string Password { get; set; }
     }
 }

@@ -8,15 +8,10 @@
 
 <div id="@MapElementId" style="width: 100%; height: 600px;"></div>
 
-<VesselTooltip IsVisible="_isTooltipVisible" Vessel="_hoveredVessel" Position="_tooltipPosition" />
 
 @code {
     [Parameter]
     public string MapElementId { get; set; } = "map";
-
-    private bool _isTooltipVisible;
-    private VesselPositionDto? _hoveredVessel;
-    private System.Drawing.Point _tooltipPosition;
 
     [Parameter]
     public EventCallback<int> OnTotalMapVesselCountChanged { get; set; }
@@ -29,6 +24,7 @@
 
     private DotNetObjectReference<VesselMap> _dotNetHelper;
     private IEnumerable<Port> _currentPorts;
+    private bool _isMapInitialized;
 
     protected override async Task OnInitializedAsync()
     {
@@ -41,16 +37,38 @@
     {
         if (firstRender)
         {
+            Console.WriteLine("VesselMap: OnAfterRenderAsync (firstRender). Initializing map...");
             await JSRuntime.InvokeVoidAsync("HarborFlowMap.initMap", MapElementId, _dotNetHelper);
+            _isMapInitialized = true;
+            Console.WriteLine("VesselMap: Map initialized.");
+            
+            if (_currentPorts != null && _currentPorts.Any())
+            {
+                Console.WriteLine($"VesselMap: Initial ports available ({_currentPorts.Count()}). Invoking addPortMarkers.");
+                await JSRuntime.InvokeVoidAsync("HarborFlowMap.addPortMarkers", _currentPorts);
+            }
+            else
+            {
+                Console.WriteLine("VesselMap: No initial ports to add.");
+            }
         }
     }
 
     protected override async Task OnParametersSetAsync()
     {
+        Console.WriteLine($"VesselMap: OnParametersSetAsync called. Ports count: {(Ports != null ? Ports.Count() : 0)}");
         if (Ports != null && Ports.Any() && (Ports != _currentPorts))
         {
             _currentPorts = Ports;
-            await JSRuntime.InvokeVoidAsync("HarborFlowMap.addPortMarkers", _currentPorts);
+            if (_isMapInitialized)
+            {
+                Console.WriteLine($"VesselMap: Map is initialized. Invoking addPortMarkers with {_currentPorts.Count()} ports.");
+                await JSRuntime.InvokeVoidAsync("HarborFlowMap.addPortMarkers", _currentPorts);
+            }
+            else
+            {
+                Console.WriteLine("VesselMap: Map is NOT yet initialized. Skipping addPortMarkers.");
+            }
         }
     }
 
@@ -77,26 +95,14 @@
         await OnVisibleVesselTypeSummaryChanged.InvokeAsync(summary);
     }
 
-    [JSInvokable]
-    public void ShowVesselTooltip(VesselPositionDto vessel, int x, int y)
-    {
-        _hoveredVessel = vessel;
-        _tooltipPosition = new System.Drawing.Point(x, y);
-        _isTooltipVisible = true;
-        StateHasChanged();
-    }
 
-    [JSInvokable]
-    public void HideVesselTooltip()
-    {
-        _isTooltipVisible = false;
-        _hoveredVessel = null;
-        StateHasChanged();
-    }
 
     public async ValueTask DisposeAsync()
     {
-        _dotNetHelper?.Dispose();
+        if (_dotNetHelper != null)
+        {
+            _dotNetHelper.Dispose();
+        }
         VesselPositionSignalRService.OnPositionUpdateReceived -= OnPositionUpdateReceived;
         await VesselPositionSignalRService.StopConnection();
     }

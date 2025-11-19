@@ -4,6 +4,8 @@ namespace HarborFlowSuite.Core.Models
 {
     public class Port
     {
+        public Guid Id { get; set; }
+
         [JsonPropertyName("CITY")]
         public string City { get; set; }
 

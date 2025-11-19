@@ -12,32 +12,35 @@ namespace HarborFlowSuite.Client.Services
     public class PortService : IPortService
     {
         private readonly HttpClient _httpClient;
-        private List<Port>? _ports;
 
-        public PortService(HttpClient httpClient)
+        public PortService(IHttpClientFactory httpClientFactory)
         {
-            _httpClient = httpClient;
-        }
-
-        private async Task LoadPortsAsync()
-        {
-            if (_ports == null)
-            {
-                _ports = await _httpClient.GetFromJsonAsync<List<Port>>("sample-data/ports.json");
-            }
+            _httpClient = httpClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
         }
 
         public async Task<IEnumerable<Port>> GetPortsAsync(IEnumerable<string> countries)
         {
-            await LoadPortsAsync();
-
-            if (countries == null || !countries.Any() || _ports == null)
+            try
             {
+                var ports = await _httpClient.GetFromJsonAsync<List<Port>>("api/ports");
+
+                if (ports == null)
+                {
+                    return Enumerable.Empty<Port>();
+                }
+
+                if (countries != null && countries.Any())
+                {
+                    return ports.Where(p => countries.Contains(p.Country, StringComparer.OrdinalIgnoreCase));
+                }
+
+                return ports;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching ports: {ex.Message}");
                 return Enumerable.Empty<Port>();
             }
-
-            var filteredPorts = _ports.Where(p => countries.Contains(p.Country, System.StringComparer.OrdinalIgnoreCase));
-            return filteredPorts;
         }
     }
 }

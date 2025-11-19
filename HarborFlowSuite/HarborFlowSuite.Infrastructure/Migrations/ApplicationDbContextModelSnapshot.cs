@@ -135,6 +135,37 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                     b.ToTable("Permission");
                 });
 
+            modelBuilder.Entity("HarborFlowSuite.Core.Models.Port", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("City")
+                        .HasColumnType("text")
+                        .HasAnnotation("Relational:JsonPropertyName", "CITY");
+
+                    b.Property<string>("Country")
+                        .HasColumnType("text")
+                        .HasAnnotation("Relational:JsonPropertyName", "COUNTRY");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("double precision")
+                        .HasAnnotation("Relational:JsonPropertyName", "LATITUDE");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("double precision")
+                        .HasAnnotation("Relational:JsonPropertyName", "LONGITUDE");
+
+                    b.Property<string>("State")
+                        .HasColumnType("text")
+                        .HasAnnotation("Relational:JsonPropertyName", "STATE");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Ports");
+                });
+
             modelBuilder.Entity("HarborFlowSuite.Core.Models.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -268,9 +299,6 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("RoleId1")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -279,8 +307,6 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                     b.HasIndex("CompanyId");
 
                     b.HasIndex("RoleId");
-
-                    b.HasIndex("RoleId1");
 
                     b.ToTable("Users");
                 });
@@ -442,10 +468,6 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("HarborFlowSuite.Core.Models.Role", null)
-                        .WithMany("Users")
-                        .HasForeignKey("RoleId1");
-
                     b.Navigation("Company");
 
                     b.Navigation("Role");
@@ -486,8 +508,6 @@ namespace HarborFlowSuite.Infrastructure.Migrations
             modelBuilder.Entity("HarborFlowSuite.Core.Models.Role", b =>
                 {
                     b.Navigation("RolePermissions");
-
-                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("HarborFlowSuite.Core.Models.ServiceRequest", b =>

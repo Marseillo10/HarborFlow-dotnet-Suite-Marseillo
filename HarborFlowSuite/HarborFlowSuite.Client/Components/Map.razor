@@ -2,7 +2,9 @@
 @using HarborFlowSuite.Client.Services
 @inject IJSRuntime JSRuntime
 @inject IVesselService VesselService
+@inject IPortService PortService
 @using HarborFlowSuite.Core.DTOs
+@using HarborFlowSuite.Core.Services
 
 <div id="map" style="height: 100vh; width: 100%;"></div>
 
@@ -12,12 +14,20 @@
         if (firstRender)
         {
             await JSRuntime.InvokeVoidAsync("HarborFlowMap.initMap", "map");
+
             var vesselPositions = await VesselService.GetVesselPositions();
             if (vesselPositions != null)
             {
                 await JSRuntime.InvokeVoidAsync("HarborFlowMap.addVesselMarkers", vesselPositions);
             }
+
+            var ports = await PortService.GetPortsAsync(new[] { "Indonesia", "Malaysia", "Papua New Guinea", "Timor-Leste", "Brunei" });
+            if (ports != null && ports.Any())
+            {
+                await JSRuntime.InvokeVoidAsync("HarborFlowMap.addPortMarkers", ports);
+            }
         }
     }
+}
 }
 

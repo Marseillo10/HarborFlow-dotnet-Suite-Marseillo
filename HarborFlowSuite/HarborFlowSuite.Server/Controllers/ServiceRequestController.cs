@@ -1,4 +1,5 @@
 using HarborFlowSuite.Core.Models;
+using HarborFlowSuite.Core.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -69,10 +70,5 @@ namespace HarborFlowSuite.Server.Controllers
             }
             return Ok(result);
         }
-    }
-
-    public class ApprovalDto
-    {
-        public string Comments { get; set; }
     }
 }

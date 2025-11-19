@@ -12,7 +12,7 @@ Please adhere to the following instructions for the continued development of the
 
 **Development and Debugging Workflow:**
 
-*   **Always Use Chrome DevTools:** Throughout the development and debugging process, consistently use `chrome-devtools-mcp` to visit and review the web application running at `https://localhost:7163/ or http://localhost:5205`. This will prevent "blind" development, as `HarborFlow.Web` and `HarborFlow.Api` are always running by me in other terminals (except when you tell me to stop).
+*   **Always Use Browser:** Throughout the development and debugging process, consistently use `browser extension` to visit and review the web application running at `https://localhost:7163/ or http://localhost:5205`. This will prevent "blind" development, as `HarborFlow.Web` and `HarborFlow.Api` are always running by me in other terminals (except when you tell me to stop).
 *   **Login Credentials:** Use the following credentials for registration and login purposes:
     *   **Nama:** Marseillo
     *   **Email:** `rafaelbintang207@gmail.com`

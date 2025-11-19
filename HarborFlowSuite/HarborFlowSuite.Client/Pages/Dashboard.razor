@@ -165,21 +165,21 @@
 
                 {
 
-                    <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+                        <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
 
                         @foreach (var item in _serviceRequestStatusSummary)
 
                         {
 
-                            <div class="bar" style="height: @(item.Count * 20)px; background-color: @GetStatusColor(item.Status);">
+                                    <div class="bar" style="height: @(item.Count * 20)px; background-color: @GetStatusColor(item.Status);">
 
-                                <span class="bar-label">@item.Status (@item.Count)</span>
+                                        <span class="bar-label">@item.Status (@item.Count)</span>
 
-                            </div>
+                                    </div>
 
                         }
 
-                    </div>
+                        </div>
 
                 }
 
@@ -187,7 +187,7 @@
 
                 {
 
-                    <p>Loading service request status...</p>
+                        <p>Loading service request status...</p>
 
                 }
 
@@ -213,7 +213,7 @@
 
                 {
 
-                    <VesselTypePolarAreaChart Data="@_vesselTypeSummary" />
+                        <VesselTypePolarAreaChart Data="@_vesselTypeSummary" />
 
                 }
 
@@ -221,7 +221,7 @@
 
                 {
 
-                    <p>Loading vessel type summary...</p>
+                        <p>Loading vessel type summary...</p>
 
                 }
 
@@ -263,140 +263,75 @@
 
 
 
+@inject ILogger<Dashboard> Logger
+
 @code {
-
     private int _vesselCount;
-
     private int _pendingServiceRequestCount;
-
     private int _companyCount;
-
     private List<ServiceRequestStatusSummaryDto> _serviceRequestStatusSummary;
-
     private List<VesselTypeSummaryDto> _vesselTypeSummary;
-
     private VesselMap? vesselMap;
-
     private string _selectedLayer = "openstreetmap";
-
     private Dictionary<string, LayerSwitcher.LayerInfo> _mapLayers;
-
     private IEnumerable<Port> _ports;
 
-
-
     protected override async Task OnInitializedAsync()
-
     {
-
         try
-
         {
-
             _mapLayers = new Dictionary<string, LayerSwitcher.LayerInfo>
-
             {
-
                 { "openstreetmap", new LayerSwitcher.LayerInfo { Name = "OpenStreetMap", Thumbnail = "/images/map_thumbnails/openstreetmap.png" } },
-
                 { "nasa_gibs", new LayerSwitcher.LayerInfo { Name = "NASA GIBS", Thumbnail = "/images/map_thumbnails/nasa_gibs.png" } },
-
                 { "esri_worldimagery", new LayerSwitcher.LayerInfo { Name = "Esri World Imagery", Thumbnail = "/images/map_thumbnails/esri_worldimagery.png" } }
-
             };
 
-
-
-            Console.WriteLine("Dashboard OnInitializedAsync started.");
-
+            Logger.LogInformation("Dashboard OnInitializedAsync started.");
             var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
 
+            var portsTask = PortService.GetPortsAsync(null);
 
-
-            var countries = new[] { "Indonesia", "Singapore", "Brunei", "Papua New Guinea", "Timor-Leste", "Malaysia" };
-
-            var portsTask = PortService.GetPortsAsync(countries);
-
-
-
-            Console.WriteLine("Fetching service request, and company data...");
-
+            Logger.LogInformation("Fetching service request, and company data...");
             var serviceRequestTask = client.GetFromJsonAsync<ServiceRequest[]>("api/servicerequest");
-
             var companyTask = client.GetFromJsonAsync<Company[]>("api/company");
 
-
-
-            Console.WriteLine("Fetching dashboard summary data...");
-
+            Logger.LogInformation("Fetching dashboard summary data...");
             var serviceRequestStatusTask = client.GetFromJsonAsync<List<ServiceRequestStatusSummaryDto>>("api/dashboard/servicerequeststatus");
-
             var vesselTypeTask = client.GetFromJsonAsync<List<VesselTypeSummaryDto>>("api/dashboard/vesseltypes");
 
-
-
             await Task.WhenAll(serviceRequestTask, companyTask, serviceRequestStatusTask, vesselTypeTask, portsTask);
-
-            Console.WriteLine("All data fetched.");
-
-
+            Logger.LogInformation("All data fetched.");
 
             _ports = portsTask.Result;
-
+            Logger.LogInformation($"Dashboard: Fetched {_ports?.Count() ?? 0} ports.");
             _pendingServiceRequestCount = serviceRequestTask.Result?.Count(r => r.Status == ServiceRequestStatus.Pending) ?? 0;
-
             _companyCount = companyTask.Result?.Length ?? 0;
-
             _serviceRequestStatusSummary = serviceRequestStatusTask.Result;
-
             _vesselTypeSummary = vesselTypeTask.Result;
 
-
-
-            Console.WriteLine("Dashboard data processed.");
-
-
+            Logger.LogInformation("Dashboard data processed.");
 
             if (HubConnection.State == HubConnectionState.Disconnected)
-
             {
-
                 await HubConnection.StartAsync();
-
             }
 
-
-
             HubConnection.On<string, double, double, double, double, string, string, VesselMetadataDto>("ReceiveVesselPositionUpdate",
-
                 async (mmsi, lat, lng, heading, speed, name, vesselType, metadata) =>
-
                 {
-
                     if (vesselMap != null)
-
                     {
-
                         await vesselMap.UpdateVesselMarker(mmsi, lat, lng, heading, speed, name, vesselType, metadata);
-
                         await InvokeAsync(StateHasChanged);
-
                     }
-
                 });
-
         }
-
         catch (Exception ex)
-
         {
-
-            Console.WriteLine($"Error in Dashboard OnInitializedAsync: {ex.Message}");
-
+            Logger.LogError(ex, "Error in Dashboard OnInitializedAsync: {Message}", ex.Message);
         }
-
         StateHasChanged();
-
     }
 
 

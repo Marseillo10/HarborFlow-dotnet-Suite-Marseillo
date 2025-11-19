@@ -3,73 +3,127 @@
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">HarborFlowSuite.Client</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+<div class="nav-menu-container">
+    <div class="top-row ps-3 navbar navbar-dark">
+        <div class="container-fluid d-flex align-items-center">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="">
+                <span class="bi bi-tsunami" aria-hidden="true" style="font-size: 1.5rem;"></span>
+                @if (!IsCollapsed)
+                {
+                    <span class="fw-bold tracking-tight">HarborFlow</span>
+                }
+            </a>
+            <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+    </div>
+
+    <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+        <nav class="nav flex-column h-100">
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span>
+                    @if (!IsCollapsed)
+                    {
+                        <span class="nav-text">Home</span>
+                    }
+                </NavLink>
+            </div>
+
+            <AuthorizeView>
+                <Authorized>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="dashboard">
+                            <span class="bi bi-speedometer" aria-hidden="true"></span>
+                            @if (!IsCollapsed)
+                            {
+                                <span class="nav-text">Dashboard</span>
+                            }
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="nautical-chart">
+                            <span class="bi bi-map-fill" aria-hidden="true"></span>
+                            @if (!IsCollapsed)
+                            {
+                                <span class="nav-text">Nautical Chart</span>
+                            }
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="vessel-management">
+                            <span class="fas fa-ship" aria-hidden="true"></span>
+                            @if (!IsCollapsed)
+                            {
+                                <span class="nav-text">Vessel Management</span>
+                            }
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="service-request-management">
+                            <span class="bi bi-tools" aria-hidden="true"></span>
+                            @if (!IsCollapsed)
+                            {
+                                <span class="nav-text">Service Requests</span>
+                            }
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="company-management">
+                            <span class="bi bi-building-fill" aria-hidden="true"></span>
+                            @if (!IsCollapsed)
+                            {
+                                <span class="nav-text">Company Management</span>
+                            }
+                        </NavLink>
+                    </div>
+                    
+                    <div class="mt-auto"></div>
+
+                    <div class="nav-item px-3">
+                        <button class="nav-link btn btn-link w-100 text-start" @onclick="HandleLogout">
+                            <span class="bi bi-box-arrow-right" aria-hidden="true"></span>
+                            @if (!IsCollapsed)
+                            {
+                                <span class="nav-text">Log out</span>
+                            }
+                        </button>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="register">
+                            <span class="bi bi-person-plus-fill" aria-hidden="true"></span>
+                            @if (!IsCollapsed)
+                            {
+                                <span class="nav-text">Register</span>
+                            }
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="login">
+                            <span class="bi bi-box-arrow-in-right" aria-hidden="true"></span>
+                            @if (!IsCollapsed)
+                            {
+                                <span class="nav-text">Login</span>
+                            }
+                        </NavLink>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+        </nav>
+    </div>
+    
+    <div class="sidebar-toggler-wrapper" @onclick="OnToggleSidebar">
+        <span class="bi @(IsCollapsed ? "bi-chevron-right" : "bi-chevron-left") text-white"></span>
     </div>
 </div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="dashboard">
-                        <span class="bi bi-speedometer" aria-hidden="true"></span> Dashboard
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="nautical-chart">
-                        <span class="bi bi-map-fill" aria-hidden="true"></span> Nautical Chart
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="vessel-management">
-                        <span class="fas fa-ship" aria-hidden="true"></span> Vessel Management
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="service-request-management">
-                        <span class="bi bi-tools" aria-hidden="true"></span> Service Requests
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="company-management">
-                        <span class="bi bi-building-fill" aria-hidden="true"></span> Company Management
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <button class="nav-link btn btn-link" @onclick="HandleLogout">
-                        <span class="bi bi-box-arrow-right" aria-hidden="true"></span> Log out
-                    </button>
-                </div>
-            </Authorized>
-            <NotAuthorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="register">
-                        <span class="bi bi-person-plus-fill" aria-hidden="true"></span> Register
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="login">
-                        <span class="bi bi-box-arrow-in-right" aria-hidden="true"></span> Login
-                    </NavLink>
-                </div>
-            </NotAuthorized>
-        </AuthorizeView>
-    </nav>
-</div>
-
 @code {
+    [Parameter] public bool IsCollapsed { get; set; }
+    [Parameter] public EventCallback OnToggleSidebar { get; set; }
+
     private bool collapseNavMenu = true;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;

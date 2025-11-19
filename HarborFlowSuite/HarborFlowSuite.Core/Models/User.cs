@@ -17,7 +17,9 @@ namespace HarborFlowSuite.Core.Models
 
         public Company Company { get; set; }
         public Role Role { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
         public ICollection<ServiceRequest> ServiceRequests { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
         public ICollection<ApprovalHistory> ApprovalHistories { get; set; }
     }
 }

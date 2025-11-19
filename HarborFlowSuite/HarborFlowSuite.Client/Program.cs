@@ -17,12 +17,11 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddTransient<CustomAuthorizationMessageHandler>();
 
-builder.Services.AddHttpClient("HarborFlowSuite.ServerAPI", client => client.BaseAddress = new Uri("http://localhost:5170"))
+builder.Services.AddHttpClient("HarborFlowSuite.ServerAPI", client => client.BaseAddress = new Uri("https://localhost:7274"))
     .AddHttpMessageHandler<CustomAuthorizationMessageHandler>();
 
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("HarborFlowSuite.ServerAPI"));
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddScoped<HarborFlowSuite.Client.Services.IAuthService, HarborFlowSuite.Client.Services.AuthService>();
 builder.Services.AddScoped<IVesselService, VesselService>();
 builder.Services.AddScoped<HarborFlowSuite.Client.Services.IServiceRequestService, HarborFlowSuite.Client.Services.ServiceRequestService>();
@@ -36,7 +35,7 @@ builder.Services.AddSingleton(sp =>
 {
     var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
     var hubConnection = new HubConnectionBuilder()
-        .WithUrl("http://localhost:5170/aisHub", options =>
+        .WithUrl("https://localhost:7274/aisHub", options =>
         {
             options.AccessTokenProvider = async () =>
             {

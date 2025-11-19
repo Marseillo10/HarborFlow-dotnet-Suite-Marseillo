@@ -79,12 +79,30 @@ namespace HarborFlowSuite.Infrastructure.Services
 
         public async Task<ServiceRequest> GetServiceRequestById(Guid id)
         {
-            return await _context.ServiceRequests.FindAsync(id);
+            return await _context.ServiceRequests
+                .Include(sr => sr.Requester)
+                .Include(sr => sr.Vessel)
+                .Include(sr => sr.Company)
+                .Include(sr => sr.AssignedOfficer)
+                .FirstOrDefaultAsync(sr => sr.Id == id);
         }
 
         public async Task<List<ServiceRequest>> GetServiceRequests()
         {
-            return await _context.ServiceRequests.ToListAsync();
+            try
+            {
+                return await _context.ServiceRequests
+                    .Include(sr => sr.Requester)
+                    .Include(sr => sr.Vessel)
+                    .Include(sr => sr.Company)
+                    .Include(sr => sr.AssignedOfficer)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetServiceRequests: {ex.Message}");
+                throw;
+            }
         }
 
         public async Task<ServiceRequest> RejectServiceRequest(Guid id, Guid approverId, string comments)

@@ -1,77 +1,126 @@
 .navbar-toggler {
     background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .top-row {
-    min-height: 3.5rem;
-    background-color: rgba(0,0,0,0.4);
+    height: 3.5rem;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .navbar-brand {
-    font-size: 1.1rem;
+    font-size: 1.25rem;
+    color: #e2e8f0;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
-.bi {
+.nav-menu-container {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 1.25rem;
-    height: 1.25rem;
-    margin-right: 0.75rem;
-    background-size: cover;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
 }
 
-.fas {
+.nav-scrollable {
+    background-color: #0f172a;
+    /* Deep slate blue */
+    flex: 1;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 1.25rem;
-    height: 1.25rem;
-    margin-right: 0.75rem;
-}
-
-.bi-house-door-fill-nav-menu {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-house-door-fill' viewBox='0 0 16 16'%3E%3Cpath d='M6.5 14.5v-3.505c0-.245.25-.495.5-.495h2c.25 0 .5.25.5.5v3.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5Z'/%3E%3C/svg%3E");
-}
-
-.bi-plus-square-fill-nav-menu {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-plus-square-fill' viewBox='0 0 16 16'%3E%3Cpath d='M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm6.5 4.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3a.5.5 0 0 1 1 0z'/%3E%3C/svg%3E");
-}
-
-.bi-list-nested-nav-menu {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-list-nested' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M4.5 11.5A.5.5 0 0 1 5 11h10a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm-2-4A.5.5 0 0 1 3 7h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm-2-4A.5.5 0 0 1 1 3h10a.5.5 0 0 1 0 1H1a.5.5 0 0 1-.5-.5z'/%3E%3C/svg%3E");
+    flex-direction: column;
 }
 
 .nav-item {
-    font-size: 0.9rem;
-    padding-bottom: 0.5rem;
+    font-size: 0.95rem;
+    padding: 0.25rem 0.75rem;
 }
 
-    .nav-item:first-of-type {
-        padding-top: 1rem;
-    }
+.nav-item:first-of-type {
+    padding-top: 1rem;
+}
 
-    .nav-item:last-of-type {
-        padding-bottom: 1rem;
-    }
+.nav-item:last-of-type {
+    padding-bottom: 1rem;
+}
 
-    .nav-item ::deep a {
-        color: #d7d7d7;
-        border-radius: 4px;
-        height: 3rem;
-        display: flex;
-        align-items: center;
-        line-height: 3rem;
-    }
+.nav-item ::deep a,
+.nav-item ::deep .btn-link {
+    color: #94a3b8;
+    /* Slate-400 */
+    border-radius: 0.5rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    line-height: 3rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    transition: all 0.2s ease-in-out;
+    font-weight: 500;
+    white-space: nowrap;
+    /* Prevent text wrapping */
+    overflow: hidden;
+}
 
 .nav-item ::deep a.active {
-    background-color: rgba(255,255,255,0.37);
-    color: white;
+    background-color: rgba(56, 189, 248, 0.1);
+    /* Sky-400 with low opacity */
+    color: #38bdf8;
+    /* Sky-400 */
 }
 
-.nav-item ::deep a:hover {
-    background-color: rgba(255,255,255,0.1);
-    color: white;
+.nav-item ::deep a:hover:not(.active),
+.nav-item ::deep .btn-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #f1f5f9;
+    /* Slate-100 */
+    text-decoration: none;
+}
+
+.nav-item ::deep .bi,
+.nav-item ::deep .fas {
+    font-size: 1.1rem;
+    margin-right: 0.75rem;
+    width: 1.5rem;
+    text-align: center;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.sidebar-toggler-wrapper {
+    position: absolute;
+    bottom: 1rem;
+    right: -12px;
+    width: 24px;
+    height: 24px;
+    background-color: #38bdf8;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    display: none;
+    /* Hidden by default, shown on desktop */
+}
+
+.sidebar-toggler-wrapper:hover {
+    background-color: #0ea5e9;
+}
+
+.sidebar-toggler-wrapper .bi {
+    font-size: 0.8rem;
+}
+
+/* Mobile specific adjustments */
+@media (max-width: 640.98px) {
+    .nav-scrollable {
+        background-color: #0f172a;
+    }
 }
 
 @media (min-width: 641px) {
@@ -80,13 +129,19 @@
     }
 
     .collapse {
-        /* Never collapse the sidebar for wide screens */
         display: block;
     }
 
     .nav-scrollable {
-        /* Allow sidebar to scroll for tall menus */
         height: calc(100vh - 3.5rem);
         overflow-y: auto;
+    }
+
+    .sidebar-toggler-wrapper {
+        display: flex;
+        top: 4rem;
+        /* Position it near the top or bottom as preferred, user asked for bottom of nav menu sidebar? No, user asked for logout at bottom. Collapse button usually near top or middle. Let's put it near the top for visibility or middle. */
+        bottom: auto;
+        right: -12px;
     }
 }
