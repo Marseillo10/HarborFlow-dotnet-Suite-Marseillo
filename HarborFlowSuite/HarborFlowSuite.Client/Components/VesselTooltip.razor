@@ -1,20 +1,69 @@
 @using HarborFlowSuite.Core.DTOs
 @if (IsVisible && Vessel != null)
 {
-    <MudCard Class="vessel-tooltip" Style="@($"left: {Position.X}px; top: {Position.Y}px;")">
-        <MudCardContent>
-            <MudText Typo="Typo.h6">@Vessel.VesselName</MudText>
-            <MudText Typo="Typo.body2">IMO: @Vessel.IMO</MudText>
-            <MudText Typo="Typo.body2">Status: @Vessel.VesselStatus</MudText>
-        </MudCardContent>
-    </MudCard>
+    <MudCard Class="vessel-tooltip" Style="@GetTooltipStyle()">
+    <MudCardContent Class="pa-3">
+        <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-1">@Vessel.VesselName</MudText>
+        <MudText Typo="Typo.caption" Class="d-block"><strong>Type:</strong> @(string.IsNullOrEmpty(Vessel.VesselType) ?
+            "Unknown" : Vessel.VesselType)</MudText>
+                <MudText Typo="Typo.caption" Class="d-block"><strong>IMO:</strong> @Vessel.IMO</MudText>
+                <MudText Typo="Typo.caption" Class="d-block"><strong>Lat:</strong> @Vessel.Latitude.ToString("F6")</MudText>
+                <MudText Typo="Typo.caption" Class="d-block"><strong>Lng:</strong> @Vessel.Longitude.ToString("F6")</MudText>
+                <MudText Typo="Typo.caption" Class="d-block"><strong>Speed:</strong> @Vessel.Speed.ToString("F1") knots
+                </MudText>
+                <MudText Typo="Typo.caption" Class="d-block"><strong>Heading:</strong> @Vessel.Heading.ToString("F0")°</MudText>
+                <MudText Typo="Typo.caption" Class="d-block mt-1 mud-text-secondary"
+                    Style="font-style: italic; font-size: 0.7rem;">(Click for details)</MudText>
+            </MudCardContent>
+        </MudCard>
 }
 
 <style>
     .vessel-tooltip {
         position: absolute;
         z-index: 1000;
-        pointer-events: none; /* Allows interaction with map underneath */
+        pointer-events: none;
+        /* Allows interaction with map underneath */
         white-space: nowrap;
+        background: rgba(11, 29, 46, 0.95);
+        color: white;
+        border: 1px solid #00f2ff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        min-width: 150px;
+    }
+
+    ::deep .theme-light .vessel-tooltip {
+        background: rgba(255, 255, 255, 0.95);
+        color: #0f172a;
+        border: 1px solid #cbd5e1;
     }
 </style>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public VesselPositionDto Vessel { get; set; }
+    [Parameter] public System.Drawing.Point Position { get; set; }
+    [Parameter] public int ScreenWidth { get; set; }
+    [Parameter] public int ScreenHeight { get; set; }
+
+    private string GetTooltipStyle()
+    {
+        // Default offset
+        int x = Position.X + 15;
+        int y = Position.Y + 15;
+
+        // Check right edge
+        if (ScreenWidth > 0 && x + 200 > ScreenWidth)
+        {
+            x = Position.X - 215; // Shift left
+        }
+
+        // Check bottom edge
+        if (ScreenHeight > 0 && y + 150 > ScreenHeight)
+        {
+            y = Position.Y - 150; // Shift up
+        }
+
+        return $"left: {x}px; top: {y}px;";
+    }
+}

@@ -17,83 +17,94 @@
 
 <PageTitle>Dashboard</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Large">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <MudText Typo="Typo.h4">Dashboard Overview</MudText>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">Quick Action
-        </MudButton>
-    </div>
+<MudContainer MaxWidth="@(_isMapFullScreen ? MaxWidth.False : MaxWidth.Large)"
+    Class="@(_isMapFullScreen ? "pa-0 ma-0" : "")"
+    Style="@(_isMapFullScreen ? "height: calc(100vh - var(--mud-appbar-height)); overflow: hidden;" : "")">
+    @if (!_isMapFullScreen)
+    {
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <MudText Typo="Typo.h4">Dashboard Overview</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">Quick Action
+            </MudButton>
+        </div>
+    }
 
-    <MudGrid Class="animate-fade-in-up" Spacing="4">
+    <MudGrid Class="animate-fade-in-up" Spacing="@(_isMapFullScreen ? 0 : 4)"
+        Style="@(_isMapFullScreen ? "height: 100%;" : "")">
         <!-- Summary Cards Row -->
-        <MudItem xs="12" md="4">
-            <MudGrid Spacing="4">
-                <MudItem xs="12">
-                    <MudCard Elevation="4" Class="glass-card rounded-xl pa-4" Style="height: 350px;">
-                        <MudCardContent>
-                            <div class="d-flex justify-space-between align-center">
-                                <div>
-                                    <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mb-1">Total Vessels
-                                    </MudText>
-                                    <MudText Typo="Typo.h3" Class="font-weight-bold text-primary">
-                                        <AnimatedCounter Value="@_vesselCount" />
-                                    </MudText>
-                                </div>
-                                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large"
-                                    Class="rounded-lg shadow-lg">
-                                    <MudIcon Icon="@Icons.Material.Filled.DirectionsBoat" Size="Size.Medium" />
-                                </MudAvatar>
-                            </div>
-                            <MudText Typo="Typo.caption" Class="mt-2 d-block text-success font-weight-bold">
-                                <MudIcon Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" Class="mr-1" />
-                                Active in port
-                            </MudText>
-                        </MudCardContent>
-                        <MudCardActions>
-                            <MudButton Variant="Variant.Text" Color="Color.Primary"
-                                EndIcon="@Icons.Material.Filled.ArrowForward" Href="/vessel-management" FullWidth="true"
-                                Class="hover-underline">View
-                                Details</MudButton>
-                        </MudCardActions>
-                    </MudCard>
-                </MudItem>
-                <MudItem xs="12">
-                    <MudCard Elevation="4" Class="glass-card rounded-xl" Style="height: 350px;">
-                        <MudCardContent Class="d-flex flex-column relative h-100">
-                            <div class="d-flex justify-space-between align-center w-100 z-10">
-                                <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mb-1">Vessel Types</MudText>
-                                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large"
-                                    Class="rounded-lg shadow-lg">
-                                    <MudIcon Icon="@Icons.Material.Filled.DirectionsBoat" Size="Size.Medium" />
-                                </MudAvatar>
-                            </div>
-                            @if (_vesselTypeSummary != null)
-                            {
-                                <div class="relative d-flex align-center justify-center flex-grow-1"
-                                    style="width: 100%; min-height: 0;">
-                                    <MudChart ChartType="ChartType.Donut" InputData="@_vesselTypeData"
-                                        InputLabels="@_vesselTypeLabels" Width="100%" Height="200px"
-                                        ChartOptions="@_vesselChartOptions" LegendPosition="Position.Bottom" />
-                                    <div class="absolute-center text-center pointer-events-none">
-                                        <MudText Typo="Typo.h4" Class="font-weight-bold">@_vesselTypeData.Sum()</MudText>
-                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Vessels</MudText>
+        @if (!_isMapFullScreen)
+        {
+            <MudItem xs="12" md="4">
+                <MudGrid Spacing="4">
+                    <MudItem xs="12">
+                        <MudCard Elevation="4" Class="glass-card rounded-xl pa-4" Style="height: 350px;">
+                            <MudCardContent>
+                                <div class="d-flex justify-space-between align-center">
+                                    <div>
+                                        <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mb-1">Total Vessels
+                                        </MudText>
+                                        <MudText Typo="Typo.h3" Class="font-weight-bold text-primary">
+                                            <AnimatedCounter Value="@_vesselCount" />
+                                        </MudText>
                                     </div>
+                                    <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large"
+                                        Class="rounded-lg shadow-lg">
+                                        <MudIcon Icon="@Icons.Material.Filled.DirectionsBoat" Size="Size.Medium" />
+                                    </MudAvatar>
                                 </div>
-                            }
-                            else
-                            {
-                                <div class="d-flex justify-center align-center flex-grow-1">
-                                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                                <MudText Typo="Typo.caption" Class="mt-2 d-block text-success font-weight-bold">
+                                    <MudIcon Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" Class="mr-1" />
+                                    Active in port
+                                </MudText>
+                            </MudCardContent>
+                            <MudCardActions>
+                                <MudButton Variant="Variant.Text" Color="Color.Primary"
+                                    EndIcon="@Icons.Material.Filled.ArrowForward" Href="/vessel-management" FullWidth="true"
+                                    Class="hover-underline">View
+                                    Details</MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudCard Elevation="4" Class="glass-card rounded-xl" Style="height: 350px;">
+                            <MudCardContent Class="d-flex flex-column relative h-100">
+                                <div class="d-flex justify-space-between align-center w-100 z-10">
+                                    <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mb-1">Vessel Types</MudText>
+                                    <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large"
+                                        Class="rounded-lg shadow-lg">
+                                        <MudIcon Icon="@Icons.Material.Filled.DirectionsBoat" Size="Size.Medium" />
+                                    </MudAvatar>
                                 </div>
-                            }
-                        </MudCardContent>
-                    </MudCard>
-                </MudItem>
-            </MudGrid>
-        </MudItem>
+                                @if (_vesselTypeSummary != null)
+                                {
+                                    <div class="relative d-flex align-center justify-center flex-grow-1"
+                                        style="width: 100%; min-height: 0;">
+                                        <MudChart ChartType="ChartType.Donut" InputData="@_vesselTypeData"
+                                            InputLabels="@_vesselTypeLabels" Width="100%" Height="200px"
+                                            ChartOptions="@_vesselChartOptions" LegendPosition="Position.Bottom" />
+                                        <div class="absolute-center text-center pointer-events-none">
+                                            <MudText Typo="Typo.h4" Class="font-weight-bold">@_vesselTypeData.Sum()</MudText>
+                                            <MudText Typo="Typo.caption" Class="mud-text-secondary">Vessels</MudText>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="d-flex justify-center align-center flex-grow-1">
+                                        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                                    </div>
+                                }
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+            </MudItem>
+        }
 
-        <MudItem xs="12" md="8">
-            <MudCard Elevation="4" Class="glass-card rounded-xl overflow-hidden h-100">
+        <MudItem xs="12" md="@(_isMapFullScreen ? 12 : 8)"
+            Style="@(_isMapFullScreen ? "height: 100%; padding: 0;" : "")">
+            <MudCard Elevation="@(_isMapFullScreen ? 0 : 4)"
+                Class="@(_isMapFullScreen ? "rounded-0 h-100" : "glass-card rounded-xl overflow-hidden h-100")">
                 <MudCardHeader>
                     <CardHeaderContent>
                         <MudText Typo="Typo.h6" Class="font-weight-bold">Live Port Operations</MudText>
@@ -102,10 +113,15 @@
                     <CardHeaderActions>
                         <LayerSwitcher Layers="_mapLayers" SelectedLayer="_selectedLayer"
                             OnLayerSelected="OnLayerSelected" />
+                        <MudTooltip Text="@(_isMapFullScreen ? "Exit Full Screen" : "Full Screen")">
+                            <MudIconButton
+                                Icon="@(_isMapFullScreen ? Icons.Material.Filled.FullscreenExit : Icons.Material.Filled.Fullscreen)"
+                                OnClick="ToggleMapFullScreen" Color="Color.Default" />
+                        </MudTooltip>
                     </CardHeaderActions>
                 </MudCardHeader>
-                <MudCardContent Class="pa-0">
-                    <div class="map-container" style="height: 650px;">
+                <MudCardContent Class="pa-0" Style="@(_isMapFullScreen ? "height: calc(100% - 64px);" : "")">
+                    <div class="map-container" style="@(_isMapFullScreen ? "height: 100%;" : "height: 650px;")">
                         <VesselMap @ref="vesselMap" OnTotalMapVesselCountChanged="OnVesselCountChanged"
                             OnVisibleVesselTypeSummaryChanged="OnVesselTypeSummaryChanged" Ports="@_ports"
                             OnVesselClick="OnVesselSelected" />
@@ -116,85 +132,88 @@
 
         <!-- Main Content Row -->
         <!-- Left Column: Charts (Smaller) -->
-        <MudItem xs="12" sm="6" md="4">
-            <MudCard Elevation="4" Class="glass-card rounded-xl" Style="height: 350px;">
-                <MudCardContent Class="d-flex flex-column h-100">
-                    <div class="d-flex justify-space-between align-center w-100 mb-2">
-                        <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mb-1">Service Request Analytics
+        @if (!_isMapFullScreen)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="4" Class="glass-card rounded-xl" Style="height: 350px;">
+                    <MudCardContent Class="d-flex flex-column h-100">
+                        <div class="d-flex justify-space-between align-center w-100 mb-2">
+                            <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mb-1">Service Request Analytics
+                            </MudText>
+                            <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large"
+                                Class="rounded-lg shadow-lg">
+                                <MudIcon Icon="@Icons.Material.Filled.Build" Size="Size.Medium" />
+                            </MudAvatar>
+                        </div>
+                        @if (_serviceRequestStatusSummary != null)
+                        {
+                            <div class="d-flex align-center justify-center flex-grow-1" style="min-height: 0;">
+                                <MudChart ChartType="ChartType.Bar" ChartSeries="@_serviceRequestSeries"
+                                    XAxisLabels="@_serviceRequestLabels" Width="100%" Height="200px"></MudChart>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="d-flex justify-center align-center flex-grow-1">
+                                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                            </div>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <!-- Right Column: Map (Larger) -->
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="4" Class="glass-card rounded-xl pa-4" Style="height: 350px;">
+                    <MudCardContent>
+                        <div class="d-flex justify-space-between align-center">
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mb-1">Pending Requests</MudText>
+                                <MudText Typo="Typo.h3" Class="font-weight-bold text-warning">@_pendingServiceRequestCount
+                                </MudText>
+                            </div>
+                            <MudAvatar Color="Color.Warning" Variant="Variant.Filled" Size="Size.Large"
+                                Class="rounded-lg shadow-lg">
+                                <MudIcon Icon="@Icons.Material.Filled.Assignment" Size="Size.Medium" />
+                            </MudAvatar>
+                        </div>
+                        <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">
+                            Requires attention
                         </MudText>
-                        <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large"
-                            Class="rounded-lg shadow-lg">
-                            <MudIcon Icon="@Icons.Material.Filled.Build" Size="Size.Medium" />
-                        </MudAvatar>
-                    </div>
-                    @if (_serviceRequestStatusSummary != null)
-                    {
-                        <div class="d-flex align-center justify-center flex-grow-1" style="min-height: 0;">
-                            <MudChart ChartType="ChartType.Bar" ChartSeries="@_serviceRequestSeries"
-                                XAxisLabels="@_serviceRequestLabels" Width="100%" Height="200px"></MudChart>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="d-flex justify-center align-center flex-grow-1">
-                            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-                        </div>
-                    }
-                </MudCardContent>
-            </MudCard>
-        </MudItem>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Text" Color="Color.Warning"
+                            EndIcon="@Icons.Material.Filled.ArrowForward" Href="/service-request-management"
+                            FullWidth="true" Class="hover-underline">Manage Requests</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
 
-        <!-- Right Column: Map (Larger) -->
-        <MudItem xs="12" sm="6" md="4">
-            <MudCard Elevation="4" Class="glass-card rounded-xl pa-4" Style="height: 350px;">
-                <MudCardContent>
-                    <div class="d-flex justify-space-between align-center">
-                        <div>
-                            <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mb-1">Pending Requests</MudText>
-                            <MudText Typo="Typo.h3" Class="font-weight-bold text-warning">@_pendingServiceRequestCount
-                            </MudText>
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="4" Class="glass-card rounded-xl pa-4" Style="height: 350px;">
+                    <MudCardContent>
+                        <div class="d-flex justify-space-between align-center">
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mb-1">Registered Companies
+                                </MudText>
+                                <MudText Typo="Typo.h3" Class="font-weight-bold text-info">@_companyCount</MudText>
+                            </div>
+                            <MudAvatar Color="Color.Info" Variant="Variant.Filled" Size="Size.Large"
+                                Class="rounded-lg shadow-lg">
+                                <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Medium" />
+                            </MudAvatar>
                         </div>
-                        <MudAvatar Color="Color.Warning" Variant="Variant.Filled" Size="Size.Large"
-                            Class="rounded-lg shadow-lg">
-                            <MudIcon Icon="@Icons.Material.Filled.Assignment" Size="Size.Medium" />
-                        </MudAvatar>
-                    </div>
-                    <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">
-                        Requires attention
-                    </MudText>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Text" Color="Color.Warning"
-                        EndIcon="@Icons.Material.Filled.ArrowForward" Href="/service-request-management"
-                        FullWidth="true" Class="hover-underline">Manage Requests</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudItem>
-
-        <MudItem xs="12" sm="6" md="4">
-            <MudCard Elevation="4" Class="glass-card rounded-xl pa-4" Style="height: 350px;">
-                <MudCardContent>
-                    <div class="d-flex justify-space-between align-center">
-                        <div>
-                            <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mb-1">Registered Companies
-                            </MudText>
-                            <MudText Typo="Typo.h3" Class="font-weight-bold text-info">@_companyCount</MudText>
-                        </div>
-                        <MudAvatar Color="Color.Info" Variant="Variant.Filled" Size="Size.Large"
-                            Class="rounded-lg shadow-lg">
-                            <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Medium" />
-                        </MudAvatar>
-                    </div>
-                    <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">
-                        Partner ecosystem
-                    </MudText>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Text" Color="Color.Info" EndIcon="@Icons.Material.Filled.ArrowForward"
-                        Href="/company-management" FullWidth="true" Class="hover-underline">Directory</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudItem>
+                        <MudText Typo="Typo.caption" Class="mt-2 d-block mud-text-secondary">
+                            Partner ecosystem
+                        </MudText>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Text" Color="Color.Info" EndIcon="@Icons.Material.Filled.ArrowForward"
+                            Href="/company-management" FullWidth="true" Class="hover-underline">Directory</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
     </MudGrid>
 
     <VesselDetailPanel @bind-Open="_isDetailPanelOpen" Vessel="_selectedVessel" Metadata="_selectedMetadata" />
@@ -358,6 +377,13 @@ new ChartSeries { Name = "Requests", Data = _serviceRequestStatusSummary.Select(
     {
         _selectedLayer = layerKey;
         await JSRuntime.InvokeVoidAsync("HarborFlowMap.switchLayer", layerKey);
+    }
+
+    private bool _isMapFullScreen = false;
+
+    private void ToggleMapFullScreen()
+    {
+        _isMapFullScreen = !_isMapFullScreen;
     }
 }
 

@@ -5,7 +5,7 @@
 
 <div class="d-flex flex-column h-100">
     <MudNavMenu>
-        <MudText Typo="Typo.subtitle2" Class="px-4 mt-4 mb-2 mud-text-secondary"><b>MENU</b></MudText>
+        <MudText Typo="Typo.subtitle2" Class="px-4 mt-4 mb-2 mud-text-secondary mini-hide"><b>MENU</b></MudText>
         <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
         <AuthorizeView>
             <Authorized>
@@ -31,15 +31,19 @@
                     <MudAvatar Color="Color.Secondary" Variant="Variant.Filled">
                         @(context.User.Identity?.Name?.FirstOrDefault().ToString().ToUpper() ?? "U")
                     </MudAvatar>
-                    <div class="d-flex flex-column">
+                    <div class="d-flex flex-column mini-hide">
                         <MudText Typo="Typo.subtitle2"><b>@(context.User.Identity?.Name ?? "User")</b></MudText>
                         <MudText Typo="Typo.caption" Class="mud-text-secondary">Administrator</MudText>
                     </div>
                 </div>
                 <MudButton Variant="Variant.Outlined" Color="Color.Error" FullWidth="true"
-                    StartIcon="@Icons.Material.Filled.Logout" OnClick="HandleLogout">
+                    StartIcon="@Icons.Material.Filled.Logout" OnClick="HandleLogout" Class="mini-hide">
                     Log Out
                 </MudButton>
+                <!-- Icon-only logout button for mini mode -->
+                <div class="d-none d-flex-mini justify-center">
+                    <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Error" OnClick="HandleLogout" />
+                </div>
             </div>
         </Authorized>
         <NotAuthorized>
@@ -51,6 +55,17 @@
         </NotAuthorized>
     </AuthorizeView>
 </div>
+
+<style>
+    /* Show icon-only logout in mini mode */
+    .mud-drawer-mini .d-flex-mini {
+        display: flex !important;
+    }
+
+    .mud-drawer-mini .d-none.d-flex-mini {
+        display: flex !important;
+    }
+</style>
 
 @code {
     private async Task HandleLogout()

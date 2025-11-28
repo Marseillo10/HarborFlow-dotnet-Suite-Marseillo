@@ -5,17 +5,16 @@
 <MudThemeProvider Theme="_theme" IsDarkMode="_isDarkMode" />
 <MudDialogProvider />
 <MudSnackbarProvider />
+<MudPopoverProvider />
 
 <MudLayout>
     <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
-            OnClick="@((e) => DrawerToggle())" />
         <MudText Typo="Typo.h5" Class="ml-3">HarborFlow</MudText>
         <MudSpacer />
         <MudIconButton Icon="@Icons.Material.Filled.Brightness4" Color="@(_isDarkMode ? Color.Inherit : Color.Primary)"
             OnClick="@((e) => _isDarkMode = !_isDarkMode)" />
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2" Variant="@DrawerVariant.Mini" OpenMiniOnHover="true">
         <NavMenu />
     </MudDrawer>
     <MudMainContent Style="@GetMainContentStyle()" Class="@(_isDarkMode ? "theme-dark" : "theme-light")">
@@ -25,8 +24,54 @@
     </MudMainContent>
 </MudLayout>
 
+<style>
+    /* Hide content when drawer is in mini mode (collapsed) */
+    .mud-drawer-mini .mini-hide {
+        display: none !important;
+    }
+    
+    /* Ensure icons are centered in mini mode */
+    .mud-drawer-mini .mud-nav-link {
+        justify-content: center;
+    }
+    
+    .mud-drawer-mini .mud-nav-link-icon {
+        margin-right: 0 !important;
+    }
+
+    /* Explicitly hide NavLink text in mini mode */
+    .mud-drawer-mini .mud-nav-link-text {
+        display: none !important;
+    }
+
+    /* Show NavLink text when drawer is hovered (expanded) */
+    .mud-drawer-mini:hover .mud-nav-link-text {
+        display: block !important;
+    }
+
+    /* Show hidden content (MENU, Profile, Logout) on hover */
+    .mud-drawer-mini:hover .mini-hide {
+        display: block !important;
+    }
+
+    /* Restore flex layout for profile container on hover */
+    .mud-drawer-mini:hover .d-flex.mini-hide {
+        display: flex !important;
+    }
+
+    /* Restore inline-flex for buttons on hover */
+    .mud-drawer-mini:hover .mud-button.mini-hide {
+        display: inline-flex !important;
+    }
+
+    /* Hide the icon-only logout button on hover (since full button is shown) */
+    .mud-drawer-mini:hover .d-flex-mini {
+        display: none !important;
+    }
+</style>
+
 @code {
-    bool _drawerOpen = true;
+    bool _drawerOpen = false;
     bool _isDarkMode = true;
     MudTheme _theme = new MudTheme()
     {

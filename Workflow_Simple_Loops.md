@@ -25,6 +25,7 @@ Always rerun the project after you done with the changes!
 
 Do you have any plan to implementing GFW API to complement AISstream API in my application? Tell me first the plan! And also please read this documentations:  https://globalfishingwatch.org/our-apis/ ; https://globalfishingwatch.org/our-apis/documentation#introduction ; https://globalfishingwatch.github.io/gfw-api-python-client/ ; https://github.com/GlobalFishingWatch/gfwr ; https://github.com/GlobalFishingWatch/vessel-classification ; https://github.com/GlobalFishingWatch/ShipDataProcess ;
 
+Can you make sure the implementation of AISstream.io API in the application escepsially in the map on dashboard is able to fetch all data, proper and optimal! Read this documentation too: https://aisstream.io/documentation and https://github.com/aisstream 
 ---
 
 I have completed my search and found several excellent free APIs that could significantly enhance the HarborFlow project. Here is a summary of the best options,

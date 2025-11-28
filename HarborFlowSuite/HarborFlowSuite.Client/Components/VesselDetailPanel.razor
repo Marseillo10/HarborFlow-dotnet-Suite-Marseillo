@@ -1,9 +1,11 @@
 @using HarborFlowSuite.Core.DTOs
 @using HarborFlowSuite.Core.Models
 
-<MudDrawer @bind-Open="@Open" Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary" Width="400px">
-    <MudDrawerHeader>
+<MudDrawer Open="@Open" OpenChanged="@OnDrawerOpenChanged" Anchor="Anchor.End" Elevation="1"
+    Variant="@DrawerVariant.Temporary" Width="400px">
+    <MudDrawerHeader Class="d-flex justify-space-between align-center">
         <MudText Typo="Typo.h6">Vessel Details</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="CloseDrawer" Color="Color.Inherit" />
     </MudDrawerHeader>
     <MudDrawerContainer>
         @if (Vessel != null)
@@ -92,5 +94,17 @@
         public double Heading { get; set; }
         public double Speed { get; set; }
         public string Type { get; set; }
+    }
+
+    private async Task CloseDrawer()
+    {
+        Open = false;
+        await OpenChanged.InvokeAsync(false);
+    }
+
+    private async Task OnDrawerOpenChanged(bool isOpen)
+    {
+        Open = isOpen;
+        await OpenChanged.InvokeAsync(isOpen);
     }
 }

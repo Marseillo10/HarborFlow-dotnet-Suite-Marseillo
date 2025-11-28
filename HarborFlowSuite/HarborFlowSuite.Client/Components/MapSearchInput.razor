@@ -1,0 +1,174 @@
+@using MudBlazor
+
+<div class="map-search-container">
+    <MudPaper Elevation="4" Class="pa-2 rounded-lg d-flex align-center gap-2 glass-search" Width="400px">
+        <MudIcon Icon="@Icons.Material.Filled.Search" Class="search-icon" />
+        <MudAutocomplete T="string" Value="@_searchQuery" SearchFunc="@Search" Placeholder="Search vessels..."
+            Variant="Variant.Text" DisableUnderLine="true" AdornmentIcon="" ResetValueOnEmptyText="true"
+            CoerceText="true" CoerceValue="true" DebounceInterval="300" ValueChanged="OnSearchValueChanged"
+            Class="flex-grow-1 search-input" />
+
+        @if (!string.IsNullOrEmpty(_searchQuery))
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="ClearSearch"
+                Class="action-icon" />
+        }
+
+        <MudTooltip Text="Search Help">
+            <MudIconButton Icon="@Icons.Material.Filled.HelpOutline" Size="Size.Small" OnClick="@ToggleHelp"
+                Class="action-icon" />
+        </MudTooltip>
+
+        <MudPopover Open="@_helpOpen" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight"
+            Class="pa-4 glass-popover" MaxWidth="300px">
+            <MudText Typo="Typo.subtitle2" Class="mb-2 font-weight-bold">How to Search</MudText>
+            <MudText Typo="Typo.body2" Class="mb-1">You can search by:</MudText>
+            <ul class="pl-4 mb-2" style="list-style-type: disc; font-size: 0.875rem;">
+                <li><b>Vessel Name</b> (e.g., "Ever Given")</li>
+                <li><b>IMO Number</b> (e.g., "9811000")</li>
+                <li><b>Vessel Type</b> (e.g., "Cargo", "Tanker")</li>
+            </ul>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">Results will be highlighted on the map.</MudText>
+            <div class="d-flex justify-end mt-2">
+                <MudButton OnClick="@ToggleHelp" Size="Size.Small" Color="Color.Primary">Got it</MudButton>
+            </div>
+        </MudPopover>
+    </MudPaper>
+</div>
+
+<style>
+    .map-search-container {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+    }
+
+    /* Base Glass Style (Dark Mode Default) */
+    .glass-search {
+        background: rgba(30, 41, 59, 0.85) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .search-input {
+        color: white !important;
+    }
+
+    .search-input input {
+        color: white !important;
+    }
+
+    .search-input input::placeholder {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    .search-icon,
+    .action-icon {
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+
+    /* Light Mode Overrides */
+    .theme-light .glass-search {
+        background: rgba(255, 255, 255, 0.85) !important;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .theme-light .search-input {
+        color: #1e293b !important;
+    }
+
+    .theme-light .search-input input {
+        color: #1e293b !important;
+    }
+
+    .theme-light .search-input input::placeholder {
+        color: #64748b !important;
+    }
+
+    .theme-light .search-icon,
+    .theme-light .action-icon {
+        color: #64748b !important;
+    }
+
+    /* Popover Styling */
+    .glass-popover {
+        background: rgba(30, 41, 59, 0.95) !important;
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white !important;
+    }
+
+    .theme-light .glass-popover {
+        background: rgba(255, 255, 255, 0.95) !important;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        color: #1e293b !important;
+    }
+
+    .theme-light .mud-text-secondary {
+        color: #64748b !important;
+    }
+
+    /* Autocomplete Dropdown */
+    .mud-popover:not(.glass-popover) {
+        background: rgba(30, 41, 59, 0.95) !important;
+        color: white !important;
+    }
+
+    .theme-light .mud-popover:not(.glass-popover) {
+        background: rgba(255, 255, 255, 0.95) !important;
+        color: #1e293b !important;
+    }
+
+    .mud-list-item {
+        color: inherit !important;
+    }
+
+    .mud-list-item:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .theme-light .mud-list-item:hover {
+        background-color: rgba(0, 0, 0, 0.05) !important;
+    }
+</style>
+
+@code {
+    private string _searchQuery;
+    private bool _helpOpen;
+
+    [Parameter]
+    public EventCallback<string> OnSearch { get; set; }
+
+    [Parameter]
+    public HashSet<string> Suggestions { get; set; } = new HashSet<string>();
+
+    private async Task<IEnumerable<string>> Search(string value, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(value))
+            return new string[0];
+
+        return Suggestions.Where(x => x.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    private async Task OnSearchValueChanged(string value)
+    {
+        _searchQuery = value;
+        await OnSearch.InvokeAsync(value);
+    }
+    private async Task ClearSearch()
+    {
+        _searchQuery = string.Empty;
+        await OnSearch.InvokeAsync(string.Empty);
+    }
+
+    private void ToggleHelp()
+    {
+        _helpOpen = !_helpOpen;
+    }
+}

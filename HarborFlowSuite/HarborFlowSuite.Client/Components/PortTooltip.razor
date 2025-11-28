@@ -1,0 +1,71 @@
+@using HarborFlowSuite.Core.Models
+@if (IsVisible && Port != null)
+{
+    <MudCard Class="port-tooltip" Style="@GetTooltipStyle()">
+    <MudCardContent Class="pa-3">
+        <MudText Typo="Typo.h6" Class="mb-2" Style="border-bottom: 1px solid #3b82f6; padding-bottom: 4px;">@Port.City
+        </MudText>
+        <MudText Typo="Typo.body2" Class="d-block"><strong>State:</strong> @(string.IsNullOrEmpty(Port.State) ? "N/A" :
+            Port.State)</MudText>
+                <MudText Typo="Typo.body2" Class="d-block"><strong>Country:</strong> @Port.Country</MudText>
+                <MudText Typo="Typo.caption" Class="d-block mt-1 mud-text-secondary">
+                    Lat: @Port.Latitude.ToString("F4"), Lng: @Port.Longitude.ToString("F4")
+                </MudText>
+            </MudCardContent>
+        </MudCard>
+}
+
+<style>
+    .port-tooltip {
+        position: absolute;
+        z-index: 1000;
+        pointer-events: none;
+        white-space: nowrap;
+        background: rgba(255, 255, 255, 0.95);
+        color: #0f172a;
+        border: 1px solid #cbd5e1;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        min-width: 200px;
+        border-radius: 8px;
+    }
+
+    ::deep .theme-dark .port-tooltip {
+        background: rgba(11, 29, 46, 0.95);
+        color: white;
+        border: 1px solid #00f2ff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    ::deep .theme-dark .port-tooltip .mud-typography-h6 {
+        border-bottom-color: #00f2ff !important;
+    }
+</style>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public Port Port { get; set; }
+    [Parameter] public System.Drawing.Point Position { get; set; }
+    [Parameter] public int ScreenWidth { get; set; }
+    [Parameter] public int ScreenHeight { get; set; }
+
+    private string GetTooltipStyle()
+    {
+        // Default offset
+        int x = Position.X + 15;
+        int y = Position.Y + 15;
+
+        // Check right edge
+        if (ScreenWidth > 0 && x + 250 > ScreenWidth)
+        {
+            x = Position.X - 265; // Shift left
+        }
+
+        // Check bottom edge
+        if (ScreenHeight > 0 && y + 150 > ScreenHeight)
+        {
+            y = Position.Y - 150; // Shift up
+        }
+
+        return $"left: {x}px; top: {y}px;";
+    }
+}

@@ -6,7 +6,305 @@
 @inject IVesselPositionSignalRService VesselPositionSignalRService
 @implements IAsyncDisposable
 
+<style>
+    /* Common Styles */
+    .map-coords-box {
+        padding: 8px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 12px;
+        min-width: 150px;
+    }
+
+    .coords-decimal {
+        margin-top: 4px;
+        opacity: 0.7;
+        font-size: 10px;
+    }
+
+    .map-zoom-level {
+        margin-top: 4px;
+        padding-top: 4px;
+    }
+
+    /* DARK MODE (Nautical Theme) */
+    .theme-dark #@MapElementId {
+        background-color: #0b1d2e;
+        /* Deep sea background */
+    }
+
+    .theme-dark #@(MapElementId).leaflet-tile-pane {
+        /* Filter removed to restore default map base appearance */
+    }
+
+    .theme-dark .leaflet-popup-content-wrapper,
+    .theme-dark .leaflet-popup-tip {
+        background: rgba(11, 29, 46, 0.9);
+        color: #00f2ff;
+        border: 1px solid #00f2ff;
+        box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+    }
+
+    .theme-dark .leaflet-popup-content h5 {
+        color: #fff !important;
+        border-bottom-color: #00f2ff !important;
+    }
+
+    .theme-dark .leaflet-popup-content div {
+        color: #a8e6cf;
+    }
+
+    .theme-dark .leaflet-popup-close-button {
+        color: #00f2ff !important;
+    }
+
+    .theme-dark .leaflet-control-zoom a {
+        background-color: rgba(11, 29, 46, 0.9) !important;
+        color: #00f2ff !important;
+        border: 1px solid #00f2ff !important;
+    }
+
+    .theme-dark .leaflet-control-zoom a:hover {
+        background-color: #00f2ff !important;
+        color: #0b1d2e !important;
+    }
+
+    .theme-dark .leaflet-control-scale-line {
+        background: rgba(11, 29, 46, 0.9) !important;
+        border: 1px solid #00f2ff !important;
+        border-top: none !important;
+        color: #00f2ff !important;
+    }
+
+    .theme-dark .map-coords-box {
+        background: rgba(11, 29, 46, 0.9);
+        border: 1px solid #00f2ff;
+        color: #00f2ff;
+    }
+
+    .theme-dark .map-zoom-level {
+        border-top: 1px solid rgba(0, 242, 255, 0.3);
+    }
+
+    /* LIGHT MODE (Standard Theme) */
+    .theme-light #@MapElementId {
+        background-color: #aad3df;
+        /* Standard water color */
+    }
+
+    .theme-light #@(MapElementId).leaflet-tile-pane {
+        filter: none;
+        /* Standard OSM look */
+    }
+
+    .theme-light .leaflet-popup-content-wrapper,
+    .theme-light .leaflet-popup-tip {
+        background: rgba(255, 255, 255, 0.95);
+        color: #0f172a;
+        /* Slate 900 */
+        border: 1px solid #e2e8f0;
+        /* Slate 200 */
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .theme-light .leaflet-popup-content h5 {
+        color: #0f172a !important;
+        border-bottom-color: #3b82f6 !important;
+        /* Bright Blue */
+    }
+
+    .theme-light .leaflet-popup-content div {
+        color: #475569;
+        /* Slate 600 */
+    }
+
+    .theme-light .leaflet-popup-close-button {
+        color: #64748b !important;
+        /* Slate 500 */
+    }
+
+    .theme-light .leaflet-control-zoom a {
+        background-color: rgba(255, 255, 255, 0.9) !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+        /* Slate 300 */
+    }
+
+    .theme-light .leaflet-control-zoom a:hover {
+        background-color: #f1f5f9 !important;
+        /* Slate 100 */
+        color: #000 !important;
+    }
+
+    .theme-light .leaflet-control-scale-line {
+        background: rgba(255, 255, 255, 0.8) !important;
+        border: 2px solid #777 !important;
+        /* Default Leaflet styleish */
+        border-top: none !important;
+        color: #000 !important;
+    }
+
+    .theme-light .map-coords-box {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #cbd5e1;
+        /* Slate 300 */
+        color: #0f172a;
+        /* Slate 900 */
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .theme-light .map-zoom-level {
+        border-top: 1px solid #e2e8f0;
+        /* Slate 200 */
+    }
+
+    /* Grid Lines */
+    .theme-dark .leaflet-grid-line {
+        stroke: #00f2ff !important;
+        stroke-opacity: 0.6 !important;
+        /* Increased for better visibility */
+        stroke-width: 1.5px;
+        /* Slightly thicker */
+        stroke-dasharray: 6, 4;
+        /* Longer dashes */
+    }
+
+    .theme-light .leaflet-grid-line {
+        stroke: #1e293b !important;
+        /* Darker slate for better contrast */
+        stroke-opacity: 0.5 !important;
+        stroke-width: 1.5px;
+        stroke-dasharray: 6, 4;
+    }
+
+    /* Grid Labels */
+    .leaflet-grid-label {
+        font-family: 'JetBrains Mono', 'Consolas', monospace;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 3px 6px;
+        white-space: nowrap;
+        pointer-events: none;
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .theme-dark .leaflet-grid-label {
+        color: #00f2ff;
+        background: rgba(11, 29, 46, 0.85);
+        border: 1px solid rgba(0, 242, 255, 0.3);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .theme-light .leaflet-grid-label {
+        color: #0f172a;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(148, 163, 184, 0.5);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Grid Toggle Control */
+    .grid-toggle-control {
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        transition: all 0.3s ease;
+    }
+
+    /* Dark Mode Styles */
+    .theme-dark .grid-toggle-control {
+        background-color: rgba(11, 29, 46, 0.9);
+        color: #00f2ff;
+        border: 1px solid rgba(0, 242, 255, 0.3);
+    }
+
+    .theme-dark .grid-toggle-control:hover {
+        background-color: rgba(0, 242, 255, 0.1);
+    }
+
+    .theme-dark .grid-toggle-control.active {
+        background-color: #00f2ff;
+        color: #0b1d2e;
+        box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+    }
+
+    /* Light Mode Styles */
+    .theme-light .grid-toggle-control {
+        background-color: rgba(255, 255, 255, 0.9);
+        color: #334155;
+        /* Slate 700 */
+        border: 1px solid #cbd5e1;
+        /* Slate 300 */
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .theme-light .grid-toggle-control:hover {
+        background-color: #f8fafc;
+        /* Slate 50 */
+        color: #0f172a;
+        /* Slate 900 */
+    }
+
+    .theme-light .grid-toggle-control.active {
+        background-color: #334155;
+        /* Slate 700 */
+        color: #ffffff;
+        border-color: #334155;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Fullscreen Control */
+    .leaflet-control-custom.fullscreen-control {
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 5px !important;
+        /* Spacing between buttons */
+    }
+
+    .theme-dark .leaflet-control-custom.fullscreen-control {
+        background-color: rgba(11, 29, 46, 0.9);
+        color: #00f2ff;
+        border: 1px solid #00f2ff;
+        /* Optional border for consistency */
+    }
+
+    .theme-dark .leaflet-control-custom.fullscreen-control:hover {
+        background-color: #00f2ff;
+        color: #0b1d2e;
+    }
+
+    .theme-light .leaflet-control-custom.fullscreen-control {
+        background-color: rgba(255, 255, 255, 0.9);
+        color: #0f172a;
+        border: 2px solid #777;
+        /* Match scale/zoom style */
+    }
+
+    .theme-light .leaflet-control-custom.fullscreen-control:hover {
+        background-color: #f1f5f9;
+        color: #000;
+    }
+</style>
+
 <div id="@MapElementId" style="width: 100%; height: 600px;"></div>
+
+<VesselTooltip IsVisible="@_isTooltipVisible" Vessel="@_tooltipVessel" Position="@_tooltipPosition"
+    ScreenWidth="@_screenWidth" ScreenHeight="@_screenHeight" />
+<PortTooltip IsVisible="@_isPortTooltipVisible" Port="@_tooltipPort" Position="@_portTooltipPosition"
+    ScreenWidth="@_screenWidth" ScreenHeight="@_screenHeight" />
+<MapSearchInput OnSearch="HandleSearch" Suggestions="@_searchSuggestions" />
 
 
 @code {
@@ -62,10 +360,21 @@
         }
     }
 
+    private HashSet<string> _searchSuggestions = new HashSet<string>();
+
     private async void OnPositionUpdateReceived(string mmsi, double lat, double lng, double heading, double speed, string
     name,
     string vesselType, VesselMetadataDto metadata)
     {
+        _searchSuggestions.Add(name);
+        _searchSuggestions.Add(mmsi);
+        _searchSuggestions.Add(vesselType);
+        if (metadata != null && !string.IsNullOrEmpty(metadata.ImoNumber))
+        {
+            _searchSuggestions.Add(metadata.ImoNumber);
+        }
+        await InvokeAsync(StateHasChanged);
+
         await UpdateVesselMarker(mmsi, lat, lng, heading, speed, name, vesselType, metadata);
     }
 
@@ -97,7 +406,78 @@
         }
     }
 
+    private bool _isTooltipVisible;
+    private VesselPositionDto _tooltipVessel;
+    private System.Drawing.Point _tooltipPosition;
+    private int _screenWidth;
+    private int _screenHeight;
 
+    [JSInvokable]
+    public void ShowVesselTooltip(string mmsi, string name, string imo, string status, string type, double speed, double
+    heading, double lat, double lng, double clientX, double clientY, int screenWidth, int screenHeight)
+    {
+        _tooltipVessel = new VesselPositionDto
+            {
+                VesselId = mmsi,
+                VesselName = name,
+                IMO = imo,
+                VesselStatus = status,
+                VesselType = type,
+                Speed = (decimal)speed,
+                Heading = (decimal)heading,
+                Latitude = (decimal)lat,
+                Longitude = (decimal)lng
+            };
+        _tooltipPosition = new System.Drawing.Point((int)clientX, (int)clientY);
+        _screenWidth = screenWidth;
+        _screenHeight = screenHeight;
+        _isTooltipVisible = true;
+        _isPortTooltipVisible = false; // Ensure port tooltip is hidden
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void HideVesselTooltip()
+    {
+        _isTooltipVisible = false;
+        StateHasChanged();
+    }
+
+    private bool _isPortTooltipVisible;
+    private Port _tooltipPort;
+    private System.Drawing.Point _portTooltipPosition;
+
+    [JSInvokable]
+    public void ShowPortTooltip(string city, string state, string country, double lat, double lng, double clientX, double
+    clientY, int screenWidth, int screenHeight)
+    {
+        _tooltipPort = new Port
+            {
+                City = city,
+                State = state,
+                Country = country,
+                Latitude = lat,
+                Longitude = lng
+            };
+        _portTooltipPosition = new System.Drawing.Point((int)clientX, (int)clientY);
+        _screenWidth = screenWidth;
+        _screenHeight = screenHeight;
+        _isPortTooltipVisible = true;
+        _isTooltipVisible = false; // Ensure vessel tooltip is hidden
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void HidePortTooltip()
+    {
+        _isPortTooltipVisible = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleSearch(string query)
+    {
+        await JSRuntime.InvokeVoidAsync("HarborFlowMap.filterVessels", query);
+    }
 
     public async ValueTask DisposeAsync()
     {
