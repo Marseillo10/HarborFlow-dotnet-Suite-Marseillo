@@ -31,6 +31,8 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IServiceRequestService, ServiceRequestService>();
 builder.Services.AddScoped<IVesselService, VesselService>();
+builder.Services.AddScoped<IPortService, PortService>();
+builder.Services.AddScoped<ICompanyService, CompanyService>();
 
 // Configure GFW API client
 builder.Services.AddHttpClient<IGfwMetadataService, GfwMetadataService>((serviceProvider, client) =>
@@ -85,7 +87,7 @@ if (app.Environment.IsDevelopment())
     {
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         dbContext.Database.Migrate();
-        
+
         var portSeeder = new PortSeeder(dbContext);
         await portSeeder.SeedAsync();
     }

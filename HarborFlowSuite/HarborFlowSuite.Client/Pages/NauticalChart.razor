@@ -1,17 +1,23 @@
 @page "/nautical-chart"
 
+@inject IJSRuntime JSRuntime
+
 <PageTitle>Nautical Chart</PageTitle>
 
-<MudContainer MaxWidth="@(_isFullScreen ? MaxWidth.False : MaxWidth.Large)" Class="@(_isFullScreen ? "pa-0 ma-0" : "mt-4")" Style="@(_isFullScreen ? "height: calc(100vh - var(--mud-appbar-height)); overflow: hidden;" : "")">
+<MudContainer MaxWidth="@(_isFullScreen ? MaxWidth.False : MaxWidth.Large)"
+    Class="@(_isFullScreen ? "pa-0 ma-0" : "mt-4")" Style="@(_isFullScreen ? "height: 100vh; overflow: hidden;" : "")">
     @if (!_isFullScreen)
     {
-            <MudText Typo="Typo.h4" Class="mb-4">Nautical Chart</MudText>
-            <MudText Typo="Typo.body1" Class="mb-4">Explore the OpenSeaMap for detailed nautical information.</MudText>
+        <MudText Typo="Typo.h4" Class="mb-4">Nautical Chart</MudText>
+        <MudText Typo="Typo.body1" Class="mb-4">Explore the OpenSeaMap for detailed nautical information.</MudText>
     }
 
-    <MudCard Elevation="@(_isFullScreen ? 0 : 4)" Class="@(_isFullScreen ? "rounded-0" : "glass-card rounded-xl overflow-hidden")" Style="@(_isFullScreen ? "height: 100%;" : "")">
+    <MudCard Elevation="@(_isFullScreen ? 0 : 4)"
+        Class="@(_isFullScreen ? "rounded-0" : "glass-card rounded-xl overflow-hidden")"
+        Style="@(_isFullScreen ? "height: 100%;" : "")">
         <MudCardContent Class="pa-0" Style="@(_isFullScreen ? "height: 100%;" : "")">
-            <div style="@(_isFullScreen ? "width: 100%; height: 100%; position: relative;" : "width: 100%; height: 80vh; background-color: #f0f0f0; position: relative;")">
+            <div id="nautical-chart-container"
+                style="@(_isFullScreen ? "width: 100%; height: 100%; position: relative;" : "width: 100%; height: 80vh; background-color: #f0f0f0; position: relative;")">
                 <iframe src="https://map.openseamap.org/" style="width: 100%; height: 100%; border: none;"
                     loading="lazy" title="OpenSeaMap Nautical Chart"
                     sandbox="allow-scripts allow-same-origin allow-popups allow-forms" allowfullscreen
@@ -19,11 +25,11 @@
                 </iframe>
 
                 <MudTooltip Text="@(_isFullScreen ? "Exit Full Screen" : "Full Screen")">
-                    <MudIconButton Icon="@(_isFullScreen ? Icons.Material.Filled.FullscreenExit : Icons.Material.Filled.Fullscreen)" 
-                                   Color="Color.Secondary" 
-                                   OnClick="ToggleFullScreen"
-                                   Class="absolute top-4 right-4 z-10 glass-button" 
-                                   Style="position: absolute; top: 16px; right: 16px; z-index: 10;" />
+                    <MudIconButton
+                        Icon="@(_isFullScreen ? Icons.Material.Filled.FullscreenExit : Icons.Material.Filled.Fullscreen)"
+                        Color="Color.Secondary" OnClick="ToggleFullScreen"
+                        Class="absolute top-4 right-4 z-10 glass-button"
+                        Style="position: absolute; top: 16px; right: 16px; z-index: 10;" />
                 </MudTooltip>
             </div>
         </MudCardContent>
@@ -52,9 +58,31 @@
 
 @code {
     private bool _isFullScreen = false;
+    private DotNetObjectReference<NauticalChart>? _dotNetHelper;
 
-    private void ToggleFullScreen()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        _isFullScreen = !_isFullScreen;
+        if (firstRender)
+        {
+            _dotNetHelper = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("fullscreenHelper.registerFullScreenChangeHandler", _dotNetHelper);
+        }
+    }
+
+    private async Task ToggleFullScreen()
+    {
+        await JSRuntime.InvokeVoidAsync("fullscreenHelper.toggleFullScreen", "nautical-chart-container");
+    }
+
+    [JSInvokable]
+    public void SetFullScreenState(bool isFullScreen)
+    {
+        _isFullScreen = isFullScreen;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _dotNetHelper?.Dispose();
     }
 }

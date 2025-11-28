@@ -6,8 +6,8 @@ namespace HarborFlowSuite.Core.Models
     public class User
     {
         public Guid Id { get; set; }
-        public Guid CompanyId { get; set; }
-        public Guid RoleId { get; set; }
+        public Guid? CompanyId { get; set; }
+        public Guid? RoleId { get; set; }
         public string FirebaseUid { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;

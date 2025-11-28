@@ -12,6 +12,7 @@ namespace HarborFlowSuite.Client.Services
         private readonly HashSet<string> _activeVessels = new HashSet<string>();
 
         public event Action<string, double, double, double, double, string, string, VesselMetadataDto> OnPositionUpdateReceived;
+        public event Action<string, VesselMetadataDto> OnMetadataUpdateReceived;
         public event Action<int> OnTotalVesselCountChanged;
 
         public int TotalVesselCount => _activeVessels.Count;
@@ -49,6 +50,11 @@ namespace HarborFlowSuite.Client.Services
                     OnTotalVesselCountChanged?.Invoke(_activeVessels.Count);
                 }
                 OnPositionUpdateReceived?.Invoke(mmsi, lat, lon, heading, speed, name, vesselType, metadata);
+            });
+
+            _hubConnection.On<string, VesselMetadataDto>("ReceiveVesselMetadataUpdate", (mmsi, metadata) =>
+            {
+                OnMetadataUpdateReceived?.Invoke(mmsi, metadata);
             });
 
             if (_hubConnection.State == HubConnectionState.Disconnected)

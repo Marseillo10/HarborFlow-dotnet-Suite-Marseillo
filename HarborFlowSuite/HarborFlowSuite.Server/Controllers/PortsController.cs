@@ -1,7 +1,6 @@
+using HarborFlowSuite.Application.Services;
 using HarborFlowSuite.Core.Models;
-using HarborFlowSuite.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace HarborFlowSuite.Server.Controllers;
 
@@ -9,16 +8,17 @@ namespace HarborFlowSuite.Server.Controllers;
 [Route("api/[controller]")]
 public class PortsController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IPortService _portService;
 
-    public PortsController(ApplicationDbContext context)
+    public PortsController(IPortService portService)
     {
-        _context = context;
+        _portService = portService;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Port>>> GetPorts()
     {
-        return await _context.Ports.ToListAsync();
+        var ports = await _portService.GetPorts();
+        return Ok(ports);
     }
 }

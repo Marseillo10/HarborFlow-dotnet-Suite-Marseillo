@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using HarborFlowSuite.Core.DTOs;
 using HarborFlowSuite.Core.Models;
-using FirebaseAdmin.Auth;
 using HarborFlowSuite.Application.Services;
+using FirebaseAdmin.Auth;
 
 namespace HarborFlowSuite.Server.Controllers;
 
@@ -24,34 +24,18 @@ public class AuthController : ControllerBase
     {
         try
         {
-            // Create user in Firebase
-            var userArgs = new UserRecordArgs
-            {
-                Email = registerUserDto.Email,
-                Password = registerUserDto.Password,
-                DisplayName = registerUserDto.Name,
-                EmailVerified = false,
-                Disabled = false
-            };
-            var userRecord = await FirebaseAuth.DefaultInstance.CreateUserAsync(userArgs);
-
-            // Save user to local database
-            var newUser = new User
-            {
-                Id = Guid.NewGuid(),
-                FirebaseUid = userRecord.Uid,
-                Email = userRecord.Email,
-                FullName = userRecord.DisplayName,
-                Role = null // Default role
-            };
-            var createdUser = await _authService.RegisterUserAsync(newUser);
-
+            var createdUser = await _authService.RegisterUserAsync(registerUserDto);
             return Ok(createdUser);
         }
         catch (FirebaseAuthException ex)
         {
             _logger.LogError(ex, "Error registering user with Firebase");
             return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Registration attempt failed: {Message}", ex.Message);
+            return Conflict(new { message = ex.Message });
         }
         catch (Exception ex)
         {

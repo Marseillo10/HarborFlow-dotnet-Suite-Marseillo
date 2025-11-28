@@ -8,6 +8,7 @@ namespace HarborFlowSuite.Core.Models
         public Guid Id { get; set; }
         public Guid CompanyId { get; set; }
         public string Name { get; set; } = string.Empty;
+        public string MMSI { get; set; } = string.Empty;
         public string ImoNumber { get; set; } = string.Empty;
         public string VesselType { get; set; } = string.Empty;
         public decimal Length { get; set; }

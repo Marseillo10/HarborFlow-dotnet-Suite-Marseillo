@@ -22,6 +22,7 @@ namespace HarborFlowSuite.Server.Services
         private ClientWebSocket _webSocket;
         private readonly string _apiKey;
         private readonly ConcurrentDictionary<string, string> _vesselTypes = new ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<string, string> _vesselNames = new ConcurrentDictionary<string, string>();
         private readonly ConcurrentDictionary<string, DateTime> _lastGfwFetchTime = new ConcurrentDictionary<string, DateTime>();
 
         public AisDataService(IHubContext<AisHub> hubContext, IConfiguration configuration, IServiceScopeFactory serviceScopeFactory)
@@ -109,6 +110,12 @@ namespace HarborFlowSuite.Server.Services
                     var mmsi = staticData.UserID.ToString();
                     var vesselType = GetVesselType(staticData.Type);
                     _vesselTypes.AddOrUpdate(mmsi, vesselType, (key, oldValue) => vesselType);
+
+                    if (!string.IsNullOrEmpty(staticData.Name))
+                    {
+                        var name = staticData.Name.Trim();
+                        _vesselNames.AddOrUpdate(mmsi, name, (key, oldValue) => name);
+                    }
                 }
 
                 if (aisMessage?.MessageType == "PositionReport")
@@ -119,7 +126,8 @@ namespace HarborFlowSuite.Server.Services
                     var lon = positionReport.Longitude;
                     var heading = positionReport.TrueHeading;
                     var speed = positionReport.Sog;
-                    var name = $"Vessel {mmsi}";
+
+                    var name = _vesselNames.GetValueOrDefault(mmsi, $"Vessel {mmsi}");
                     var vesselType = _vesselTypes.GetValueOrDefault(mmsi, "Other");
 
                     // Send position update immediately
@@ -137,6 +145,10 @@ namespace HarborFlowSuite.Server.Services
                                 var metadata = await gfwMetadataService.GetVesselMetadataAsync(mmsi);
                                 if (metadata != null)
                                 {
+                                    if (!string.IsNullOrEmpty(metadata.ShipName))
+                                    {
+                                        _vesselNames.AddOrUpdate(mmsi, metadata.ShipName, (key, oldValue) => metadata.ShipName);
+                                    }
                                     await _hubContext.Clients.All.SendAsync("ReceiveVesselMetadataUpdate", mmsi, metadata, stoppingToken);
                                 }
                             }

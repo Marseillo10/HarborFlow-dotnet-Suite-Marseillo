@@ -332,6 +332,7 @@
     {
         _dotNetHelper = DotNetObjectReference.Create(this);
         VesselPositionSignalRService.OnPositionUpdateReceived += OnPositionUpdateReceived;
+        VesselPositionSignalRService.OnMetadataUpdateReceived += OnMetadataUpdateReceived;
         VesselPositionSignalRService.OnConnectionStateChanged += OnConnectionStateChanged;
         await VesselPositionSignalRService.StartConnection();
     }
@@ -389,6 +390,16 @@
         await InvokeAsync(StateHasChanged);
 
         await UpdateVesselMarker(mmsi, lat, lng, heading, speed, name, vesselType, metadata);
+    }
+
+    private async void OnMetadataUpdateReceived(string mmsi, VesselMetadataDto metadata)
+    {
+        if (metadata != null && !string.IsNullOrEmpty(metadata.ShipName))
+        {
+            _searchSuggestions.Add(metadata.ShipName);
+            await InvokeAsync(StateHasChanged);
+        }
+        await JSRuntime.InvokeVoidAsync("HarborFlowMap.updateVesselMetadata", mmsi, metadata);
     }
 
     public async Task UpdateVesselMarker(string mmsi, double lat, double lng, double heading, double speed, string name,
@@ -494,11 +505,21 @@
 
     public async ValueTask DisposeAsync()
     {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("HarborFlowMap.dispose");
+        }
+        catch (Exception)
+        {
+            // Ignore JS errors during disposal
+        }
+
         if (_dotNetHelper != null)
         {
             _dotNetHelper.Dispose();
         }
         VesselPositionSignalRService.OnPositionUpdateReceived -= OnPositionUpdateReceived;
+        VesselPositionSignalRService.OnMetadataUpdateReceived -= OnMetadataUpdateReceived;
         VesselPositionSignalRService.OnConnectionStateChanged -= OnConnectionStateChanged;
         // Do not stop the connection here, as it should persist across navigation
         // await VesselPositionSignalRService.StopConnection();

@@ -2,8 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HarborFlowSuite.Core.Models;
 using HarborFlowSuite.Core.DTOs;
-using HarborFlowSuite.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
+using HarborFlowSuite.Application.Services;
 
 namespace HarborFlowSuite.Server.Controllers;
 
@@ -12,38 +11,30 @@ namespace HarborFlowSuite.Server.Controllers;
 [Route("api/[controller]")]
 public class CompanyController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly ICompanyService _companyService;
 
-    public CompanyController(ApplicationDbContext context)
+    public CompanyController(ICompanyService companyService)
     {
-        _context = context;
+        _companyService = companyService;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Company>>> GetCompanies()
     {
-        return await _context.Companies.ToListAsync();
+        return Ok(await _companyService.GetCompanies());
     }
 
     [HttpPost]
     public async Task<ActionResult<Company>> PostCompany(CreateCompanyDto createCompanyDto)
     {
-        var company = new Company
-        {
-            Id = Guid.NewGuid(),
-            Name = createCompanyDto.Name
-        };
-
-        _context.Companies.Add(company);
-        await _context.SaveChangesAsync();
-
+        var company = await _companyService.CreateCompany(createCompanyDto);
         return CreatedAtAction(nameof(GetCompany), new { id = company.Id }, company);
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<Company>> GetCompany(Guid id)
     {
-        var company = await _context.Companies.FindAsync(id);
+        var company = await _companyService.GetCompany(id);
 
         if (company == null)
         {
@@ -56,27 +47,10 @@ public class CompanyController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> PutCompany(Guid id, Company company)
     {
-        if (id != company.Id)
+        var result = await _companyService.UpdateCompany(id, company);
+        if (!result)
         {
-            return BadRequest();
-        }
-
-        _context.Entry(company).State = EntityState.Modified;
-
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!CompanyExists(id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
+            return NotFound();
         }
 
         return NoContent();
@@ -85,20 +59,12 @@ public class CompanyController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCompany(Guid id)
     {
-        var company = await _context.Companies.FindAsync(id);
-        if (company == null)
+        var result = await _companyService.DeleteCompany(id);
+        if (!result)
         {
             return NotFound();
         }
 
-        _context.Companies.Remove(company);
-        await _context.SaveChangesAsync();
-
         return NoContent();
-    }
-
-    private bool CompanyExists(Guid id)
-    {
-        return _context.Companies.Any(e => e.Id == id);
     }
 }

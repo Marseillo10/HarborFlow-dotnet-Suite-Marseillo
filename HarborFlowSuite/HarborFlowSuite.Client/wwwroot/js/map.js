@@ -18,6 +18,18 @@ window.HarborFlowMap = {
         })
     },
 
+    dispose: function () {
+        if (this.reportTimeout) {
+            clearTimeout(this.reportTimeout);
+            this.reportTimeout = null;
+        }
+        this.dotNetHelper = null;
+        if (this.map) {
+            this.map.remove();
+            this.map = null;
+        }
+    },
+
     initMap: function (elementId = 'map', dotNetHelper) {
         if (this.map) {
             this.map.remove();
@@ -450,6 +462,40 @@ window.HarborFlowMap = {
 
         // Throttle the reporting to avoid spamming .NET
         this.reportVesselData();
+    },
+
+    updateVesselMetadata: function (mmsi, metadata) {
+        if (!this.vesselMarkers[mmsi]) return;
+
+        const marker = this.vesselMarkers[mmsi];
+        if (marker.vesselData) {
+            // Update internal data
+            marker.vesselData.metadata = metadata;
+            if (metadata.shipName) {
+                marker.vesselData.name = metadata.shipName;
+            }
+        }
+
+        // Re-generate popup content
+        const vesselData = marker.vesselData;
+        let popupContent = `<h5>${vesselData.name || 'Unknown Vessel'}</h5>
+                            <b>MMSI:</b> ${mmsi}<br>
+                            <b>Type:</b> ${vesselData.vesselType || 'Other'}<br>
+                            <b>Speed:</b> ${vesselData.speed ? vesselData.speed.toFixed(1) : 0} kn<br>
+                            <b>Heading:</b> ${vesselData.heading ? vesselData.heading.toFixed(0) : 0}°`;
+
+        if (metadata) {
+            popupContent += `<br><b>Flag:</b> ${metadata.flag || 'N/A'}<br>
+                             <b>Length:</b> ${metadata.length ? metadata.length + 'm' : 'N/A'}<br>
+                             <b>IMO:</b> ${metadata.imoNumber || 'N/A'}`;
+        }
+
+        marker.setPopupContent(popupContent);
+
+        // If popup is open, update it immediately
+        if (marker.isPopupOpen()) {
+            marker.getPopup().setContent(popupContent);
+        }
     },
 
     reportVesselData: function () {

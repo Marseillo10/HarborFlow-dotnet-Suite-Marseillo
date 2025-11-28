@@ -29,6 +29,15 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<ApprovalHistory>().HasKey(ah => ah.Id);
         modelBuilder.Entity<Port>().HasKey(p => p.Id);
 
+        // Configure Indexes
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.FirebaseUid)
+            .IsUnique();
+
+        modelBuilder.Entity<Vessel>()
+            .HasIndex(v => v.MMSI)
+            .IsUnique();
+
         // Configure relationships
         modelBuilder.Entity<User>()
             .HasOne(u => u.Company)
