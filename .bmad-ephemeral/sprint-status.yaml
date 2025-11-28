@@ -46,11 +46,11 @@ development_status:
   1-8-handle-live-feed-interruption-state: done
   epic-1-retrospective: optional
   epic-2: backlog
-  2-1-firebase-authentication-integration: backlog
-  2-2-jwt-token-validation: backlog
-  2-3-session-management: backlog
-  2-4-user-profile-management: backlog
-  2-5-account-recovery: backlog
+  2-1-firebase-authentication-integration: done
+  2-2-jwt-token-validation: done
+  2-3-session-management: done
+  2-4-user-profile-management: done
+  2-5-account-recovery: done
   epic-2-retrospective: optional
   epic-3: backlog
   3-1-four-tier-role-system-implementation: backlog

@@ -32,6 +32,7 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, FirebaseAuthenticationStateProvider>();
 builder.Services.AddBlazoredToast();
 builder.Services.AddMudServices();
+builder.Services.AddScoped<IIdleTimeoutService, IdleTimeoutService>();
 
 builder.Services.AddSingleton(sp =>
 {

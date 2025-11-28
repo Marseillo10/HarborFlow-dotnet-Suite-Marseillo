@@ -29,7 +29,12 @@
 
             <MudTextField @bind-Value="_loginModel.Password" Label="Password" Variant="Variant.Outlined"
                 InputType="@_passwordInputType" Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon"
-                OnAdornmentClick="TogglePasswordVisibility" Class="mb-4" FullWidth="true" />
+                OnAdornmentClick="TogglePasswordVisibility" Class="mb-1" FullWidth="true" />
+
+            <div class="d-flex justify-end mb-4">
+                <MudLink Href="/forgot-password" Typo="Typo.caption" Color="Color.Primary" Underline="Underline.Hover">
+                    Forgot Password?</MudLink>
+            </div>
 
             <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
                 Size="Size.Large" Class="mt-2 shadow-lg">

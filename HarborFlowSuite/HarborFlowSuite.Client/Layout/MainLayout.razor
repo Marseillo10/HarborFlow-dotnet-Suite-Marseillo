@@ -1,4 +1,6 @@
 @using Microsoft.AspNetCore.SignalR.Client
+@using HarborFlowSuite.Client.Services
+@using HarborFlowSuite.Core.Services
 @inherits LayoutComponentBase
 @inject HubConnection HubConnection
 
@@ -115,6 +117,9 @@
 
     [Inject] IJSRuntime JSRuntime { get; set; }
     [Inject] IDialogService DialogService { get; set; }
+    [Inject] IIdleTimeoutService IdleTimeoutService { get; set; }
+    [Inject] NavigationManager NavigationManager { get; set; }
+    [Inject] IAuthService AuthService { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -129,6 +134,8 @@
                 Console.WriteLine($"Error starting SignalR connection: {ex.Message}");
             }
         }
+        
+        IdleTimeoutService.OnTimeout += HandleIdleTimeout;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -137,7 +144,26 @@
         {
             var dotNetHelper = DotNetObjectReference.Create(this);
             await JSRuntime.InvokeVoidAsync("registerCommandPaletteShortcut", dotNetHelper);
+            
+            // Initialize idle timer (15 minutes = 15)
+            await IdleTimeoutService.InitializeAsync(15);
         }
+    }
+    
+    private void HandleIdleTimeout()
+    {
+        // We need to invoke this on the UI thread since it's triggered from a timer/JS
+        InvokeAsync(async () =>
+        {
+            await AuthService.SignOut();
+            NavigationManager.NavigateTo("/login");
+        });
+    }
+
+    public void Dispose()
+    {
+        IdleTimeoutService.OnTimeout -= HandleIdleTimeout;
+        _ = IdleTimeoutService.DisposeAsync();
     }
 
     [JSInvokable]

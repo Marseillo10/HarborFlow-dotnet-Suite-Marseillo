@@ -8,6 +8,7 @@ window.authInterop = {
                     dotnetHelper.invokeMethodAsync('OnAuthStateChanged', {
                         email: user.email,
                         uid: user.uid,
+                        displayName: user.displayName,
                         token: token
                     });
                 });

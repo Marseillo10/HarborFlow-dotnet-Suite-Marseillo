@@ -35,4 +35,9 @@ public class AuthService : IAuthService
     {
         await _jsRuntime.InvokeVoidAsync("firebaseAuth.signOut");
     }
+
+    public async Task SendPasswordResetEmail(string email)
+    {
+        await _jsRuntime.InvokeVoidAsync("firebaseAuth.sendPasswordResetEmail", email);
+    }
 }

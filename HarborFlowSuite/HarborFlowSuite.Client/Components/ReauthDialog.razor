@@ -1,0 +1,27 @@
+@using MudBlazor
+@using Microsoft.AspNetCore.Components
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body1" Class="mb-4">
+            For security reasons, please enter your current password to continue.
+        </MudText>
+        <MudTextField @bind-Value="CurrentPassword" Label="Current Password" InputType="InputType.Password"
+            Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Lock"
+            FullWidth="true" Immediate="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit" Disabled="@string.IsNullOrWhiteSpace(CurrentPassword)">Confirm
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+
+    private string CurrentPassword { get; set; } = "";
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(CurrentPassword));
+    private void Cancel() => MudDialog.Cancel();
+}

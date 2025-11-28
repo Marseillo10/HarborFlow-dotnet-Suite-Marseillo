@@ -1,6 +1,6 @@
 # Story 1.5: Implement Collapsible Sidebar for Map View
 
-Status: in_progress
+Status: done
 
 ## Story
 
@@ -46,5 +46,10 @@ I want to be able to collapse the main sidebar to have an immersive, full-screen
 ### Debug Log References
 
 ### Completion Notes List
+- Implemented Mini Drawer in `MainLayout.razor`.
+- Updated `NavMenu.razor` to adapt to collapsed state.
+- Removed toggle button as per later design decision (hover-based).
 
 ### File List
+- HarborFlowSuite/HarborFlowSuite.Client/Layout/MainLayout.razor
+- HarborFlowSuite/HarborFlowSuite.Client/Layout/NavMenu.razor

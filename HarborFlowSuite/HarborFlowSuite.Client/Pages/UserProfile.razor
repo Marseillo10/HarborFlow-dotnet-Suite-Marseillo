@@ -4,35 +4,159 @@
 @using System.Threading.Tasks
 @using HarborFlowSuite.Core.DTOs
 @inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
 
-<h3>User Profile</h3>
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8 animate-fade-in-up">
+    <MudText Typo="Typo.h3" Class="mb-6 font-weight-bold text-gradient">User Profile</MudText>
 
-@if (userProfile == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">Edit Profile</h5>
-            <form @onsubmit="UpdateProfile">
-                <div class="mb-3">
-                    <label for="fullName" class="form-label">Full Name</label>
-                    <input type="text" class="form-control" id="fullName" @bind="userProfile.FullName" />
-                </div>
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email" @bind="userProfile.Email" />
-                </div>
-                <button type="submit" class="btn btn-primary">Save Changes</button>
-            </form>
+    @if (userProfile == null)
+    {
+        <div class="d-flex justify-center align-center" style="height: 300px;">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
         </div>
-    </div>
-}
+    }
+    else
+    {
+        <MudCard Elevation="4" Class="glass-card rounded-xl pa-6 mb-6">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Color="Color.Secondary" Size="Size.Large" Variant="Variant.Filled">
+                        @(userProfile.FullName?.FirstOrDefault().ToString().ToUpper() ?? "U")
+                    </MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5">@userProfile.FullName</MudText>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@userProfile.Email</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="mb-4">Edit Profile</MudText>
+                <EditForm Model="@userProfile" OnValidSubmit="UpdateProfile">
+                    <DataAnnotationsValidator />
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="userProfile.FullName" Label="Full Name" Variant="Variant.Outlined"
+                                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person"
+                                          FullWidth="true" Class="mb-4" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="userProfile.Email" Label="Email" Variant="Variant.Outlined"
+                                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Email"
+                                          FullWidth="true" Class="mb-4" Disabled="true" HelperText="Email cannot be changed" />
+                        </MudItem>
+                        <MudItem xs="12" Class="d-flex justify-end">
+                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary"
+                                       Size="Size.Large" StartIcon="@Icons.Material.Filled.Save" Disabled="@_isSaving">
+                                @if (_isSaving)
+                                {
+                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                    <MudText Class="ms-2">Saving...</MudText>
+                                }
+                                else
+                                {
+                                    <MudText>Save Changes</MudText>
+                                }
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </EditForm>
+            </MudCardContent>
+        </MudCard>
+
+        <MudCard Elevation="4" Class="glass-card rounded-xl pa-6">
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="mb-4">Security</MudText>
+                <MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">Update your password to keep your account secure.</MudText>
+                <EditForm Model="@changePasswordModel" OnValidSubmit="ChangePassword">
+                    <DataAnnotationsValidator />
+                    <MudGrid>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="changePasswordModel.NewPassword" Label="New Password" 
+                                          Variant="Variant.Outlined" InputType="InputType.Password"
+                                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Lock"
+                                          FullWidth="true" Class="mb-4" Required="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="changePasswordModel.ConfirmPassword" Label="Confirm Password" 
+                                          Variant="Variant.Outlined" InputType="InputType.Password"
+                                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Lock"
+                                          FullWidth="true" Class="mb-4" Required="true" />
+                        </MudItem>
+                        <MudItem xs="12" Class="d-flex justify-end">
+                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Warning"
+                                       Size="Size.Large" StartIcon="@Icons.Material.Filled.LockReset" Disabled="@_isChangingPassword">
+                                @if (_isChangingPassword)
+                                {
+                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                    <MudText Class="ms-2">Updating...</MudText>
+                                }
+                                else
+                                {
+                                    <MudText>Change Password</MudText>
+                                }
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </EditForm>
+            </MudCardContent>
+        </MudCard>
+    }
+</MudContainer>
+
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.8) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        transition: all 0.3s ease;
+    }
+
+    /* Target the theme-dark class applied in MainLayout */
+    .theme-dark .glass-card {
+        background: rgba(30, 41, 59, 0.85) !important; /* Slate 800 with high opacity */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        color: #F3F4F6 !important; /* Ensure text is light */
+    }
+
+    .text-gradient {
+        background: linear-gradient(to right, #0EA5E9, #10B981);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Target the theme-dark class applied in MainLayout */
+    .theme-dark .text-gradient {
+        background: linear-gradient(to right, #60A5FA, #34D399); /* Brighter gradient for dark mode */
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        opacity: 0;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
 
 @code {
-    private UserProfileDto userProfile = new UserProfileDto();
+    private UserProfileDto? userProfile;
+    private ChangePasswordModel changePasswordModel = new ChangePasswordModel();
+    private bool _isSaving = false;
+    private bool _isChangingPassword = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -41,14 +165,143 @@ else
 
     private async Task LoadUserProfile()
     {
-        userProfile = await Http.GetFromJsonAsync<UserProfileDto>("api/UserProfile");
+        try
+        {
+            userProfile = await Http.GetFromJsonAsync<UserProfileDto>("api/UserProfile");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading profile: {ex.Message}", Severity.Error);
+        }
     }
 
     private async Task UpdateProfile()
     {
         if (userProfile != null)
         {
-            await Http.PutAsJsonAsync("api/UserProfile", userProfile);
+            _isSaving = true;
+            try
+            {
+                var response = await Http.PutAsJsonAsync("api/UserProfile", userProfile);
+                if (response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add("Profile updated successfully!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to update profile.", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error updating profile: {ex.Message}", Severity.Error);
+            }
+            finally
+            {
+                _isSaving = false;
+            }
         }
+    }
+
+@inject IDialogService DialogService
+@inject NavigationManager NavManager
+
+    private async Task ChangePassword()
+    {
+        if (changePasswordModel.NewPassword != changePasswordModel.ConfirmPassword)
+        {
+            Snackbar.Add("Passwords do not match.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(changePasswordModel.NewPassword) || changePasswordModel.NewPassword.Length < 6)
+        {
+            Snackbar.Add("Password must be at least 6 characters long.", Severity.Warning);
+            return;
+        }
+
+        _isChangingPassword = true;
+        try
+        {
+            var result = await JSRuntime.InvokeAsync<ChangePasswordResult>("firebaseAuth.changePassword", changePasswordModel.NewPassword);
+            
+            if (result.Success)
+            {
+                await HandleSuccessfulPasswordChange();
+            }
+            else
+            {
+                if (result.Error.Contains("requires-recent-login"))
+                {
+                    await HandleReauthentication();
+                }
+                else
+                {
+                    Snackbar.Add($"Failed to change password: {result.Error}", Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error changing password: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isChangingPassword = false;
+        }
+    }
+
+    private async Task HandleReauthentication()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<ReauthDialog>("Security Check", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var currentPassword = result.Data.ToString();
+            var reauthResult = await JSRuntime.InvokeAsync<ChangePasswordResult>("firebaseAuth.reauthenticate", currentPassword);
+
+            if (reauthResult.Success)
+            {
+                // Retry password change
+                var retryResult = await JSRuntime.InvokeAsync<ChangePasswordResult>("firebaseAuth.changePassword", changePasswordModel.NewPassword);
+                if (retryResult.Success)
+                {
+                    await HandleSuccessfulPasswordChange();
+                }
+                else
+                {
+                    Snackbar.Add($"Failed to change password after re-authentication: {retryResult.Error}", Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Incorrect password. Please try again.", Severity.Error);
+            }
+        }
+    }
+
+    private async Task HandleSuccessfulPasswordChange()
+    {
+        Snackbar.Add("Password changed successfully! Logging out...", Severity.Success);
+        changePasswordModel = new ChangePasswordModel(); // Reset form
+        
+        // Auto-logout after a short delay to let the user see the message
+        await Task.Delay(2000);
+        await JSRuntime.InvokeVoidAsync("firebaseAuth.signOut");
+        NavManager.NavigateTo("/login");
+    }
+
+    public class ChangePasswordModel
+    {
+        public string NewPassword { get; set; } = "";
+        public string ConfirmPassword { get; set; } = "";
+    }
+
+    public class ChangePasswordResult
+    {
+        public bool Success { get; set; }
+        public string Error { get; set; }
     }
 }

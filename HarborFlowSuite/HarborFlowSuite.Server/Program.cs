@@ -33,6 +33,7 @@ builder.Services.AddScoped<IServiceRequestService, ServiceRequestService>();
 builder.Services.AddScoped<IVesselService, VesselService>();
 builder.Services.AddScoped<IPortService, PortService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
+builder.Services.AddScoped<HarborFlowSuite.Core.Services.IUserProfileService, UserProfileService>();
 
 // Configure GFW API client
 builder.Services.AddHttpClient<IGfwMetadataService, GfwMetadataService>((serviceProvider, client) =>

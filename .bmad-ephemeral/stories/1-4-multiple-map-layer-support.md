@@ -1,6 +1,6 @@
 # Story 1.4: Multiple Map Layer Support
 
-Status: in_progress
+Status: done
 
 ## Story
 
@@ -55,5 +55,11 @@ so that I can customize my map experience.
 ### Debug Log References
 
 ### Completion Notes List
+- Implemented `MapLayerSelector.razor` with support for multiple tile layers.
+- Integrated NASA Blue Marble and Sea Surface Temperature layers.
+- Added logic in `map.js` to switch layers dynamically.
 
 ### File List
+- HarborFlowSuite/HarborFlowSuite.Client/Components/MapLayerSelector.razor
+- HarborFlowSuite/HarborFlowSuite.Client/Components/VesselMap.razor
+- HarborFlowSuite/HarborFlowSuite.Client/wwwroot/js/map.js

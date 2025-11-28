@@ -1,6 +1,6 @@
 # Story 1.8: Handle Live Feed Interruption State
 
-Status: in_progress
+Status: done
 
 ## Story
 
@@ -14,10 +14,10 @@ I want to be clearly informed when the live data feed is interrupted so I don't 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Implement logic to detect SignalR connection loss/interruption.
-- [ ] Task 2: Create a non-intrusive banner component to display connection status.
-- [ ] Task 3: Update `VesselMap.razor` and `map.js` to visually indicate stale data (grey out icons).
-- [ ] Task 4: Verify interruption handling (simulate connection loss).
+- [x] Task 1: Implement logic to detect SignalR connection loss/interruption.
+- [x] Task 2: Create a non-intrusive banner component to display connection status.
+- [x] Task 3: Update `VesselMap.razor` and `map.js` to visually indicate stale data (grey out icons).
+- [x] Task 4: Verify interruption handling (simulate connection loss).
 
 ## Dev Notes
 

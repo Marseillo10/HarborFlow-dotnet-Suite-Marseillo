@@ -1,6 +1,6 @@
 # Story 1.1: Display Interactive Map with Vessel Positions
 
-Status: ready-for-dev
+Status: done
 
 ...
 
@@ -17,5 +17,10 @@ Status: ready-for-dev
 ### Debug Log References
 
 ### Completion Notes List
+- Implemented `VesselMap.razor` using Leaflet.js.
+- Added basic vessel markers with rotation and popup support.
+- Integrated `map.js` for Leaflet interop.
 
 ### File List
+- HarborFlowSuite/HarborFlowSuite.Client/Components/VesselMap.razor
+- HarborFlowSuite/HarborFlowSuite.Client/wwwroot/js/map.js

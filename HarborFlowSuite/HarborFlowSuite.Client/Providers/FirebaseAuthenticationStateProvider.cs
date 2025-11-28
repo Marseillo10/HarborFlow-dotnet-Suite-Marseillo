@@ -46,13 +46,25 @@ public class FirebaseAuthenticationStateProvider : AuthenticationStateProvider
         }
 
         var claims = ParseClaimsFromJwt(userDto.Token);
+
+        // Add Name claim if DisplayName is available
+        if (!string.IsNullOrEmpty(userDto.DisplayName))
+        {
+            claims.Add(new Claim(ClaimTypes.Name, userDto.DisplayName));
+        }
+        else if (!string.IsNullOrEmpty(userDto.Email))
+        {
+            // Fallback to email if no display name
+            claims.Add(new Claim(ClaimTypes.Name, userDto.Email));
+        }
+
         var identity = new ClaimsIdentity(claims, "jwt");
         var user = new ClaimsPrincipal(identity);
 
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
     }
 
-    private static IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
+    private static List<Claim> ParseClaimsFromJwt(string jwt)
     {
         var claims = new List<Claim>();
         var payload = jwt.Split('.')[1];
@@ -68,6 +80,10 @@ public class FirebaseAuthenticationStateProvider : AuthenticationStateProvider
             if (keyValuePairs.TryGetValue("email", out var email))
             {
                 claims.Add(new Claim(ClaimTypes.Email, email.ToString() ?? string.Empty));
+            }
+            if (keyValuePairs.TryGetValue("name", out var name))
+            {
+                claims.Add(new Claim(ClaimTypes.Name, name.ToString() ?? string.Empty));
             }
             // Add other claims as needed
         }
@@ -90,6 +106,7 @@ public class FirebaseUserDto
 {
     public string Email { get; set; }
     public string Uid { get; set; }
+    public string DisplayName { get; set; }
     public string Token { get; set; }
 }
 

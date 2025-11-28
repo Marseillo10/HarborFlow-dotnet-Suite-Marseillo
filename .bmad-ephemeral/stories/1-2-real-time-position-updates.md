@@ -1,6 +1,6 @@
 # Story 1.2: Real-time Position Updates
 
-Status: Approved
+Status: done
 
 ## Story
 

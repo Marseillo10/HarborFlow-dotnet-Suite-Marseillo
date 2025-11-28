@@ -27,7 +27,8 @@
         <Authorized>
             <div class="pa-4">
                 <MudDivider Class="mb-4" />
-                <div class="d-flex align-center gap-3 mb-4">
+                <div class="d-flex align-center gap-3 mb-4 cursor-pointer user-profile-link"
+                @onclick='() => NavigationManager.NavigateTo("/user-profile")'>
                     <MudAvatar Color="Color.Secondary" Variant="Variant.Filled">
                         @(context.User.Identity?.Name?.FirstOrDefault().ToString().ToUpper() ?? "U")
                     </MudAvatar>
@@ -57,6 +58,20 @@
 </div>
 
 <style>
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .user-profile-link:hover {
+        opacity: 0.8;
+        background-color: rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+        padding: 4px;
+        margin: -4px;
+        /* Compensate for padding */
+        transition: all 0.2s;
+    }
+
     /* Show icon-only logout in mini mode */
     .mud-drawer-mini .d-flex-mini {
         display: flex !important;
