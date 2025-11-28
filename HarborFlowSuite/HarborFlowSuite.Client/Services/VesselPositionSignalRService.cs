@@ -16,9 +16,28 @@ namespace HarborFlowSuite.Client.Services
 
         public int TotalVesselCount => _activeVessels.Count;
 
+        public event Action<HubConnectionState> OnConnectionStateChanged;
+
+        public HubConnectionState ConnectionState => _hubConnection?.State ?? HubConnectionState.Disconnected;
+
         public VesselPositionSignalRService(HubConnection hubConnection)
         {
             _hubConnection = hubConnection;
+            _hubConnection.Closed += (e) =>
+            {
+                OnConnectionStateChanged?.Invoke(_hubConnection.State);
+                return Task.CompletedTask;
+            };
+            _hubConnection.Reconnecting += (e) =>
+            {
+                OnConnectionStateChanged?.Invoke(_hubConnection.State);
+                return Task.CompletedTask;
+            };
+            _hubConnection.Reconnected += (s) =>
+            {
+                OnConnectionStateChanged?.Invoke(_hubConnection.State);
+                return Task.CompletedTask;
+            };
         }
 
         public async Task StartConnection()
@@ -35,6 +54,7 @@ namespace HarborFlowSuite.Client.Services
             if (_hubConnection.State == HubConnectionState.Disconnected)
             {
                 await _hubConnection.StartAsync();
+                OnConnectionStateChanged?.Invoke(_hubConnection.State);
             }
         }
 
@@ -43,6 +63,7 @@ namespace HarborFlowSuite.Client.Services
             if (_hubConnection is not null)
             {
                 await _hubConnection.StopAsync();
+                OnConnectionStateChanged?.Invoke(_hubConnection.State);
             }
         }
 

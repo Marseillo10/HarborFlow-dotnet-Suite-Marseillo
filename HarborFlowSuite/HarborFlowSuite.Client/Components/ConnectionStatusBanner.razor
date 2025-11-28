@@ -1,0 +1,87 @@
+@using Microsoft.AspNetCore.SignalR.Client
+@using HarborFlowSuite.Client.Services
+@inject IVesselPositionSignalRService SignalRService
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+@if (ShouldShowBanner)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Square="true" Class="mud-width-full py-2">
+    @if (!_isOnline)
+        {
+            <span>No internet connection.</span>
+        }
+        else if (_connectionState == HubConnectionState.Reconnecting)
+        {
+            <span>Connection lost. Reconnecting...</span>
+        }
+        else
+        {
+            <span>Live feed disconnected...</span>
+        }
+        </MudAlert>
+}
+
+@code {
+    private HubConnectionState _connectionState;
+    private System.Threading.Timer _timer;
+    private bool _isOnline = true;
+    private DotNetObjectReference<ConnectionStatusBanner> _dotNetHelper;
+
+    private bool ShouldShowBanner => !_isOnline ||
+    _connectionState == HubConnectionState.Disconnected ||
+    _connectionState == HubConnectionState.Reconnecting;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _connectionState = SignalRService.ConnectionState;
+        SignalRService.OnConnectionStateChanged += HandleConnectionStateChanged;
+
+        // Poll every 2 seconds as a fallback
+        _timer = new System.Threading.Timer(CheckConnectionState, null, 2000, 2000);
+
+        // Initialize network status listener
+        _dotNetHelper = DotNetObjectReference.Create(this);
+        try
+        {
+            _isOnline = await JSRuntime.InvokeAsync<bool>("window.networkStatus.registerListener", _dotNetHelper);
+        }
+        catch (Exception)
+        {
+            // Ignore JS errors during prerendering or if script not loaded
+        }
+    }
+
+    [JSInvokable]
+    public void OnNetworkStatusChanged(bool isOnline)
+    {
+        _isOnline = isOnline;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void CheckConnectionState(object state)
+    {
+        var newState = SignalRService.ConnectionState;
+        if (_connectionState != newState)
+        {
+            _connectionState = newState;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleConnectionStateChanged(HubConnectionState state)
+    {
+        if (_connectionState != state)
+        {
+            _connectionState = state;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+        _dotNetHelper?.Dispose();
+        SignalRService.OnConnectionStateChanged -= HandleConnectionStateChanged;
+    }
+}

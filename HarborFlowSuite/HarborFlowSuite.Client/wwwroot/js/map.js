@@ -539,5 +539,28 @@ window.HarborFlowMap = {
                 marker.setZIndexOffset(0); // Reset z-index
             }
         }
+    },
+
+    setVesselsStale: function (isStale) {
+        if (!this.map) return;
+
+        for (const mmsi in this.vesselMarkers) {
+            const marker = this.vesselMarkers[mmsi];
+            // Get the icon element (divIcon)
+            // Note: marker.getElement() might return null if marker is not currently visible (e.g. clustered)
+            // But here we are not clustering yet.
+            const icon = marker.getElement();
+            if (icon) {
+                // The image is inside the divIcon
+                const img = icon.querySelector('img');
+                if (img) {
+                    if (isStale) {
+                        img.style.filter = 'grayscale(100%) opacity(0.7)';
+                    } else {
+                        img.style.filter = '';
+                    }
+                }
+            }
+        }
     }
 };

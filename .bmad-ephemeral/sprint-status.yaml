@@ -43,7 +43,7 @@ development_status:
   1-5-implement-collapsible-sidebar-for-map-view: done
   1-6-implement-vessel-hover-tooltip: done
   1-7-implement-map-search-highlighting: done
-  1-8-handle-live-feed-interruption-state: backlog
+  1-8-handle-live-feed-interruption-state: done
   epic-1-retrospective: optional
   epic-2: backlog
   2-1-firebase-authentication-integration: backlog

@@ -175,6 +175,7 @@
         stroke-opacity: 0.5 !important;
         stroke-width: 1.5px;
         stroke-dasharray: 6, 4;
+        /* Longer dashes */
     }
 
     /* Grid Labels */
@@ -331,7 +332,19 @@
     {
         _dotNetHelper = DotNetObjectReference.Create(this);
         VesselPositionSignalRService.OnPositionUpdateReceived += OnPositionUpdateReceived;
+        VesselPositionSignalRService.OnConnectionStateChanged += OnConnectionStateChanged;
         await VesselPositionSignalRService.StartConnection();
+    }
+
+    private async void OnConnectionStateChanged(Microsoft.AspNetCore.SignalR.Client.HubConnectionState state)
+    {
+        bool isStale = state == Microsoft.AspNetCore.SignalR.Client.HubConnectionState.Disconnected ||
+        state == Microsoft.AspNetCore.SignalR.Client.HubConnectionState.Reconnecting;
+
+        if (_isMapInitialized)
+        {
+            await JSRuntime.InvokeVoidAsync("HarborFlowMap.setVesselsStale", isStale);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -486,6 +499,8 @@
             _dotNetHelper.Dispose();
         }
         VesselPositionSignalRService.OnPositionUpdateReceived -= OnPositionUpdateReceived;
-        await VesselPositionSignalRService.StopConnection();
+        VesselPositionSignalRService.OnConnectionStateChanged -= OnConnectionStateChanged;
+        // Do not stop the connection here, as it should persist across navigation
+        // await VesselPositionSignalRService.StopConnection();
     }
 }

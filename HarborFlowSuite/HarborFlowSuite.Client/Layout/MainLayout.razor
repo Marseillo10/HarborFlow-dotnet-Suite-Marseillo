@@ -19,6 +19,7 @@
     </MudDrawer>
     <MudMainContent Style="@GetMainContentStyle()" Class="@(_isDarkMode ? "theme-dark" : "theme-light")">
         <MudContainer MaxWidth="MaxWidth.Large" Class="my-4 pt-4">
+            <ConnectionStatusBanner />
             @Body
         </MudContainer>
     </MudMainContent>
