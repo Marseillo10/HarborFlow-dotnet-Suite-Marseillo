@@ -1,0 +1,63 @@
+@using System.Net.Http
+@using System.Net.Http.Json
+@using HarborFlowSuite.Core.Models
+@using MudBlazor
+@inject IHttpClientFactory ClientFactory
+@inject ISnackbar Snackbar
+
+<MudDialog Class="mud-paper">
+    <DialogContent>
+        <EditForm Model="@_vessel" OnValidSubmit="Submit">
+            <DataAnnotationsValidator />
+            <MudTextField Label="Name" @bind-Value="_vessel.Name" For="@(() => _vessel.Name)" />
+            <MudTextField Label="MMSI" @bind-Value="_vessel.MMSI" For="@(() => _vessel.MMSI)" />
+            <MudTextField Label="IMO Number" @bind-Value="_vessel.ImoNumber" For="@(() => _vessel.ImoNumber)" />
+            <MudTextField Label="Type" @bind-Value="_vessel.VesselType" For="@(() => _vessel.VesselType)" />
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Submit</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+
+    private Vessel _vessel = new();
+
+    private async Task Submit()
+    {
+        // Basic validation
+        if (string.IsNullOrWhiteSpace(_vessel.Name) || string.IsNullOrWhiteSpace(_vessel.MMSI) ||
+        string.IsNullOrWhiteSpace(_vessel.ImoNumber) || string.IsNullOrWhiteSpace(_vessel.VesselType))
+        {
+            Snackbar.Add("Please fill in all required fields.", Severity.Warning);
+            return;
+        }
+
+        var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
+        try
+        {
+            var response = await client.PostAsJsonAsync("api/vessel", _vessel);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Vessel added successfully!", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                var errorMessage = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error adding vessel: {errorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

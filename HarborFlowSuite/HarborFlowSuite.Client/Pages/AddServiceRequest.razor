@@ -2,6 +2,7 @@
 @using System.Net.Http
 @using System.Net.Http.Json
 @using HarborFlowSuite.Core.DTOs
+@using HarborFlowSuite.Core.Models
 @using Microsoft.AspNetCore.Authorization
 @inject IHttpClientFactory ClientFactory
 @inject NavigationManager NavigationManager
@@ -26,8 +27,13 @@
     </div>
 
     <div class="mb-3">
-        <label for="status" class="form-label">Status</label>
-        <InputText id="status" class="form-control" @bind-Value="_createServiceRequestDto.Status" />
+        <MudSelect T="string" Label="Status" @bind-Value="_createServiceRequestDto.Status"
+            AnchorOrigin="Origin.BottomCenter">
+            @foreach (var status in Enum.GetNames(typeof(ServiceRequestStatus)))
+            {
+                <MudSelectItem Value="@status">@status</MudSelectItem>
+            }
+        </MudSelect>
     </div>
 
     <button type="submit" class="btn btn-primary">Submit</button>

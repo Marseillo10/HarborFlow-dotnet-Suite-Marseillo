@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using HarborFlowSuite.Core.DTOs;
+using HarborFlowSuite.Shared.DTOs;
 
 namespace HarborFlowSuite.Server.Services
 {

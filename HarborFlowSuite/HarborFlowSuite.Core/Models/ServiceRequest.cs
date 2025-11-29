@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HarborFlowSuite.Core.Models
 {
-    public class ServiceRequest
+    public class ServiceRequest : Interfaces.IMustHaveCompany
     {
         [Key]
         public Guid Id { get; set; }

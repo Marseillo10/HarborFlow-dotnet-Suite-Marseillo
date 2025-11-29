@@ -1,0 +1,105 @@
+@using HarborFlowSuite.Shared.DTOs
+@using HarborFlowSuite.Shared.Constants
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudDialog>
+    <DialogContent>
+        <MudText>Assign a new role to <b>@User.FullName</b>.</MudText>
+        <MudSelect T="Guid" Label="Role" @bind-Value="_selectedRoleId" AnchorOrigin="Origin.BottomCenter">
+            @foreach (var role in _roles)
+            {
+                <MudSelectItem Value="@role.Id">@role.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public UserDto User { get; set; }
+
+    private Guid _selectedRoleId;
+    private List<RoleDto> _roles = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // In a real app, fetch roles from API. For now, we can hardcode or fetch if we have an endpoint.
+        // Let's assume we have a Roles endpoint or use constants if we only have fixed roles.
+        // Since we implemented dynamic roles in DB, we should fetch them.
+        // But we haven't implemented GET /api/roles yet.
+        // For this iteration, I will mock the roles based on what I know exists in DB or add a RolesController later.
+        // Actually, let's use the known roles from UserRole constants and map them to IDs if possible,
+        // BUT we need the GUIDs.
+        // So we really need a GET /api/roles endpoint.
+        // I will add a temporary fetch or just hardcode the logic to fail gracefully if no roles found.
+
+        // Wait, I can't hardcode GUIDs. I need to fetch roles.
+        // I'll add a RolesController or just fetch from UsersController if I add an endpoint there.
+        // For now, let's try to fetch from a new endpoint `api/roles` which I should create.
+
+        // To unblock, I will assume I can fetch roles. I'll add the endpoint in the next step.
+        try
+        {
+            _roles = await Http.GetFromJsonAsync<List<RoleDto>>("api/roles") ?? new List<RoleDto>();
+            _selectedRoleId = User.RoleId ?? Guid.Empty;
+        }
+        catch
+        {
+            Snackbar.Add("Failed to load roles.", Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        var selectedRole = _roles.FirstOrDefault(r => r.Id == _selectedRoleId);
+        if (selectedRole?.Name == "SystemAdmin")
+        {
+            var parameters = new DialogParameters
+            {
+                { "ContentText", $"Are you sure you want to grant System Administrator privileges to {User.FullName}? This will give them full access to the system." },
+                { "ButtonText", "Grant Access" },
+                { "Color", Color.Warning }
+            };
+
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.ConfirmationDialog>("Confirm Admin Promotion", parameters, options);
+            var result = await dialog.Result;
+
+            if (result.Canceled)
+            {
+                return;
+            }
+        }
+
+        try
+        {
+            var updateDto = new UpdateUserRoleDto { RoleId = _selectedRoleId };
+            var response = await Http.PutAsJsonAsync($"api/users/{User.Id}/role", updateDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Role updated successfully", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                Snackbar.Add("Failed to update role", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+}

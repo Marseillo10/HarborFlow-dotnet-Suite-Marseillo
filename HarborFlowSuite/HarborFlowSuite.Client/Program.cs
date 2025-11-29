@@ -28,7 +28,35 @@ builder.Services.AddScoped<IVesselService, VesselService>();
 builder.Services.AddScoped<HarborFlowSuite.Client.Services.IServiceRequestService, HarborFlowSuite.Client.Services.ServiceRequestService>();
 builder.Services.AddScoped<IVesselPositionSignalRService, VesselPositionSignalRService>();
 builder.Services.AddScoped<IPortService, PortService>();
-builder.Services.AddAuthorizationCore();
+
+builder.Services.AddAuthorizationCore(options =>
+{
+    // Helper method to get all permission constants
+    var permissions = typeof(HarborFlowSuite.Shared.Constants.Permissions)
+        .GetNestedTypes()
+        .SelectMany(t => t.GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.FlattenHierarchy))
+        .Where(fi => fi.IsLiteral && !fi.IsInitOnly)
+        .Select(fi => fi.GetRawConstantValue()?.ToString())
+        .Where(p => p != null)
+        .Cast<string>()
+        .ToList();
+
+    foreach (var permission in permissions)
+    {
+        options.AddPolicy(permission, policy =>
+            policy.RequireAssertion(context =>
+            {
+                var userRole = context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
+                               ?? context.User.FindFirst("role")?.Value;
+
+                if (string.IsNullOrEmpty(userRole)) return false;
+
+                var rolePermissions = HarborFlowSuite.Shared.Security.RolePermissions.GetPermissionsForRole(userRole);
+                return rolePermissions.Contains(permission);
+            }));
+    }
+});
+
 builder.Services.AddScoped<AuthenticationStateProvider, FirebaseAuthenticationStateProvider>();
 builder.Services.AddBlazoredToast();
 builder.Services.AddMudServices();

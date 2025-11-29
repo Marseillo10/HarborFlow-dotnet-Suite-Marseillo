@@ -5,11 +5,15 @@ namespace HarborFlowSuite.Infrastructure.Persistence;
 
 public class ApplicationDbContext : DbContext
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+    private readonly Services.ICurrentUserService _currentUserService;
+
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, Services.ICurrentUserService currentUserService) : base(options)
     {
+        _currentUserService = currentUserService;
     }
 
     public DbSet<User> Users { get; set; }
+    public DbSet<Role> Roles { get; set; }
     public DbSet<Vessel> Vessels { get; set; }
     public DbSet<ServiceRequest> ServiceRequests { get; set; }
     public DbSet<Company> Companies { get; set; }
@@ -20,6 +24,16 @@ public class ApplicationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Apply Global Query Filters for Company Isolation
+        // Allow seeing SystemAdmins to support ApprovalHistory visibility
+        modelBuilder.Entity<User>().HasQueryFilter(e => _currentUserService.IsSystemAdmin || e.CompanyId == _currentUserService.CompanyId || e.Role.Name == Shared.Constants.UserRole.SystemAdmin);
+        modelBuilder.Entity<Vessel>().HasQueryFilter(e => _currentUserService.IsSystemAdmin || e.CompanyId == _currentUserService.CompanyId);
+        modelBuilder.Entity<ServiceRequest>().HasQueryFilter(e => _currentUserService.IsSystemAdmin || e.CompanyId == _currentUserService.CompanyId);
+        // Apply filter to ApprovalHistory to avoid issues with required User relationship
+        modelBuilder.Entity<ApprovalHistory>().HasQueryFilter(e => _currentUserService.IsSystemAdmin || e.Approver.CompanyId == _currentUserService.CompanyId || e.Approver.Role.Name == Shared.Constants.UserRole.SystemAdmin);
+        // Apply filter to VesselPosition to match Vessel filter
+        modelBuilder.Entity<VesselPosition>().HasQueryFilter(e => _currentUserService.IsSystemAdmin || e.Vessel.CompanyId == _currentUserService.CompanyId);
 
         // Configure primary keys for string Ids
         modelBuilder.Entity<User>().HasKey(u => u.Id);

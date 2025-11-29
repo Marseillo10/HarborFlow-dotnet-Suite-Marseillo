@@ -41,7 +41,9 @@ namespace HarborFlowSuite.Server.Tests
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
-            return new ApplicationDbContext(options);
+
+            var mockCurrentUserService = new Mock<HarborFlowSuite.Infrastructure.Services.ICurrentUserService>();
+            return new ApplicationDbContext(options, mockCurrentUserService.Object);
         }
 
         [Fact]

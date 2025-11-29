@@ -8,6 +8,7 @@
 @inject IJSRuntime JSRuntime
 @inject IToastService ToastService
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
 @attribute [Authorize]
 
@@ -17,7 +18,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <MudText Typo="Typo.h4">Company Management</MudText>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddCircle"
-            Href="/add-company">
+            OnClick="OpenAddCompanyDialog">
             Add Company
         </MudButton>
     </div>
@@ -37,7 +38,6 @@
                 </ToolBarContent>
                 <HeaderContent>
                     <MudTh>Name</MudTh>
-                    <MudTh>Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="Name">@context.Name</MudTd>
@@ -45,7 +45,7 @@
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
                             Href="@($"/edit-company/{context.Id}")" />
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
-                            OnClick="@(async () => await ConfirmDeleteCompany(context.Id.ToString()))" />
+                            OnClick="@(async () => await DeleteCompany(context))" />
                     </MudTd>
                 </RowTemplate>
                 <PagerContent>
@@ -96,48 +96,58 @@
         }
     }
 
-    private async Task ConfirmDeleteCompany(string id)
+    private async Task DeleteCompany(Company company)
     {
-        var parameters = new DialogParameters<ApprovalDialog>
+        var parameters = new DialogParameters
 {
-{ x => x.ContentText, "Are you sure you want to delete this company? This action cannot be undone." },
-{ x => x.ButtonText, "Delete" },
-{ x => x.Color, Color.Error }
+{ "Title", "Delete Company" },
+{ "Message", $"Are you sure you want to delete company {company.Name}?" },
+{ "MatchLabel", "Company Name" },
+{ "MatchValue", company.Name }
 };
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small };
 
-        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-
-        var dialog = await DialogService.ShowAsync<ApprovalDialog>("Delete Company", parameters, options);
+        var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.DeleteConfirmationDialog>("Delete Company",
+        parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)
         {
-            await DeleteCompany(id);
+            try
+            {
+                var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
+                var response = await client.DeleteAsync($"api/company/{company.Id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add("Company deleted successfully", Severity.Success);
+                    await LoadCompanies();
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    if (string.IsNullOrWhiteSpace(error))
+                    {
+                        error = "Failed to delete company";
+                    }
+                    Snackbar.Add(error, Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting company: {ex.Message}", Severity.Error);
+            }
         }
     }
 
-    private async Task DeleteCompany(string id)
+    private async Task OpenAddCompanyDialog()
     {
-        var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
-        try
-        {
-            var response = await client.DeleteAsync($"api/company/{id}");
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.CompanyDialog>("Add Company", options);
+        var result = await dialog.Result;
 
-            if (response.IsSuccessStatusCode)
-            {
-                ToastService.ShowSuccess("Company deleted successfully!");
-                await LoadCompanies();
-            }
-            else
-            {
-                var errorMessage = await response.Content.ReadAsStringAsync();
-                ToastService.ShowError($"Error deleting company: {errorMessage}");
-            }
-        }
-        catch (Exception ex)
+        if (!result.Canceled)
         {
-            Console.WriteLine(ex.Message);
-            ToastService.ShowError(ex.Message);
+            await LoadCompanies();
         }
     }
 }

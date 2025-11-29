@@ -1,6 +1,7 @@
 @page "/dashboard"
 @using Microsoft.AspNetCore.Authorization
 @using HarborFlowSuite.Core.Models
+@using HarborFlowSuite.Shared.DTOs
 @using HarborFlowSuite.Core.DTOs
 @using System.Net.Http
 @using System.Net.Http.Json
@@ -148,8 +149,11 @@
                         @if (_serviceRequestStatusSummary != null)
                         {
                             <div class="d-flex align-center justify-center flex-grow-1" style="min-height: 0;">
-                                <MudChart ChartType="ChartType.Bar" ChartSeries="@_serviceRequestSeries"
-                                    XAxisLabels="@_serviceRequestLabels" Width="100%" Height="200px"></MudChart>
+                                <div class="d-flex align-center justify-center flex-grow-1" style="min-height: 0;">
+                                    <MudChart ChartType="ChartType.Pie" InputData="@_serviceRequestData"
+                                        InputLabels="@_serviceRequestLabels" Width="100%" Height="200px"
+                                        LegendPosition="Position.Right"></MudChart>
+                                </div>
                             </div>
                         }
                         else
@@ -236,7 +240,7 @@
     private Dictionary<string, (VesselDetailPanel.VesselPositionDto Info, VesselMetadataDto Metadata)> _vesselCache = new();
 
     // Chart Data
-    private List<ChartSeries> _serviceRequestSeries = new();
+    private double[] _serviceRequestData = { };
     private string[] _serviceRequestLabels = { };
     private double[] _vesselTypeData = { };
     private string[] _vesselTypeLabels = { };
@@ -288,10 +292,7 @@
             if (_serviceRequestStatusSummary != null)
             {
                 _serviceRequestLabels = _serviceRequestStatusSummary.Select(x => x.Status).ToArray();
-                _serviceRequestSeries = new List<ChartSeries>
-{
-new ChartSeries { Name = "Requests", Data = _serviceRequestStatusSummary.Select(x => (double)x.Count).ToArray() }
-};
+                _serviceRequestData = _serviceRequestStatusSummary.Select(x => (double)x.Count).ToArray();
             }
 
             if (_vesselTypeSummary != null)
@@ -314,27 +315,57 @@ new ChartSeries { Name = "Requests", Data = _serviceRequestStatusSummary.Select(
                 }
             }
 
-            HubConnection.On<string, double, double, double, double, string, string,
-            VesselMetadataDto>("ReceiveVesselPositionUpdate",
-            async (mmsi, lat, lng, heading, speed, name, vesselType, metadata) =>
+            HubConnection.On<VesselPositionUpdateDto>("ReceiveVesselPositionUpdate",
+            async (update) =>
             {
                 var vesselInfo = new VesselDetailPanel.VesselPositionDto
                     {
-                        MMSI = mmsi,
-                        Name = name,
-                        Latitude = lat,
-                        Longitude = lng,
-                        Heading = heading,
-                        Speed = speed,
-                        Type = vesselType
+                        MMSI = update.MMSI,
+                        VesselId = update.VesselId?.ToString() ?? update.MMSI,
+                        Name = update.Name,
+                        Latitude = update.Latitude,
+                        Longitude = update.Longitude,
+                        Heading = update.Heading,
+                        Speed = update.Speed,
+                        Type = update.VesselType
                     };
-                _vesselCache[mmsi] = (vesselInfo, metadata);
+
+                // Preserve existing metadata if available
+                var existingMetadata = _vesselCache.TryGetValue(update.MMSI, out var cached) ? cached.Metadata : null;
+                _vesselCache[update.MMSI] = (vesselInfo, update.Metadata ?? existingMetadata);
 
                 if (vesselMap != null)
                 {
-                    await vesselMap.UpdateVesselMarker(mmsi, lat, lng, heading, speed, name, vesselType, metadata);
+                    await vesselMap.UpdateVesselMarker(update);
                     await InvokeAsync(StateHasChanged);
                 }
+            });
+
+            HubConnection.On<string, VesselMetadataDto>("ReceiveVesselMetadataUpdate", async (mmsi, metadata) =>
+            {
+                if (_vesselCache.TryGetValue(mmsi, out var data))
+                {
+                    _vesselCache[mmsi] = (data.Info, metadata);
+
+                    // If this is the currently selected vessel, update the selection to refresh UI
+                    if (_selectedVessel?.MMSI == mmsi)
+                    {
+                        _selectedMetadata = metadata;
+                        await InvokeAsync(StateHasChanged);
+                    }
+                }
+            });
+
+            HubConnection.On("ReceiveServiceRequestUpdate", async () =>
+            {
+                await LoadServiceRequestStats();
+                await InvokeAsync(StateHasChanged);
+            });
+
+            HubConnection.On("ReceiveCompanyUpdate", async () =>
+            {
+                await LoadCompanyStats();
+                await InvokeAsync(StateHasChanged);
             });
         }
         catch (Exception ex)
@@ -342,6 +373,47 @@ new ChartSeries { Name = "Requests", Data = _serviceRequestStatusSummary.Select(
             Logger.LogError(ex, "Error in Dashboard OnInitializedAsync: {Message}", ex.Message);
         }
         StateHasChanged();
+    }
+
+    private async Task LoadServiceRequestStats()
+    {
+        try
+        {
+            var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
+            var serviceRequestTask = client.GetFromJsonAsync<ServiceRequest[]>("api/servicerequest");
+            var serviceRequestStatusTask =
+            client.GetFromJsonAsync<List<ServiceRequestStatusSummaryDto>>("api/dashboard/servicerequeststatus");
+
+            await Task.WhenAll(serviceRequestTask, serviceRequestStatusTask);
+
+            _pendingServiceRequestCount = serviceRequestTask.Result?.Count(r => r.Status == ServiceRequestStatus.Pending) ?? 0;
+            _serviceRequestStatusSummary = serviceRequestStatusTask.Result;
+
+            if (_serviceRequestStatusSummary != null)
+            {
+                _serviceRequestLabels = _serviceRequestStatusSummary.Select(x => x.Status).ToArray();
+                _serviceRequestData = _serviceRequestStatusSummary.Select(x => (double)x.Count).ToArray();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error refreshing service request stats");
+        }
+    }
+
+    private async Task LoadCompanyStats()
+    {
+        try
+        {
+            var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
+            var companyTask = client.GetFromJsonAsync<Company[]>("api/company");
+            await companyTask;
+            _companyCount = companyTask.Result?.Length ?? 0;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error refreshing company stats");
+        }
     }
 
     private void OnVesselSelected(string mmsi)

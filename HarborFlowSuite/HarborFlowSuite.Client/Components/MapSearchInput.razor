@@ -4,7 +4,7 @@
     <MudPaper Elevation="4" Class="pa-2 rounded-lg d-flex align-center gap-2 glass-search" Width="400px">
         <MudIcon Icon="@Icons.Material.Filled.Search" Class="search-icon" />
         <MudAutocomplete T="string" Value="@_searchQuery" SearchFunc="@Search" Placeholder="Search vessels..."
-            Variant="Variant.Text" DisableUnderLine="true" AdornmentIcon="" ResetValueOnEmptyText="true"
+            Variant="Variant.Text" AdornmentIcon="" ResetValueOnEmptyText="true"
             CoerceText="true" CoerceValue="true" DebounceInterval="300" ValueChanged="OnSearchValueChanged"
             Class="flex-grow-1 search-input" />
 
@@ -20,7 +20,7 @@
         </MudTooltip>
 
         <MudPopover Open="@_helpOpen" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight"
-            Class="pa-4 glass-popover" MaxWidth="300px">
+            Class="pa-4 glass-popover" Style="max-width: 300px;">
             <MudText Typo="Typo.subtitle2" Class="mb-2 font-weight-bold">How to Search</MudText>
             <MudText Typo="Typo.body2" Class="mb-1">You can search by:</MudText>
             <ul class="pl-4 mb-2" style="list-style-type: disc; font-size: 0.875rem;">
@@ -148,12 +148,12 @@
     [Parameter]
     public HashSet<string> Suggestions { get; set; } = new HashSet<string>();
 
-    private async Task<IEnumerable<string>> Search(string value, CancellationToken token)
+    private Task<IEnumerable<string>> Search(string value, CancellationToken token)
     {
         if (string.IsNullOrEmpty(value))
-            return new string[0];
+            return Task.FromResult<IEnumerable<string>>(new string[0]);
 
-        return Suggestions.Where(x => x.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+        return Task.FromResult(Suggestions.Where(x => x.Contains(value, StringComparison.InvariantCultureIgnoreCase)));
     }
 
     private async Task OnSearchValueChanged(string value)

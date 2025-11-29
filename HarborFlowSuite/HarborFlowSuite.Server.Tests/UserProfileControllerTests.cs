@@ -1,3 +1,4 @@
+using HarborFlowSuite.Application.Services;
 using HarborFlowSuite.Core.DTOs;
 using HarborFlowSuite.Core.Services;
 using HarborFlowSuite.Server.Controllers;
@@ -12,9 +13,9 @@ namespace HarborFlowSuite.Server.Tests
 {
     public class UserProfileControllerTests
     {
-        private UserProfileController CreateController(IUserProfileService userProfileService, string userId, string email)
+        private UserProfileController CreateController(IUserProfileService userProfileService, IUserService userService, string userId, string email)
         {
-            var controller = new UserProfileController(userProfileService);
+            var controller = new UserProfileController(userProfileService, userService);
             if (!string.IsNullOrEmpty(userId))
             {
                 var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
@@ -36,11 +37,12 @@ namespace HarborFlowSuite.Server.Tests
         {
             // Arrange
             var mockService = new Mock<IUserProfileService>();
+            var mockUserService = new Mock<IUserService>();
             var userId = "test-uid";
             var userEmail = "test@example.com";
             var userProfile = new UserProfileDto { FullName = "Test User", Email = userEmail };
             mockService.Setup(s => s.GetUserProfileAsync(userId, userEmail)).ReturnsAsync(userProfile);
-            var controller = CreateController(mockService.Object, userId, userEmail);
+            var controller = CreateController(mockService.Object, mockUserService.Object, userId, userEmail);
 
             // Act
             var result = await controller.GetUserProfile();
@@ -56,10 +58,11 @@ namespace HarborFlowSuite.Server.Tests
         {
             // Arrange
             var mockService = new Mock<IUserProfileService>();
+            var mockUserService = new Mock<IUserService>();
             var userId = "test-uid";
             var userEmail = "test@example.com";
             var userProfileDto = new UserProfileDto { FullName = "Updated Name", Email = "updated@example.com" };
-            var controller = CreateController(mockService.Object, userId, userEmail);
+            var controller = CreateController(mockService.Object, mockUserService.Object, userId, userEmail);
 
             // Act
             var result = await controller.UpdateUserProfile(userProfileDto);

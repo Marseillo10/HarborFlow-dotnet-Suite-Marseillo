@@ -1,0 +1,58 @@
+@using System.Net.Http
+@using System.Net.Http.Json
+@using HarborFlowSuite.Core.Models
+@using MudBlazor
+@inject IHttpClientFactory ClientFactory
+@inject ISnackbar Snackbar
+
+<MudDialog Class="mud-paper">
+    <DialogContent>
+        <EditForm Model="@_company" OnValidSubmit="Submit">
+            <DataAnnotationsValidator />
+            <MudTextField Label="Name" @bind-Value="_company.Name" For="@(() => _company.Name)" />
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Submit</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+
+    private Company _company = new();
+
+    private async Task Submit()
+    {
+        if (string.IsNullOrWhiteSpace(_company.Name))
+        {
+            Snackbar.Add("Please fill in the company name.", Severity.Warning);
+            return;
+        }
+
+        var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
+        try
+        {
+            var response = await client.PostAsJsonAsync("api/company", _company);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Company added successfully!", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                var errorMessage = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error adding company: {errorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

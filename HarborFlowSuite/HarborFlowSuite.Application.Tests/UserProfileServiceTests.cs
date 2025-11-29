@@ -16,7 +16,9 @@ namespace HarborFlowSuite.Application.Tests
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
-            return new ApplicationDbContext(options);
+
+            var mockCurrentUserService = new Moq.Mock<HarborFlowSuite.Infrastructure.Services.ICurrentUserService>();
+            return new ApplicationDbContext(options, mockCurrentUserService.Object);
         }
 
         [Fact]
@@ -47,7 +49,7 @@ namespace HarborFlowSuite.Application.Tests
             var user = new User { Id = Guid.NewGuid(), FirebaseUid = "test-uid", FullName = "Test User", Email = "test@example.com" };
             dbContext.Users.Add(user);
             await dbContext.SaveChangesAsync();
-            
+
             var service = new UserProfileService(dbContext);
             var updatedProfile = new UserProfileDto { FullName = "Updated Name", Email = "updated@example.com" };
 

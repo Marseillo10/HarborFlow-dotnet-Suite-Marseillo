@@ -1,4 +1,5 @@
 @using Microsoft.AspNetCore.Components.Web
+@using HarborFlowSuite.Shared.DTOs
 @using HarborFlowSuite.Core.DTOs
 @using HarborFlowSuite.Core.Models
 @using HarborFlowSuite.Client.Services
@@ -376,20 +377,18 @@
 
     private HashSet<string> _searchSuggestions = new HashSet<string>();
 
-    private async void OnPositionUpdateReceived(string mmsi, double lat, double lng, double heading, double speed, string
-    name,
-    string vesselType, VesselMetadataDto metadata)
+    private async void OnPositionUpdateReceived(VesselPositionUpdateDto update)
     {
-        _searchSuggestions.Add(name);
-        _searchSuggestions.Add(mmsi);
-        _searchSuggestions.Add(vesselType);
-        if (metadata != null && !string.IsNullOrEmpty(metadata.ImoNumber))
+        _searchSuggestions.Add(update.Name);
+        _searchSuggestions.Add(update.MMSI);
+        _searchSuggestions.Add(update.VesselType);
+        if (update.Metadata != null && !string.IsNullOrEmpty(update.Metadata.ImoNumber))
         {
-            _searchSuggestions.Add(metadata.ImoNumber);
+            _searchSuggestions.Add(update.Metadata.ImoNumber);
         }
         await InvokeAsync(StateHasChanged);
 
-        await UpdateVesselMarker(mmsi, lat, lng, heading, speed, name, vesselType, metadata);
+        await UpdateVesselMarker(update);
     }
 
     private async void OnMetadataUpdateReceived(string mmsi, VesselMetadataDto metadata)
@@ -402,11 +401,11 @@
         await JSRuntime.InvokeVoidAsync("HarborFlowMap.updateVesselMetadata", mmsi, metadata);
     }
 
-    public async Task UpdateVesselMarker(string mmsi, double lat, double lng, double heading, double speed, string name,
-    string vesselType, VesselMetadataDto metadata)
+    public async Task UpdateVesselMarker(VesselPositionUpdateDto update)
     {
-        await JSRuntime.InvokeVoidAsync("HarborFlowMap.updateVesselMarker", mmsi, lat, lng, heading, speed, name, vesselType,
-        metadata);
+        await JSRuntime.InvokeVoidAsync("HarborFlowMap.updateVesselMarker", update.MMSI, update.Latitude, update.Longitude,
+        update.Heading, update.Speed, update.Name, update.VesselType,
+        update.Metadata, update.VesselId);
     }
 
     [JSInvokable]
@@ -438,11 +437,11 @@
 
     [JSInvokable]
     public void ShowVesselTooltip(string mmsi, string name, string imo, string status, string type, double speed, double
-    heading, double lat, double lng, double clientX, double clientY, int screenWidth, int screenHeight)
+    heading, double lat, double lng, double clientX, double clientY, int screenWidth, int screenHeight, string? vesselId)
     {
         _tooltipVessel = new VesselPositionDto
             {
-                VesselId = mmsi,
+                VesselId = vesselId ?? mmsi,
                 VesselName = name,
                 IMO = imo,
                 VesselStatus = status,

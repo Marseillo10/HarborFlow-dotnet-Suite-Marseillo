@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using HarborFlowSuite.Core.Models;
 using HarborFlowSuite.Core.DTOs;
 using HarborFlowSuite.Application.Services;
+using HarborFlowSuite.Server.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace HarborFlowSuite.Server.Controllers;
 
@@ -12,10 +14,12 @@ namespace HarborFlowSuite.Server.Controllers;
 public class CompanyController : ControllerBase
 {
     private readonly ICompanyService _companyService;
+    private readonly IHubContext<AisHub> _hubContext;
 
-    public CompanyController(ICompanyService companyService)
+    public CompanyController(ICompanyService companyService, IHubContext<AisHub> hubContext)
     {
         _companyService = companyService;
+        _hubContext = hubContext;
     }
 
     [HttpGet]
@@ -28,6 +32,7 @@ public class CompanyController : ControllerBase
     public async Task<ActionResult<Company>> PostCompany(CreateCompanyDto createCompanyDto)
     {
         var company = await _companyService.CreateCompany(createCompanyDto);
+        await _hubContext.Clients.All.SendAsync("ReceiveCompanyUpdate");
         return CreatedAtAction(nameof(GetCompany), new { id = company.Id }, company);
     }
 
@@ -52,19 +57,26 @@ public class CompanyController : ControllerBase
         {
             return NotFound();
         }
-
+        await _hubContext.Clients.All.SendAsync("ReceiveCompanyUpdate");
         return NoContent();
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCompany(Guid id)
     {
-        var result = await _companyService.DeleteCompany(id);
-        if (!result)
+        try
         {
-            return NotFound();
+            var result = await _companyService.DeleteCompany(id);
+            if (!result)
+            {
+                return NotFound();
+            }
+            await _hubContext.Clients.All.SendAsync("ReceiveCompanyUpdate");
+            return NoContent();
         }
-
-        return NoContent();
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 }

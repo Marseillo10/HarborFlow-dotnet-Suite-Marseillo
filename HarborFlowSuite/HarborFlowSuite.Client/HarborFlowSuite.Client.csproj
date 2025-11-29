@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HarborFlowSuite.Core\HarborFlowSuite.Core.csproj" />
+    <ProjectReference Include="..\HarborFlowSuite.Shared\HarborFlowSuite.Shared.csproj" />
   </ItemGroup>
 
 </Project>

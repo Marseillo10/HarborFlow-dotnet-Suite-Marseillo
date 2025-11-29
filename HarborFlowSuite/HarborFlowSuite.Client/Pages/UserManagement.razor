@@ -1,0 +1,131 @@
+@page "/user-management"
+@using HarborFlowSuite.Shared.DTOs
+@using HarborFlowSuite.Shared.Constants
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+@attribute [Authorize(Policy = Permissions.Users.View)]
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@using HarborFlowSuite.Client.Shared.Dialogs
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h4" GutterBottom="true">User Management</MudText>
+
+    <MudTable Items="@_users" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading"
+        LoadingProgressColor="Color.Info">
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Email</MudTh>
+            <MudTh>Role</MudTh>
+            <MudTh>Company</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.FullName</MudTd>
+            <MudTd DataLabel="Email">@context.Email</MudTd>
+            <MudTd DataLabel="Role">@context.Role</MudTd>
+            <MudTd DataLabel="Company">@context.CompanyName</MudTd>
+            <MudTd DataLabel="Actions">
+                <AuthorizeView Policy="@Permissions.Users.Manage">
+                    <Authorized Context="authContext">
+                        @if (context.Role == "SystemAdmin")
+                        {
+                            <MudTooltip Text="System Admin accounts cannot be modified here.">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="true"
+                                    Class="mr-2">Edit Role</MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Error" Size="Size.Small" Disabled="true">
+                                    Delete</MudButton>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                                OnClick="@(() => OpenRoleDialog(context))" Class="mr-2">Edit Role</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Error" Size="Size.Small"
+                                OnClick="@(() => DeleteUser(context))">Delete</MudButton>
+                        }
+                    </Authorized>
+                </AuthorizeView>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private List<UserDto> _users = new();
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        _loading = true;
+        try
+        {
+            _users = await Http.GetFromJsonAsync<List<UserDto>>("api/users") ?? new List<UserDto>();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading users: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OpenRoleDialog(UserDto user)
+    {
+        var parameters = new DialogParameters { ["User"] = user };
+        var dialog = await DialogService.ShowAsync<RoleAssignmentDialog>("Assign Role", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadUsers();
+        }
+    }
+
+    private async Task DeleteUser(UserDto user)
+    {
+        var parameters = new DialogParameters
+{
+{ "Title", "Delete User" },
+{ "Message", $"Are you sure you want to delete user {user.FullName}?" },
+{ "MatchLabel", "Email Address" },
+{ "MatchValue", user.Email }
+};
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small };
+
+        var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.DeleteConfirmationDialog>("Delete User",
+        parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                var response = await Http.DeleteAsync($"api/users/{user.Id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add("User deleted successfully", Severity.Success);
+                    await LoadUsers();
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    Snackbar.Add($"Failed to delete user: {error}", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting user: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}

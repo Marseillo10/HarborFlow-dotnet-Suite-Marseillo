@@ -85,6 +85,10 @@ public class FirebaseAuthenticationStateProvider : AuthenticationStateProvider
             {
                 claims.Add(new Claim(ClaimTypes.Name, name.ToString() ?? string.Empty));
             }
+            if (keyValuePairs.TryGetValue("role", out var role))
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role.ToString() ?? string.Empty));
+            }
             // Add other claims as needed
         }
 

@@ -1,8 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\HarborFlowSuite.Core\HarborFlowSuite.Core.csproj" />
     <ProjectReference Include="..\HarborFlowSuite.Application\HarborFlowSuite.Application.csproj" />
+    <ProjectReference Include="..\HarborFlowSuite.Shared\HarborFlowSuite.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,7 +22,7 @@
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
 </Project>

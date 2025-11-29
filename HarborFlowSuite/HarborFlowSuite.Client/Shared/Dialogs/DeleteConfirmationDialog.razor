@@ -1,0 +1,41 @@
+@using MudBlazor
+
+<MudDialog>
+    <DialogContent>
+        <MudText Class="mb-4">
+            @Message
+            This action cannot be undone.
+        </MudText>
+        <MudText Class="mb-2">
+            Please type the @MatchLabel <b>@MatchValue</b> to confirm.
+        </MudText>
+        <MudTextField @bind-Value="_input" Label="@MatchLabel" Variant="Variant.Outlined" Immediate="true"
+            OnKeyUp="CheckMatch" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Submit" Disabled="@(!_isMatch)">Delete
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public string Title { get; set; } = "Delete Item";
+    [Parameter] public string Message { get; set; }
+    [Parameter] public string MatchLabel { get; set; } = "Value";
+    [Parameter] public string MatchValue { get; set; }
+
+    private string _input;
+    private bool _isMatch;
+
+    private void CheckMatch()
+    {
+        _isMatch = string.Equals(_input, MatchValue, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(true));
+}

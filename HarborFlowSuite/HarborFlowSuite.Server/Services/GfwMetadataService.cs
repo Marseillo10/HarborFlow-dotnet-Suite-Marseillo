@@ -3,7 +3,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using HarborFlowSuite.Core.DTOs;
+using HarborFlowSuite.Shared.DTOs;
 using HarborFlowSuite.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using HarborFlowSuite.Core.Models;

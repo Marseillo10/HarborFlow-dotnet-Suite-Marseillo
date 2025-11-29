@@ -23,6 +23,11 @@ namespace HarborFlowSuite.Infrastructure.Services
             return await _context.Vessels.ToListAsync();
         }
 
+        public async Task<Vessel> GetVesselById(Guid id)
+        {
+            return await _context.Vessels.FindAsync(id);
+        }
+
         public async Task<List<VesselPositionDto>> GetVesselPositions()
         {
             var positions = await _context.Vessels
@@ -42,6 +47,45 @@ namespace HarborFlowSuite.Infrastructure.Services
                 .ToListAsync();
 
             return positions;
+        }
+
+        public async Task<Vessel> CreateVessel(Vessel vessel)
+        {
+            _context.Vessels.Add(vessel);
+            await _context.SaveChangesAsync();
+            return vessel;
+        }
+
+        public async Task<Vessel> UpdateVessel(Vessel vessel)
+        {
+            var existingVessel = await _context.Vessels.FindAsync(vessel.Id);
+            if (existingVessel == null)
+            {
+                return null;
+            }
+
+            existingVessel.Name = vessel.Name;
+            existingVessel.ImoNumber = vessel.ImoNumber;
+            existingVessel.VesselType = vessel.VesselType;
+            existingVessel.Length = vessel.Length;
+            existingVessel.Width = vessel.Width;
+            existingVessel.IsActive = vessel.IsActive;
+            // Update other properties as needed
+
+            await _context.SaveChangesAsync();
+            return existingVessel;
+        }
+        public async Task<bool> DeleteVessel(Guid id)
+        {
+            var vessel = await _context.Vessels.FindAsync(id);
+            if (vessel == null)
+            {
+                return false;
+            }
+
+            _context.Vessels.Remove(vessel);
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

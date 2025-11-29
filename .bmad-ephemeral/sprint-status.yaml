@@ -53,27 +53,38 @@ development_status:
   2-5-account-recovery: done
   epic-2-retrospective: optional
   epic-3: backlog
-  3-1-four-tier-role-system-implementation: backlog
-  3-2-granular-permission-enforcement: backlog
-  3-3-company-based-data-isolation: backlog
+  3-1-four-tier-role-system-implementation: done
+  3-2-granular-permission-enforcement: done
+  3-3-company-based-data-isolation: in-progress
   3-4-role-assignment-management: backlog
   3-5-permission-inheritance: backlog
   epic-3-retrospective: optional
-  epic-4: backlog
-  4-1-service-request-status-visualization: backlog
-  4-2-vessel-count-by-type-analytics: backlog
-  4-3-role-based-data-filtering: backlog
-  4-4-real-time-dashboard-updates: backlog
+  epic-4: in-progress
+  4-1-service-request-status-visualization: done
+  4-2-vessel-count-by-type-analytics: done
+  4-3-role-based-data-filtering: done
+  4-4-real-time-dashboard-updates: done
   4-5-export-functionality: backlog
   epic-4-retrospective: optional
-  epic-5: backlog
-  5-1-implement-contextual-modal-service-request-form: backlog
-  5-2-request-status-tracking: backlog
-  5-3-company-based-request-filtering: backlog
-  5-4-implement-badge-and-toast-notifications-for-service-requests: backlog
-  5-5-build-two-pane-review-command-center-layout: backlog
-  5-6-implement-request-detail-pane-with-mini-map: backlog
-  5-7-implement-approve-reject-actions-with-keyboard-shortcuts: backlog
+  epic-5:
+    status: in-progress
+    stories:
+      - id: "5.1"
+        status: completed
+      - id: "5.5"
+        status: completed
+      - id: "5.2"
+        status: backlog
+      - id: "5.3"
+        status: backlog
+      - id: "5.4"
+        status: backlog
+      - id: "5.5"
+        status: backlog
+      - id: "5.6"
+        status: backlog
+      - id: "5.7"
+        status: backlog
   epic-5-retrospective: optional
   epic-6: backlog
   6-1-curated-maritime-news-feed: backlog

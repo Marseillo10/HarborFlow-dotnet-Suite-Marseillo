@@ -101,6 +101,21 @@
                 </EditForm>
             </MudCardContent>
         </MudCard>
+
+        <MudCard Elevation="4" Class="glass-card rounded-xl pa-6 border-danger">
+            <MudCardContent>
+                <MudText Typo="Typo.h6" Class="mb-4 text-danger">Danger Zone</MudText>
+                <MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">
+                    Once you delete your account, there is no going back. Please be certain.
+                </MudText>
+                <div class="d-flex justify-end">
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" Size="Size.Large"
+                               StartIcon="@Icons.Material.Filled.DeleteForever" OnClick="DeleteAccount">
+                        Delete Account
+                    </MudButton>
+                </div>
+            </MudCardContent>
+        </MudCard>
     }
 </MudContainer>
 
@@ -150,6 +165,14 @@
             transform: translateY(0);
         }
     }
+
+    .border-danger {
+        border: 1px solid rgba(244, 67, 54, 0.5) !important;
+    }
+
+    .text-danger {
+        color: #f44336 !important;
+    }
 </style>
 
 @code {
@@ -185,7 +208,16 @@
                 var response = await Http.PutAsJsonAsync("api/UserProfile", userProfile);
                 if (response.IsSuccessStatusCode)
                 {
-                    Snackbar.Add("Profile updated successfully!", Severity.Success);
+                    // Update Firebase Profile to trigger UI refresh
+                    var result = await JSRuntime.InvokeAsync<ChangePasswordResult>("firebaseAuth.updateProfile", userProfile.FullName);
+                    if (result.Success)
+                    {
+                        Snackbar.Add("Profile updated successfully!", Severity.Success);
+                    }
+                    else
+                    {
+                         Snackbar.Add($"Profile saved, but UI sync failed: {result.Error}", Severity.Warning);
+                    }
                 }
                 else
                 {
@@ -291,6 +323,47 @@
         await Task.Delay(2000);
         await JSRuntime.InvokeVoidAsync("firebaseAuth.signOut");
         NavManager.NavigateTo("/login");
+    }
+
+    private async Task DeleteAccount()
+    {
+        if (userProfile == null) return;
+
+        var parameters = new DialogParameters
+        {
+            { "Title", "Delete Account" },
+            { "Message", "Are you sure you want to delete your account? This action cannot be undone." },
+            { "MatchLabel", "Email" },
+            { "MatchValue", userProfile.Email }
+        };
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small };
+
+        var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.DeleteConfirmationDialog>("Delete Account", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                var response = await Http.DeleteAsync("api/UserProfile");
+                if (response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add("Account deleted successfully. Goodbye!", Severity.Success);
+                    await Task.Delay(2000);
+                    await JSRuntime.InvokeVoidAsync("firebaseAuth.signOut");
+                    NavManager.NavigateTo("/login");
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    Snackbar.Add($"Failed to delete account: {error}", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting account: {ex.Message}", Severity.Error);
+            }
+        }
     }
 
     public class ChangePasswordModel

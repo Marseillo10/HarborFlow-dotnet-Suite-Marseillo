@@ -18,8 +18,8 @@ namespace HarborFlowSuite.Infrastructure.Services
 
         public async Task<UserProfileDto> GetUserProfileAsync(string userId, string email)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == userId);
-            
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.FirebaseUid == userId);
+
             if (user == null)
             {
                 // User exists in Firebase but not in our DB, so create them.
@@ -38,7 +38,8 @@ namespace HarborFlowSuite.Infrastructure.Services
             return new UserProfileDto
             {
                 FullName = user.FullName,
-                Email = user.Email
+                Email = user.Email,
+                Role = user.Role?.Name ?? "Unknown"
             };
         }
 

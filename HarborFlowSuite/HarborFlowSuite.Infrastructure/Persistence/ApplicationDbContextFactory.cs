@@ -24,6 +24,14 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
         var connectionString = config.GetConnectionString("DefaultConnection");
         optionsBuilder.UseNpgsql(connectionString);
-        return new ApplicationDbContext(optionsBuilder.Options);
+        return new ApplicationDbContext(optionsBuilder.Options, new DesignTimeCurrentUserService());
+    }
+
+    public class DesignTimeCurrentUserService : Services.ICurrentUserService
+    {
+        public Guid? CompanyId => null;
+        public string? UserId => "system";
+        public string? Role => "SystemAdmin";
+        public bool IsSystemAdmin => true;
     }
 }

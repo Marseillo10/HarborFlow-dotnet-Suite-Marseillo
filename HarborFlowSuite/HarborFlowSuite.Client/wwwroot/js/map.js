@@ -376,11 +376,11 @@ window.HarborFlowMap = {
 
     reportTimeout: null,
 
-    updateVesselMarker: function (mmsi, lat, lng, heading, speed, name, type = 'HSC', metadata) {
+    updateVesselMarker: function (mmsi, lat, lng, heading, speed, name, type = 'HSC', metadata, vesselId) {
         if (!this.map) return;
 
         const vesselData = {
-            vesselId: mmsi,
+            vesselId: vesselId || mmsi,
             vesselName: name,
             vesselType: type,
             imo: metadata ? metadata.imoNumber : 'N/A',
@@ -449,7 +449,8 @@ window.HarborFlowMap = {
                     e.originalEvent.clientX,
                     e.originalEvent.clientY,
                     window.innerWidth,
-                    window.innerHeight
+                    window.innerHeight,
+                    vesselId
                 );
             });
 

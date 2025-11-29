@@ -6,7 +6,7 @@
     <DialogContent>
         <MudTextField @bind-Value="_searchString" Placeholder="Type a command or search..." Adornment="Adornment.Start"
             AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-3" Immediate="true" TextChanged="OnSearch" />
-        <MudList T="string" Clickable="true">
+        <MudList T="string">
             @foreach (var item in _filteredItems)
             {
                 <MudListItem OnClick="@(() => ExecuteCommand(item))">

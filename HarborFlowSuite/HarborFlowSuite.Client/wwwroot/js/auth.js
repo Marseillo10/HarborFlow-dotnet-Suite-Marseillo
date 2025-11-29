@@ -68,5 +68,35 @@ window.firebaseAuth = {
             console.error("Error re-authenticating:", error);
             return { success: false, error: error.message };
         }
+    },
+    updateProfile: async function (displayName) {
+        try {
+            const user = firebase.auth().currentUser;
+            if (user) {
+                await user.updateProfile({
+                    displayName: displayName
+                });
+
+                // Force token refresh to get new claims/profile data in the token
+                const token = await user.getIdToken(true);
+
+                // Manually notify Blazor of the state change
+                if (window.authProviderRef) {
+                    await window.authProviderRef.invokeMethodAsync('OnAuthStateChanged', {
+                        email: user.email,
+                        uid: user.uid,
+                        displayName: user.displayName,
+                        token: token
+                    });
+                }
+
+                return { success: true };
+            } else {
+                return { success: false, error: "No user logged in." };
+            }
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            return { success: false, error: error.message };
+        }
     }
 };

@@ -6,7 +6,7 @@
         <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-1">@Vessel.VesselName</MudText>
         <MudText Typo="Typo.caption" Class="d-block"><strong>Type:</strong> @(string.IsNullOrEmpty(Vessel.VesselType) ?
             "Unknown" : Vessel.VesselType)</MudText>
-                <MudText Typo="Typo.caption" Class="d-block"><strong>IMO:</strong> @Vessel.IMO</MudText>
+
                 <MudText Typo="Typo.caption" Class="d-block"><strong>Lat:</strong> @Vessel.Latitude.ToString("F6")</MudText>
                 <MudText Typo="Typo.caption" Class="d-block"><strong>Lng:</strong> @Vessel.Longitude.ToString("F6")</MudText>
                 <MudText Typo="Typo.caption" Class="d-block"><strong>Speed:</strong> @Vessel.Speed.ToString("F1") knots
@@ -14,16 +14,28 @@
                 <MudText Typo="Typo.caption" Class="d-block"><strong>Heading:</strong> @Vessel.Heading.ToString("F0")°</MudText>
                 <MudText Typo="Typo.caption" Class="d-block mt-1 mud-text-secondary"
                     Style="font-style: italic; font-size: 0.7rem;">(Click for details)</MudText>
-            </MudCardContent>
-        </MudCard>
+                @if (Guid.TryParse(Vessel.VesselId, out _))
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="mt-2"
+                    OnClick="CreateServiceRequest">Create Request</MudButton>
+            }
+            else
+            {
+                <MudTooltip Text="Vessel not registered in system">
+                    <MudButton Variant="Variant.Filled" Color="Color.Default" Size="Size.Small" Class="mt-2" Disabled="true">
+                        Create Request</MudButton>
+                </MudTooltip>
+            }
+        </MudCardContent>
+    </MudCard>
 }
 
 <style>
     .vessel-tooltip {
         position: absolute;
         z-index: 1000;
-        pointer-events: none;
-        /* Allows interaction with map underneath */
+        pointer-events: auto;
+        /* Allows interaction with button */
         white-space: nowrap;
         background: rgba(11, 29, 46, 0.95);
         color: white;
@@ -46,6 +58,8 @@
     [Parameter] public int ScreenWidth { get; set; }
     [Parameter] public int ScreenHeight { get; set; }
 
+    [Inject] IDialogService DialogService { get; set; }
+
     private string GetTooltipStyle()
     {
         // Default offset
@@ -65,5 +79,16 @@
         }
 
         return $"left: {x}px; top: {y}px;";
+    }
+
+    private async Task CreateServiceRequest()
+    {
+        if (Guid.TryParse(Vessel.VesselId, out var vesselId))
+        {
+            var parameters = new DialogParameters { { "VesselId", vesselId } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+            await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.ServiceRequestDialog>("Add Service Request",
+            parameters, options);
+        }
     }
 }

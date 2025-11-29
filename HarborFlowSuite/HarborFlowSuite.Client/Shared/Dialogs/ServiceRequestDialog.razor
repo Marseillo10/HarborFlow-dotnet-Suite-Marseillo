@@ -1,0 +1,89 @@
+@using System.Net.Http
+@using System.Net.Http.Json
+@using HarborFlowSuite.Core.DTOs
+@using HarborFlowSuite.Core.Models
+@using MudBlazor
+@inject IHttpClientFactory ClientFactory
+@inject ISnackbar Snackbar
+
+<MudDialog Class="mud-paper">
+    <DialogContent>
+        <EditForm Model="@_createServiceRequestDto" OnValidSubmit="Submit">
+            <DataAnnotationsValidator />
+            <MudTextField Label="Title" @bind-Value="_createServiceRequestDto.Title"
+                For="@(() => _createServiceRequestDto.Title)" />
+            <MudTextField Label="Description" @bind-Value="_createServiceRequestDto.Description"
+                For="@(() => _createServiceRequestDto.Description)" Lines="3" />
+            <MudSelect T="string" Label="Status" @bind-Value="_createServiceRequestDto.Status"
+                AnchorOrigin="Origin.BottomCenter">
+                @foreach (var status in Enum.GetNames(typeof(ServiceRequestStatus)))
+                {
+                    <MudSelectItem Value="@status">@status</MudSelectItem>
+                }
+            </MudSelect>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Submit</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public Guid? VesselId { get; set; }
+
+    private readonly CreateServiceRequestDto _createServiceRequestDto = new()
+        {
+            Title = "",
+            Description = "",
+            Status =
+        "Pending"
+        };
+
+    protected override void OnInitialized()
+    {
+        if (VesselId.HasValue)
+        {
+            // In a real scenario, we might want to pre-fill description or title with vessel info
+            // For now, we just acknowledge the vessel ID context
+            _createServiceRequestDto.Description = $"Request for Vessel ID: {VesselId}";
+        }
+    }
+
+    private async Task Submit()
+    {
+        // Basic validation check before API call
+        if (string.IsNullOrWhiteSpace(_createServiceRequestDto.Title) ||
+        string.IsNullOrWhiteSpace(_createServiceRequestDto.Description))
+        {
+            Snackbar.Add("Please fill in all required fields.", Severity.Warning);
+            return;
+        }
+
+        var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
+        try
+        {
+            var response = await client.PostAsJsonAsync("api/servicerequest", _createServiceRequestDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Service request added successfully!", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                var errorMessage = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error adding service request: {errorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

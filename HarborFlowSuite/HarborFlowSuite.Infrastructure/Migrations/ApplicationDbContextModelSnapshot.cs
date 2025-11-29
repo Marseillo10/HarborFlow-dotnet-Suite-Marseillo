@@ -195,7 +195,7 @@ namespace HarborFlowSuite.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Role");
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("HarborFlowSuite.Core.Models.RolePermission", b =>
@@ -329,7 +329,7 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")

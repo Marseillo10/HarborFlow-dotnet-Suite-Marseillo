@@ -9,6 +9,8 @@
 @inject IToastService ToastService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IHttpClientFactory ClientFactory
 
 @attribute [Authorize]
 
@@ -18,8 +20,12 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <MudText Typo="Typo.h4">Service Request Management</MudText>
         <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.AddCircle"
-            OnClick='() => NavigationManager.NavigateTo("/add-service-request")'>
+            OnClick="OpenAddServiceRequestDialog">
             Add Service Request
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
+            OnClick="ExportCsv" Class="ml-2">
+            Export CSV
         </MudButton>
     </div>
 
@@ -58,7 +64,7 @@
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
                             Href="@($"/edit-service-request/{context.Id}")" />
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
-                            OnClick="@(async () => await DeleteServiceRequest(context.Id))" />
+                            OnClick="@(async () => await DeleteServiceRequest(context))" />
                         @if (_isPortAuthorityOfficer && context.Status == ServiceRequestStatus.Pending)
                         {
                             <MudTooltip Text="Approve">
@@ -205,32 +211,66 @@
         };
     }
 
-    private async Task DeleteServiceRequest(Guid id)
+    private async Task DeleteServiceRequest(ServiceRequest request)
     {
-        var parameters = new DialogParameters<ApprovalDialog>
+        var parameters = new DialogParameters
         {
-            { x => x.ContentText, "Are you sure you want to delete this service request? This action cannot be undone." },
-            { x => x.ButtonText, "Delete" },
-            { x => x.Color, Color.Error }
+            { "Title", "Delete Service Request" },
+            { "Message", $"Are you sure you want to delete service request {request.Title}?" },
+            { "MatchLabel", "Request Title" },
+            { "MatchValue", request.Title }
         };
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small };
 
-        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-
-        var dialog = await DialogService.ShowAsync<ApprovalDialog>("Delete Service Request", parameters, options);
+        var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.DeleteConfirmationDialog>("Delete Service Request", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)
         {
             try
             {
-                await ServiceRequestService.DeleteServiceRequest(id);
-                ToastService.ShowSuccess("Service request deleted successfully.");
+                await ServiceRequestService.DeleteServiceRequest(request.Id);
+                Snackbar.Add("Service request deleted successfully", Severity.Success);
                 await LoadServiceRequests();
             }
             catch (Exception ex)
             {
-                ToastService.ShowError($"Error deleting service request: {ex.Message}");
+                Snackbar.Add($"Error deleting service request: {ex.Message}", Severity.Error);
             }
+        }
+    }
+    private async Task OpenAddServiceRequestDialog()
+    {
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.ServiceRequestDialog>("Add Service Request", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadServiceRequests();
+        }
+    }
+
+    private async Task ExportCsv()
+    {
+        try
+        {
+            var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
+            var response = await client.GetAsync("api/servicerequest/export");
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/download.js");
+                await module.InvokeVoidAsync("saveAsFile", "service_requests.csv", content);
+            }
+            else
+            {
+                Snackbar.Add("Failed to export CSV", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error exporting CSV: {ex.Message}", Severity.Error);
         }
     }
 }

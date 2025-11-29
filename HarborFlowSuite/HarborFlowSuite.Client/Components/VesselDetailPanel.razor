@@ -1,4 +1,5 @@
 @using HarborFlowSuite.Core.DTOs
+@using HarborFlowSuite.Shared.DTOs
 @using HarborFlowSuite.Core.Models
 
 <MudDrawer Open="@Open" OpenChanged="@OnDrawerOpenChanged" Anchor="Anchor.End" Elevation="1"
@@ -17,8 +18,31 @@
                 </MudListItem>
                 <MudListItem Icon="@Icons.Material.Filled.Numbers">
                     <MudText Typo="Typo.subtitle2">MMSI</MudText>
-                    <MudText Typo="Typo.body1">@Vessel.MMSI</MudText>
+                    <div class="d-flex align-center">
+                        <MudText Typo="Typo.body1" Class="mr-2">@Vessel.MMSI</MudText>
+                        <MudTooltip Text="Copy MMSI">
+                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
+                                OnClick="@(() => CopyToClipboard(Vessel.MMSI, "MMSI"))" />
+                        </MudTooltip>
+                    </div>
                 </MudListItem>
+                @if (Metadata != null)
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.Fingerprint">
+                        <MudText Typo="Typo.subtitle2">IMO</MudText>
+                        <div class="d-flex align-center">
+                            <MudText Typo="Typo.body1" Class="mr-2">@(string.IsNullOrEmpty(Metadata.ImoNumber) ? "N/A" :
+                        Metadata.ImoNumber)</MudText>
+                                @if (!string.IsNullOrEmpty(Metadata.ImoNumber))
+                            {
+                                <MudTooltip Text="Copy IMO">
+                                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
+                                        OnClick="@(() => CopyToClipboard(Metadata.ImoNumber, "IMO"))" />
+                                </MudTooltip>
+                            }
+                        </div>
+                    </MudListItem>
+                }
                 <MudListItem Icon="@Icons.Material.Filled.Category">
                     <MudText Typo="Typo.subtitle2">Type</MudText>
                     <MudText Typo="Typo.body1">@Vessel.Type</MudText>
@@ -51,14 +75,23 @@
                         <MudText Typo="Typo.subtitle2">Length</MudText>
                         <MudText Typo="Typo.body1">@Metadata.Length m</MudText>
                     </MudListItem>
-                    <MudListItem Icon="@Icons.Material.Filled.Fingerprint">
-                        <MudText Typo="Typo.subtitle2">IMO</MudText>
-                        <MudText Typo="Typo.body1">@Metadata.ImoNumber</MudText>
-                    </MudListItem>
+
                 </MudList>
             }
 
             <div class="pa-4">
+            @if (Guid.TryParse(Vessel.VesselId, out _))
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" FullWidth="true" Class="mb-2"
+                        OnClick="CreateServiceRequest">Create Service Request</MudButton>
+                }
+                else
+                {
+                    <MudTooltip Text="Vessel not registered in system">
+                        <MudButton Variant="Variant.Filled" Color="Color.Default" FullWidth="true" Class="mb-2" Disabled="true">
+                            Create Service Request</MudButton>
+                    </MudTooltip>
+                }
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
                     Href="@($"/vessel-details/{Vessel.MMSI}")">View Full Details</MudButton>
             </div>
@@ -88,6 +121,7 @@
     public class VesselPositionDto
     {
         public string MMSI { get; set; }
+        public string VesselId { get; set; }
         public string Name { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
@@ -106,5 +140,29 @@
     {
         Open = isOpen;
         await OpenChanged.InvokeAsync(isOpen);
+    }
+
+    [Inject] IDialogService DialogService { get; set; }
+    [Inject] IJSRuntime JSRuntime { get; set; }
+    [Inject] ISnackbar Snackbar { get; set; }
+
+    private async Task CreateServiceRequest()
+    {
+        if (Guid.TryParse(Vessel.VesselId, out var vesselId))
+        {
+            var parameters = new DialogParameters { { "VesselId", vesselId } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+            await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.ServiceRequestDialog>("Add Service Request",
+            parameters, options);
+        }
+    }
+
+    private async Task CopyToClipboard(string text, string label)
+    {
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+            Snackbar.Add($"{label} copied to clipboard", Severity.Success);
+        }
     }
 }

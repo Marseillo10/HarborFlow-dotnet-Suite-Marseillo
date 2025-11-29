@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace HarborFlowSuite.Core.Models
 {
-    public class User
+    public class User : Interfaces.IMustHaveCompany
     {
         public Guid Id { get; set; }
         public Guid? CompanyId { get; set; }

@@ -8,6 +8,9 @@ using HarborFlowSuite.Application.Services;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 
+using HarborFlowSuite.Server.Hubs;
+using Microsoft.AspNetCore.SignalR;
+
 namespace HarborFlowSuite.Server.Controllers
 {
     [Authorize]
@@ -16,10 +19,12 @@ namespace HarborFlowSuite.Server.Controllers
     public class ServiceRequestController : ControllerBase
     {
         private readonly IServiceRequestService _serviceRequestService;
+        private readonly IHubContext<AisHub> _hubContext;
 
-        public ServiceRequestController(IServiceRequestService serviceRequestService)
+        public ServiceRequestController(IServiceRequestService serviceRequestService, IHubContext<AisHub> hubContext)
         {
             _serviceRequestService = serviceRequestService;
+            _hubContext = hubContext;
         }
 
         [HttpGet]
@@ -29,20 +34,42 @@ namespace HarborFlowSuite.Server.Controllers
             return Ok(serviceRequests);
         }
 
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ServiceRequest>> GetServiceRequest(Guid id)
+        {
+            var serviceRequest = await _serviceRequestService.GetServiceRequestById(id);
+            if (serviceRequest == null)
+            {
+                return NotFound();
+            }
+            return Ok(serviceRequest);
+        }
+
         [HttpPost]
-        public async Task<ActionResult<ServiceRequest>> CreateServiceRequest([FromBody] ServiceRequest serviceRequest)
+        public async Task<ActionResult<ServiceRequest>> CreateServiceRequest([FromBody] CreateServiceRequestDto createServiceRequestDto)
         {
             var firebaseUid = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(firebaseUid))
             {
                 return Unauthorized("User not found.");
             }
+
+            // Map DTO to Entity
+            var serviceRequest = new ServiceRequest
+            {
+                Title = createServiceRequestDto.Title,
+                Description = createServiceRequestDto.Description,
+                Status = Enum.Parse<ServiceRequestStatus>(createServiceRequestDto.Status)
+            };
+
             var createdServiceRequest = await _serviceRequestService.CreateServiceRequest(serviceRequest, firebaseUid);
 
             if (createdServiceRequest == null)
             {
                 return BadRequest("User not found or error creating service request.");
             }
+
+            await _hubContext.Clients.All.SendAsync("ReceiveServiceRequestUpdate");
 
             return CreatedAtAction(nameof(GetServiceRequests), new { id = createdServiceRequest.Id }, createdServiceRequest);
         }
@@ -56,6 +83,7 @@ namespace HarborFlowSuite.Server.Controllers
             {
                 return NotFound();
             }
+            await _hubContext.Clients.All.SendAsync("ReceiveServiceRequestUpdate");
             return Ok(result);
         }
 
@@ -68,7 +96,62 @@ namespace HarborFlowSuite.Server.Controllers
             {
                 return NotFound();
             }
+            await _hubContext.Clients.All.SendAsync("ReceiveServiceRequestUpdate");
             return Ok(result);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateServiceRequest(Guid id, [FromBody] ServiceRequest serviceRequest)
+        {
+            if (id != serviceRequest.Id)
+            {
+                return BadRequest();
+            }
+
+            var updatedRequest = await _serviceRequestService.UpdateServiceRequest(serviceRequest);
+            if (updatedRequest == null)
+            {
+                return NotFound();
+            }
+
+            await _hubContext.Clients.All.SendAsync("ReceiveServiceRequestUpdate");
+
+            return NoContent();
+        }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteServiceRequest(Guid id)
+        {
+            var result = await _serviceRequestService.DeleteServiceRequest(id);
+            if (!result)
+            {
+                return NotFound();
+            }
+            await _hubContext.Clients.All.SendAsync("ReceiveServiceRequestUpdate");
+            return NoContent();
+        }
+        [HttpGet("export")]
+        public async Task<IActionResult> Export()
+        {
+            var serviceRequests = await _serviceRequestService.GetServiceRequests();
+            var builder = new System.Text.StringBuilder();
+            builder.AppendLine("Id,Title,Description,Status,Priority,RequestedAt");
+
+            foreach (var req in serviceRequests)
+            {
+                builder.AppendLine($"{req.Id},{EscapeCsv(req.Title)},{EscapeCsv(req.Description)},{req.Status},{req.Priority},{req.RequestedAt}");
+            }
+
+            return File(System.Text.Encoding.UTF8.GetBytes(builder.ToString()), "text/csv", "service_requests.csv");
+        }
+
+        private string EscapeCsv(string field)
+        {
+            if (string.IsNullOrEmpty(field)) return "";
+            if (field.Contains(",") || field.Contains("\"") || field.Contains("\n"))
+            {
+                return $"\"{field.Replace("\"", "\"\"")}\"";
+            }
+            return field;
         }
     }
 }

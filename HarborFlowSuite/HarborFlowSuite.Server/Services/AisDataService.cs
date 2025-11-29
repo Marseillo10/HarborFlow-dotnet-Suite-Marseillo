@@ -11,6 +11,10 @@ using System.Text.Json;
 using HarborFlowSuite.Core.Models;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Concurrent;
+using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
+using HarborFlowSuite.Shared.DTOs;
+using Microsoft.EntityFrameworkCore;
 
 namespace HarborFlowSuite.Server.Services
 {
@@ -130,8 +134,32 @@ namespace HarborFlowSuite.Server.Services
                     var name = _vesselNames.GetValueOrDefault(mmsi, $"Vessel {mmsi}");
                     var vesselType = _vesselTypes.GetValueOrDefault(mmsi, "Other");
 
+                    Guid? vesselId = null;
+                    // Try to find the vessel ID in the database
+                    using (var scope = _serviceScopeFactory.CreateScope())
+                    {
+                        var dbContext = scope.ServiceProvider.GetRequiredService<HarborFlowSuite.Infrastructure.Persistence.ApplicationDbContext>();
+                        var vessel = dbContext.Vessels.IgnoreQueryFilters().FirstOrDefault(v => v.MMSI == mmsi);
+                        if (vessel != null)
+                        {
+                            vesselId = vessel.Id;
+                        }
+                    }
+
                     // Send position update immediately
-                    await _hubContext.Clients.All.SendAsync("ReceiveVesselPositionUpdate", mmsi, lat, lon, heading, speed, name, vesselType, null, stoppingToken);
+                    var updateDto = new HarborFlowSuite.Shared.DTOs.VesselPositionUpdateDto
+                    {
+                        MMSI = mmsi,
+                        Latitude = lat,
+                        Longitude = lon,
+                        Heading = heading,
+                        Speed = speed,
+                        Name = name,
+                        VesselType = vesselType,
+                        Metadata = null,
+                        VesselId = vesselId
+                    };
+                    await _hubContext.Clients.All.SendAsync("ReceiveVesselPositionUpdate", updateDto, stoppingToken);
 
                     // Fetch metadata in the background
                     _ = Task.Run(async () =>

@@ -1,4 +1,5 @@
 using System;
+using HarborFlowSuite.Shared.DTOs;
 
 namespace HarborFlowSuite.Core.DTOs
 {

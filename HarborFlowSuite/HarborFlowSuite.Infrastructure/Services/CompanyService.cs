@@ -68,10 +68,25 @@ public class CompanyService : ICompanyService
 
     public async Task<bool> DeleteCompany(Guid id)
     {
-        var company = await _context.Companies.FindAsync(id);
+        var company = await _context.Companies
+            .Include(c => c.Vessels)
+            .Include(c => c.Users)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(c => c.Id == id);
+
         if (company == null)
         {
             return false;
+        }
+
+        if (company.Vessels != null && company.Vessels.Any())
+        {
+            throw new InvalidOperationException("Cannot delete company because it has assigned vessels.");
+        }
+
+        if (company.Users != null && company.Users.Any())
+        {
+            throw new InvalidOperationException("Cannot delete company because it has assigned users.");
         }
 
         _context.Companies.Remove(company);

@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.SignalR.Client;
-using HarborFlowSuite.Core.DTOs;
+using HarborFlowSuite.Shared.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -11,7 +11,7 @@ namespace HarborFlowSuite.Client.Services
         private readonly HubConnection _hubConnection;
         private readonly HashSet<string> _activeVessels = new HashSet<string>();
 
-        public event Action<string, double, double, double, double, string, string, VesselMetadataDto> OnPositionUpdateReceived;
+        public event Action<VesselPositionUpdateDto> OnPositionUpdateReceived;
         public event Action<string, VesselMetadataDto> OnMetadataUpdateReceived;
         public event Action<int> OnTotalVesselCountChanged;
 
@@ -43,13 +43,13 @@ namespace HarborFlowSuite.Client.Services
 
         public async Task StartConnection()
         {
-            _hubConnection.On<string, double, double, double, double, string, string, VesselMetadataDto>("ReceiveVesselPositionUpdate", (mmsi, lat, lon, heading, speed, name, vesselType, metadata) =>
+            _hubConnection.On<VesselPositionUpdateDto>("ReceiveVesselPositionUpdate", (update) =>
             {
-                if (_activeVessels.Add(mmsi))
+                if (_activeVessels.Add(update.MMSI))
                 {
                     OnTotalVesselCountChanged?.Invoke(_activeVessels.Count);
                 }
-                OnPositionUpdateReceived?.Invoke(mmsi, lat, lon, heading, speed, name, vesselType, metadata);
+                OnPositionUpdateReceived?.Invoke(update);
             });
 
             _hubConnection.On<string, VesselMetadataDto>("ReceiveVesselMetadataUpdate", (mmsi, metadata) =>

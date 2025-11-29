@@ -7,6 +7,8 @@
 @inject IJSRuntime JSRuntime
 @inject IToastService ToastService
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IHttpClientFactory ClientFactory
 
 @attribute [Authorize]
 
@@ -16,8 +18,12 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <MudText Typo="Typo.h4">Vessel Management</MudText>
         <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.AddCircle"
-            OnClick='() => NavigationManager.NavigateTo("/add-vessel")'>
+            OnClick="OpenAddVesselDialog">
             Add Vessel
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
+            OnClick="ExportCsv" Class="ml-2">
+            Export CSV
         </MudButton>
     </div>
 
@@ -65,7 +71,7 @@
                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
                             Href="@($"/edit-vessel/{context.Id}")" />
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
-                            OnClick="@(async () => await DeleteVessel(context.Id))" />
+                            OnClick="@(async () => await DeleteVessel(context))" />
                     </MudTd>
                 </RowTemplate>
                 <PagerContent>
@@ -119,32 +125,68 @@
         return false;
     }
 
-    private async Task DeleteVessel(Guid id)
+    private async Task DeleteVessel(Vessel vessel)
     {
-        var parameters = new DialogParameters<ApprovalDialog>
+        var parameters = new DialogParameters
 {
-{ x => x.ContentText, "Are you sure you want to delete this vessel? This action cannot be undone." },
-{ x => x.ButtonText, "Delete" },
-{ x => x.Color, Color.Error }
+{ "Title", "Delete Vessel" },
+{ "Message", $"Are you sure you want to delete vessel {vessel.Name}?" },
+{ "MatchLabel", "Vessel Name" },
+{ "MatchValue", vessel.Name }
 };
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small };
 
-        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-
-        var dialog = await DialogService.ShowAsync<ApprovalDialog>("Delete Vessel", parameters, options);
+        var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.DeleteConfirmationDialog>("Delete Vessel",
+        parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)
         {
             try
             {
-                await VesselService.DeleteVessel(id);
-                ToastService.ShowSuccess("Vessel deleted successfully.");
+                await VesselService.DeleteVessel(vessel.Id);
+                Snackbar.Add("Vessel deleted successfully", Severity.Success);
                 await LoadVessels();
             }
             catch (Exception ex)
             {
-                ToastService.ShowError($"Error deleting vessel: {ex.Message}");
+                Snackbar.Add($"Error deleting vessel: {ex.Message}", Severity.Error);
             }
+        }
+    }
+
+    private async Task OpenAddVesselDialog()
+    {
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.VesselDialog>("Add Vessel", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadVessels();
+        }
+    }
+
+    private async Task ExportCsv()
+    {
+        try
+        {
+            var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
+            var response = await client.GetAsync("api/vessel/export");
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/download.js");
+                await module.InvokeVoidAsync("saveAsFile", "vessels.csv", content);
+            }
+            else
+            {
+                Snackbar.Add("Failed to export CSV", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error exporting CSV: {ex.Message}", Severity.Error);
         }
     }
 }

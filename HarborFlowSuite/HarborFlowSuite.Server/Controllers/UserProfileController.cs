@@ -13,10 +13,12 @@ namespace HarborFlowSuite.Server.Controllers
     public class UserProfileController : ControllerBase
     {
         private readonly IUserProfileService _userProfileService;
+        private readonly HarborFlowSuite.Application.Services.IUserService _userService;
 
-        public UserProfileController(IUserProfileService userProfileService)
+        public UserProfileController(IUserProfileService userProfileService, HarborFlowSuite.Application.Services.IUserService userService)
         {
             _userProfileService = userProfileService;
+            _userService = userService;
         }
 
         [HttpGet]
@@ -45,6 +47,30 @@ namespace HarborFlowSuite.Server.Controllers
 
             await _userProfileService.UpdateUserProfileAsync(userId, userProfileDto);
             return NoContent();
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteAccount()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            try
+            {
+                await _userService.DeleteUserByFirebaseIdAsync(userId);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error occurred while deleting the account.", Details = ex.Message });
+            }
         }
     }
 }

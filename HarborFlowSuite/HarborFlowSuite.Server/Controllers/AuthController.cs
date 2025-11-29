@@ -32,6 +32,14 @@ public class AuthController : ControllerBase
             _logger.LogError(ex, "Error registering user with Firebase");
             return BadRequest(new { message = ex.Message });
         }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "Invalid input during registration: {Message}", ex.Message);
+            return BadRequest(new
+            {
+                message = ex.Message
+            });
+        }
         catch (InvalidOperationException ex)
         {
             _logger.LogWarning(ex, "Registration attempt failed: {Message}", ex.Message);
