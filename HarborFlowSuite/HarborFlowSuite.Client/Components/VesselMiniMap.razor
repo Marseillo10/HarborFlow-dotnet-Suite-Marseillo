@@ -64,7 +64,7 @@
         {
             _statusMessage = null;
             // Fetch specific vessel position (checks DB then GFW)
-            var position = await VesselService.GetVesselPosition(Vessel.MMSI);
+            var position = await VesselService.GetVesselPosition(Vessel.MMSI, allowGfwFallback: false);
 
             if (position != null)
             {

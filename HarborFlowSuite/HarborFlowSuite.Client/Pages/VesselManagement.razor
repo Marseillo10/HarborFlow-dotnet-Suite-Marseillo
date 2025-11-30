@@ -42,7 +42,7 @@
                 </ToolBarContent>
                 <HeaderContent>
                     <MudTh>Name</MudTh>
-                    <MudTh>IMO Number</MudTh>
+                    <MudTh>MMSI</MudTh>
                     <MudTh>Type</MudTh>
                     <MudTh>Length</MudTh>
                     <MudTh>Width</MudTh>
@@ -52,7 +52,7 @@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="Name">@context.Name</MudTd>
-                    <MudTd DataLabel="IMO Number">@context.ImoNumber</MudTd>
+                    <MudTd DataLabel="MMSI">@context.MMSI</MudTd>
                     <MudTd DataLabel="Type">@context.VesselType</MudTd>
                     <MudTd DataLabel="Length">@context.Length m</MudTd>
                     <MudTd DataLabel="Width">@context.Width m</MudTd>
@@ -115,7 +115,7 @@
             return true;
         if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
             return true;
-        if (element.ImoNumber.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+        if (element.MMSI.Contains(searchString, StringComparison.OrdinalIgnoreCase))
             return true;
         if (element.VesselType.Contains(searchString, StringComparison.OrdinalIgnoreCase))
             return true;

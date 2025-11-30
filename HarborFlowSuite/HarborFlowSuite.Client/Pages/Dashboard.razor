@@ -342,8 +342,17 @@
 
             if (_vesselTypeSummary != null)
             {
-                _vesselTypeLabels = _vesselTypeSummary.Select(x => x.VesselType).ToArray();
-                _vesselTypeData = _vesselTypeSummary.Select(x => (double)x.Count).ToArray();
+                var aggregated = _vesselTypeSummary
+                    .Select(x => new { 
+                        Label = (x.VesselType == "Other" || string.IsNullOrEmpty(x.VesselType)) ? "Unspecified" : x.VesselType, 
+                        Count = x.Count 
+                    })
+                    .GroupBy(x => x.Label)
+                    .Select(g => new { Label = g.Key, Count = g.Sum(x => x.Count) })
+                    .ToList();
+
+                _vesselTypeLabels = aggregated.Select(x => x.Label).ToArray();
+                _vesselTypeData = aggregated.Select(x => (double)x.Count).ToArray();
             }
 
             Logger.LogInformation("Dashboard data processed.");
@@ -584,8 +593,17 @@ string.Empty,
         // Update chart data dynamically if needed
         if (_vesselTypeSummary != null)
         {
-            _vesselTypeLabels = _vesselTypeSummary.Select(x => x.VesselType).ToArray();
-            _vesselTypeData = _vesselTypeSummary.Select(x => (double)x.Count).ToArray();
+            var aggregated = _vesselTypeSummary
+                .Select(x => new { 
+                    Label = (x.VesselType == "Other" || string.IsNullOrEmpty(x.VesselType)) ? "Unspecified" : x.VesselType, 
+                    Count = x.Count 
+                })
+                .GroupBy(x => x.Label)
+                .Select(g => new { Label = g.Key, Count = g.Sum(x => x.Count) })
+                .ToList();
+
+            _vesselTypeLabels = aggregated.Select(x => x.Label).ToArray();
+            _vesselTypeData = aggregated.Select(x => (double)x.Count).ToArray();
         }
         StateHasChanged();
     }
@@ -622,8 +640,8 @@ string.Empty,
         _isPortDetailPanelOpen = true; 
         
         // Calculate real-time congestion based on cached vessel positions
-        // We count vessels within 20km radius
-        _selectedPortCongestion = GetVesselCountNearPort(port, 20.0);
+        // We count vessels within 5km radius
+        _selectedPortCongestion = GetVesselCountNearPort(port, 5.0);
         
         StateHasChanged(); 
     }

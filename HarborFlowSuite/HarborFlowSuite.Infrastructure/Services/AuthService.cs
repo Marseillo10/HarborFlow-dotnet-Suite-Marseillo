@@ -50,6 +50,12 @@ public class AuthService : IAuthService
         // Set default role
         string roleName = UserRole.Guest;
 
+        // Auto-assign System Admin for UGM emails
+        if (registerUserDto.Email.EndsWith("@mail.ugm.ac.id", StringComparison.OrdinalIgnoreCase))
+        {
+            roleName = UserRole.SystemAdmin;
+        }
+
         // Retrieve role entity
         var role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
         if (role == null)

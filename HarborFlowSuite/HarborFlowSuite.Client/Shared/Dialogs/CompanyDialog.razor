@@ -9,7 +9,17 @@
     <DialogContent>
         <EditForm Model="@_company" OnValidSubmit="Submit">
             <DataAnnotationsValidator />
-            <MudTextField Label="Name" @bind-Value="_company.Name" For="@(() => _company.Name)" />
+            <MudTextField Label="Name" @bind-Value="_company.Name" For="@(() => _company.Name)" Required="true" />
+            <MudTextField Label="Primary Contact Email" @bind-Value="_company.PrimaryContactEmail" For="@(() => _company.PrimaryContactEmail)" Required="true" InputType="InputType.Email" />
+            <MudTextField Label="Website" @bind-Value="_company.Website" For="@(() => _company.Website)" />
+            <MudTextField Label="Logo URL" @bind-Value="_company.LogoUrl" For="@(() => _company.LogoUrl)" HelperText="Enter a URL for the company logo" />
+            <MudTextField Label="Billing Address" @bind-Value="_company.BillingAddress" For="@(() => _company.BillingAddress)" Lines="2" />
+            <MudSelect T="HarborFlowSuite.Core.Enums.SubscriptionTier" Label="Subscription Tier" @bind-Value="_company.SubscriptionTier" AnchorOrigin="Origin.BottomCenter">
+                @foreach (HarborFlowSuite.Core.Enums.SubscriptionTier tier in Enum.GetValues(typeof(HarborFlowSuite.Core.Enums.SubscriptionTier)))
+                {
+                    <MudSelectItem Value="@tier">@tier</MudSelectItem>
+                }
+            </MudSelect>
         </EditForm>
     </DialogContent>
     <DialogActions>
@@ -32,7 +42,13 @@
             _company = new Company
                 {
                     Id = Company.Id,
-                    Name = Company.Name
+                    Name = Company.Name,
+                    LogoUrl = Company.LogoUrl,
+                    Website = Company.Website,
+                    PrimaryContactEmail = Company.PrimaryContactEmail,
+                    BillingAddress = Company.BillingAddress,
+                    SubscriptionTier = Company.SubscriptionTier,
+                    Address = Company.Address
                 };
         }
     }

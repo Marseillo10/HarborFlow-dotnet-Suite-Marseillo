@@ -63,6 +63,15 @@ builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<HarborFlowSuite.Core.Services.IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IServiceRequestNotifier, ServiceRequestNotifier>();
+builder.Services.AddScoped<INewsService, NewsService>();
+builder.Services.AddMemoryCache();
+
+// Configure NewsClient with SSL bypass (for some RSS feeds)
+builder.Services.AddHttpClient("NewsClient")
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
+    });
 
 // Configure GFW API client
 builder.Services.AddHttpClient<IGfwApiService, GfwApiService>((serviceProvider, client) =>
@@ -192,6 +201,7 @@ app.UseCors("AllowClient");
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<HarborFlowSuite.Server.Middleware.UserSyncMiddleware>();
 
 app.MapControllers();
 app.MapHub<AisHub>("/aisHub");

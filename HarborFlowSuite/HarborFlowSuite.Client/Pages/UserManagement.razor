@@ -8,10 +8,21 @@
 @inject HttpClient Http
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @using HarborFlowSuite.Client.Shared.Dialogs
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
-    <MudText Typo="Typo.h4" GutterBottom="true">User Management</MudText>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <MudText Typo="Typo.h4">User Management</MudText>
+        <AuthorizeView Policy="@Permissions.Users.Manage">
+            <Authorized Context="authContext">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd"
+                    OnClick="OpenAddUserDialog">
+                    Add User
+                </MudButton>
+            </Authorized>
+        </AuthorizeView>
+    </div>
 
     <MudTable Items="@_users" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading"
         LoadingProgressColor="Color.Info">
@@ -91,15 +102,49 @@
         }
     }
 
+    private async Task OpenAddUserDialog()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var isCompanyAdmin = user.IsInRole(UserRole.CompanyAdmin);
+        Guid? lockedCompanyId = null;
+
+        if (isCompanyAdmin)
+        {
+            // We need to get the user's company ID.
+            // Since we don't have it in claims yet, we can try to find it from the loaded users list if the current user is in it.
+            // Or we can make a separate call.
+            // For now, let's assume the current user is in the list (which they should be).
+            var currentUserId = user.FindFirst(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var currentUserDto = _users.FirstOrDefault(u => u.FirebaseUid == currentUserId);
+            lockedCompanyId = currentUserDto?.CompanyId;
+        }
+
+        var parameters = new DialogParameters
+        {
+            { "IsCompanyLocked", isCompanyAdmin },
+            { "LockedCompanyId", lockedCompanyId }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<AddUserDialog>("Add User", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadUsers();
+        }
+    }
+
     private async Task DeleteUser(UserDto user)
     {
         var parameters = new DialogParameters
-{
-{ "Title", "Delete User" },
-{ "Message", $"Are you sure you want to delete user {user.FullName}?" },
-{ "MatchLabel", "Email Address" },
-{ "MatchValue", user.Email }
-};
+        {
+            { "Title", "Delete User" },
+            { "Message", $"Are you sure you want to delete user {user.FullName}?" },
+            { "MatchLabel", "Email Address" },
+            { "MatchValue", user.Email }
+        };
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small };
 
         var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.DeleteConfirmationDialog>("Delete User",

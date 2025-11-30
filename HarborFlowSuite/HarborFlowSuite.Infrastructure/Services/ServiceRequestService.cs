@@ -87,12 +87,20 @@ namespace HarborFlowSuite.Infrastructure.Services
             return serviceRequest;
         }
 
-        public async Task<bool> DeleteServiceRequest(Guid id)
+        public async Task<bool> DeleteServiceRequest(Guid id, string firebaseUid)
         {
             var serviceRequest = await _context.ServiceRequests.FindAsync(id);
             if (serviceRequest == null)
             {
                 return false;
+            }
+
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
+            if (user == null) return false;
+
+            if (user.Role?.Name == "Vessel Agent" || user.Role?.Name == "Guest")
+            {
+                if (serviceRequest.CompanyId != user.CompanyId) return false;
             }
 
             _context.ServiceRequests.Remove(serviceRequest);
@@ -101,9 +109,9 @@ namespace HarborFlowSuite.Infrastructure.Services
             return true;
         }
 
-        public async Task<ServiceRequest> GetServiceRequestById(Guid id)
+        public async Task<ServiceRequest> GetServiceRequestById(Guid id, string firebaseUid)
         {
-            return await _context.ServiceRequests
+            var request = await _context.ServiceRequests
                 .Include(sr => sr.Requester)
                 .Include(sr => sr.Vessel)
                 .Include(sr => sr.Company)
@@ -111,6 +119,16 @@ namespace HarborFlowSuite.Infrastructure.Services
                 .Include(sr => sr.ApprovalHistories)
                     .ThenInclude(ah => ah.Approver)
                 .FirstOrDefaultAsync(sr => sr.Id == id);
+
+            if (request == null) return null;
+
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
+            if (user != null && (user.Role?.Name == "Vessel Agent" || user.Role?.Name == "Guest"))
+            {
+                if (request.CompanyId != user.CompanyId) return null;
+            }
+
+            return request;
         }
 
         public async Task<List<ServiceRequest>> GetServiceRequests(string firebaseUid)
@@ -208,7 +226,14 @@ namespace HarborFlowSuite.Infrastructure.Services
             serviceRequest.UpdatedAt = DateTime.UtcNow;
             _context.Entry(serviceRequest).State = EntityState.Modified;
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
+            if (user == null) return null;
+
+            if (user.Role?.Name == "Vessel Agent" || user.Role?.Name == "Guest")
+            {
+                if (existingRequest.CompanyId != user.CompanyId) return null;
+            }
+
             if (user != null)
             {
                 var history = new ApprovalHistory

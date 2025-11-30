@@ -7,7 +7,7 @@
             @(string.IsNullOrEmpty(Vessel.VesselName) ? $"MMSI: {Vessel.MMSI}" : Vessel.VesselName)
             </MudText>
             <MudText Typo="Typo.caption" Class="d-block"><strong>Type:</strong> @(string.IsNullOrEmpty(Vessel.VesselType) ?
-            "Unknown" : Vessel.VesselType)</MudText>
+            "Unspecified" : Vessel.VesselType)</MudText>
                 @if (!string.IsNullOrEmpty(Vessel.NavigationalStatus))
             {
                 <MudText Typo="Typo.caption" Class="d-block"><strong>Status:</strong> @Vessel.NavigationalStatus</MudText>

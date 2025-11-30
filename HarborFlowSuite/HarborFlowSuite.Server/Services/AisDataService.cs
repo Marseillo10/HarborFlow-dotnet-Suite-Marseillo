@@ -27,8 +27,11 @@ namespace HarborFlowSuite.Server.Services
         private readonly IServiceScopeFactory _scopeFactory; // Changed from _serviceScopeFactory to _scopeFactory
         private ClientWebSocket _webSocket;
         private readonly string _apiKey;
-        private readonly ConcurrentDictionary<string, string> _vesselTypes = new ConcurrentDictionary<string, string>();
-        private readonly ConcurrentDictionary<string, string> _vesselNames = new ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<string, string> _vesselTypes = new();
+        private readonly ConcurrentDictionary<string, string> _vesselNames = new();
+        // Buffer for throttling updates
+        private readonly ConcurrentDictionary<string, VesselPositionUpdateDto> _bufferedUpdates = new();
+        private const int BroadcastIntervalMs = 1000; // Broadcast every 1 second
         private readonly ConcurrentDictionary<string, DateTime> _lastGfwFetchTime = new ConcurrentDictionary<string, DateTime>();
         private readonly ConcurrentDictionary<string, VesselPositionUpdateDto> _vesselPositions = new ConcurrentDictionary<string, VesselPositionUpdateDto>();
         private readonly Channel<string> _messageChannel;
@@ -147,6 +150,15 @@ namespace HarborFlowSuite.Server.Services
 
         private async Task ProcessMessagesAsync(CancellationToken stoppingToken)
         {
+            // Start the broadcasting loop in parallel with the message processing loop
+            var processingTask = ProcessMessages(stoppingToken);
+            var broadcastingTask = BroadcastLoop(stoppingToken);
+
+            await Task.WhenAll(processingTask, broadcastingTask);
+        }
+
+        private async Task ProcessMessages(CancellationToken stoppingToken)
+        {
             await foreach (var message in _messageChannel.Reader.ReadAllAsync(stoppingToken))
             {
                 try
@@ -174,10 +186,39 @@ namespace HarborFlowSuite.Server.Services
             }
         }
 
+        private async Task BroadcastLoop(CancellationToken stoppingToken)
+        {
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await Task.Delay(BroadcastIntervalMs, stoppingToken);
+
+                    if (_bufferedUpdates.IsEmpty) continue;
+
+                    var updates = _bufferedUpdates.Values.ToList();
+                    _bufferedUpdates.Clear();
+
+                    if (updates.Any())
+                    {
+                        foreach (var update in updates)
+                        {
+                            await _hubContext.Clients.All.SendAsync("ReceiveVesselPositionUpdate", update, stoppingToken);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error in broadcast loop: {ex.Message}");
+                }
+            }
+        }
+
         private async Task ProcessStaticData(AisMessage.ShipStaticDataMessage staticData, CancellationToken stoppingToken)
         {
             var mmsi = staticData.UserID.ToString();
             var vesselType = GetVesselType(staticData.Type);
+            vesselType = RefineVesselType(vesselType, -1, staticData.Name); // NavStatus not in static data
             _vesselTypes.AddOrUpdate(mmsi, vesselType, (key, oldValue) => vesselType);
 
             if (!string.IsNullOrEmpty(staticData.Name))
@@ -211,6 +252,7 @@ namespace HarborFlowSuite.Server.Services
             var mmsi = positionReport.UserID.ToString();
             var name = _vesselNames.GetValueOrDefault(mmsi, $"MMSI: {mmsi}");
             var vesselType = _vesselTypes.GetValueOrDefault(mmsi, "Other");
+            vesselType = RefineVesselType(vesselType, positionReport.NavigationalStatus, name);
 
             var updateDto = new VesselPositionUpdateDto
             {
@@ -275,7 +317,8 @@ namespace HarborFlowSuite.Server.Services
             // Track first seen
             _vesselFirstSeen.TryAdd(updateDto.MMSI, DateTime.UtcNow);
 
-            await _hubContext.Clients.All.SendAsync("ReceiveVesselPositionUpdate", updateDto, stoppingToken);
+            // Buffer the update for throttled broadcasting
+            _bufferedUpdates.AddOrUpdate(updateDto.MMSI, updateDto, (key, oldValue) => updateDto);
 
             // Trigger metadata fetch if needed
             _ = FetchGfwMetadataIfNeeded(updateDto.MMSI, stoppingToken);
@@ -370,16 +413,83 @@ namespace HarborFlowSuite.Server.Services
 
         private string GetVesselType(int typeCode)
         {
+            // WIG
             if (typeCode >= 20 && typeCode <= 29) return "WIG";
-            if (typeCode >= 30 && typeCode <= 39) return "Fishing";
+
+            // Fishing
+            if (typeCode == 30) return "Fishing";
+
+            // Special Craft
+            if (typeCode == 31 || typeCode == 32) return "Towing";
+            if (typeCode == 33) return "Dredging";
+            if (typeCode == 34) return "Diving";
+            if (typeCode == 35) return "Military";
+            if (typeCode == 36) return "Sailing";
+            if (typeCode == 37) return "Pleasure Craft";
+            if (typeCode >= 38 && typeCode <= 39) return "Unspecified"; // Reserved
+
+            // High Speed Craft
             if (typeCode >= 40 && typeCode <= 49) return "HSC";
-            if (typeCode >= 50 && typeCode <= 59) return "Other";
+
+            // Special Craft II
+            if (typeCode == 50) return "Pilot";
+            if (typeCode == 51) return "Search and Rescue";
+            if (typeCode == 52) return "Tug";
+            if (typeCode == 53) return "Port Tender";
+            if (typeCode == 54) return "Anti-pollution";
+            if (typeCode == 55) return "Law Enforcement";
+            if (typeCode == 56 || typeCode == 57) return "Unspecified"; // Local
+            if (typeCode == 58) return "Medical";
+            if (typeCode == 59) return "Non-combatant";
+
+            // Passenger
             if (typeCode >= 60 && typeCode <= 69) return "Passenger";
+
+            // Cargo
             if (typeCode >= 70 && typeCode <= 79) return "Cargo";
+
+            // Tanker
             if (typeCode >= 80 && typeCode <= 89) return "Tanker";
-            if (typeCode >= 90 && typeCode <= 99) return "Other";
-            return "Other";
+
+            // Other
+            if (typeCode >= 90 && typeCode <= 99) return "Unspecified";
+
+            return "Unspecified";
         }
+
+        private string RefineVesselType(string currentType, int navStatus, string name)
+        {
+            // 1. Trust existing specific types (anything not "Other", "Unspecified" or "Unknown")
+            if (!string.IsNullOrEmpty(currentType) &&
+                !currentType.Equals("Other", StringComparison.OrdinalIgnoreCase) &&
+                !currentType.Equals("Unspecified", StringComparison.OrdinalIgnoreCase) &&
+                !currentType.Equals("Unknown", StringComparison.OrdinalIgnoreCase))
+            {
+                return currentType;
+            }
+
+            // 2. Check Navigational Status (7 = Engaged in Fishing)
+            if (navStatus == 7) return "Fishing";
+
+            // 3. Check Name Patterns
+            if (string.IsNullOrEmpty(name)) return currentType;
+
+            var n = name.ToUpperInvariant();
+            if (n.Contains("TUG") || n.Contains("TOW")) return "Tug";
+            if (n.Contains("PILOT") || n.StartsWith("PL ")) return "Pilot";
+            if (n.Contains("FISHING") || n.StartsWith("FV ") || n.Contains("FISH")) return "Fishing";
+            if (n.Contains("DREDG") || n.Contains("WB ")) return "Dredging";
+            if (n.StartsWith("SV ") || n.Contains("YACHT")) return "Sailing";
+            if (n.Contains("FERRY") || n.Contains("PASSENGER")) return "Passenger";
+            if (n.Contains("TANKER")) return "Tanker";
+            if (n.Contains("CARGO") || n.Contains("CONTAINER")) return "Cargo";
+            if (n.Contains("POLICE") || n.Contains("COAST GUARD") || n.Contains("PATROL")) return "Law Enforcement";
+            if (n.Contains("RESCUE") || n.Contains("SAR ")) return "Search and Rescue";
+
+            return (currentType.Equals("Other", StringComparison.OrdinalIgnoreCase) ||
+                    currentType.Equals("Unknown", StringComparison.OrdinalIgnoreCase)) ? "Unspecified" : currentType;
+        }
+
         private async void CheckForMissingDataAndFetchGfw(object? state)
         {
             try
@@ -432,7 +542,7 @@ namespace HarborFlowSuite.Server.Services
                             var updatedInfo = data.Info;
                             if (!string.IsNullOrEmpty(gfwMetadata.ShipName)) updatedInfo.Name = gfwMetadata.ShipName;
                             if (!string.IsNullOrEmpty(gfwMetadata.VesselType)) updatedInfo.VesselType = gfwMetadata.VesselType; // Update Type if available
-                            // Update other fields in Info if needed
+                                                                                                                                // Update other fields in Info if needed
                             updatedInfo.Metadata = mergedMetadata;
 
                             _vesselCache[mmsi] = (updatedInfo, mergedMetadata);

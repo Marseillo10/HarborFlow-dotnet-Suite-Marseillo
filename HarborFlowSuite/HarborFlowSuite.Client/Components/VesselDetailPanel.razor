@@ -115,10 +115,8 @@
                 }
                 else
                 {
-                    <MudTooltip Text="Vessel not registered in system">
-                        <MudButton Variant="Variant.Filled" Color="Color.Default" FullWidth="true" Class="mb-2" Disabled="true">
-                            Create Service Request</MudButton>
-                    </MudTooltip>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" Class="mb-2"
+                        OnClick="AddVessel">Add Vessel</MudButton>
                 }
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
                     Href="@($"/vessel-details/{Vessel.MMSI}")">View Full Details</MudButton>
@@ -188,6 +186,32 @@
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
             await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.ServiceRequestDialog>("Add Service Request",
             parameters, options);
+        }
+    }
+
+    private async Task AddVessel()
+    {
+        var initialVessel = new Vessel
+        {
+            Name = Vessel.Name,
+            MMSI = Vessel.MMSI,
+            ImoNumber = Metadata?.ImoNumber ?? "",
+            VesselType = Vessel.Type,
+            Length = (decimal)(Metadata?.Length ?? 0),
+            Width = (decimal)(Metadata?.Width ?? 0)
+        };
+
+        var parameters = new DialogParameters { { "InitialVessel", initialVessel } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.VesselDialog>("Add Vessel", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            Snackbar.Add("Vessel added successfully", Severity.Success);
+            // Ideally, we should refresh the map or the panel to show the new state (e.g. "Create Service Request" enabled)
+            // For now, we'll just close the drawer to force a refresh when re-opened or let the user re-click
+            await CloseDrawer();
         }
     }
 

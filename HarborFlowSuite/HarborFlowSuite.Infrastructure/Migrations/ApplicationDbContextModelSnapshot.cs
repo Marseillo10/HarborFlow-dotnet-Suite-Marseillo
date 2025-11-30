@@ -76,18 +76,61 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("text");
 
+                    b.Property<string>("BillingAddress")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LogoUrl")
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .HasColumnType("text");
 
+                    b.Property<string>("PrimaryContactEmail")
+                        .HasColumnType("text");
+
+                    b.Property<int>("SubscriptionTier")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Website")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.ToTable("Companies");
+                });
+
+            modelBuilder.Entity("HarborFlowSuite.Core.Models.CompanyHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ChangeDetails")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ChangedBy")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.ToTable("CompanyHistories");
                 });
 
             modelBuilder.Entity("HarborFlowSuite.Core.Models.GfwMetadataCache", b =>
@@ -426,6 +469,17 @@ namespace HarborFlowSuite.Infrastructure.Migrations
                     b.Navigation("ServiceRequest");
                 });
 
+            modelBuilder.Entity("HarborFlowSuite.Core.Models.CompanyHistory", b =>
+                {
+                    b.HasOne("HarborFlowSuite.Core.Models.Company", "Company")
+                        .WithMany("Histories")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("HarborFlowSuite.Core.Models.RolePermission", b =>
                 {
                     b.HasOne("HarborFlowSuite.Core.Models.Permission", "Permission")
@@ -511,6 +565,8 @@ namespace HarborFlowSuite.Infrastructure.Migrations
 
             modelBuilder.Entity("HarborFlowSuite.Core.Models.Company", b =>
                 {
+                    b.Navigation("Histories");
+
                     b.Navigation("Users");
 
                     b.Navigation("Vessels");

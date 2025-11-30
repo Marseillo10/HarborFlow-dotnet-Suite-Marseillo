@@ -12,13 +12,15 @@ namespace HarborFlowSuite.Client.Tests
     public class VesselPositionSignalRServiceTests
     {
         private readonly Mock<HubConnection> _mockHubConnection;
+        private readonly Mock<HarborFlowSuite.Client.Services.IVesselService> _mockVesselService;
         private readonly VesselPositionSignalRService _service;
 
         public VesselPositionSignalRServiceTests()
         {
             var mockHubConnectionBuilder = new Mock<IHubConnectionBuilder>();
             _mockHubConnection = new Mock<HubConnection>(mockHubConnectionBuilder.Object);
-            _service = new VesselPositionSignalRService(_mockHubConnection.Object);
+            _mockVesselService = new Mock<HarborFlowSuite.Client.Services.IVesselService>();
+            _service = new VesselPositionSignalRService(_mockHubConnection.Object, _mockVesselService.Object);
         }
 
         [Fact(Skip = "Requires HubConnection mocking refactoring")]

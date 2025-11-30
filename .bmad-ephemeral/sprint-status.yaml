@@ -55,9 +55,11 @@ development_status:
   epic-3: backlog
   3-1-four-tier-role-system-implementation: done
   3-2-granular-permission-enforcement: done
-  3-3-company-based-data-isolation: in-progress
-  3-4-role-assignment-management: backlog
+  3-3-company-based-data-isolation: done
+  3-4-role-assignment-management: done
   3-5-permission-inheritance: backlog
+  3-6-company-identity-enrichment: done
+  3-7-decentralized-company-management: in-progress
   epic-3-retrospective: optional
   epic-4: in-progress
   4-1-service-request-status-visualization: done

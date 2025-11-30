@@ -16,13 +16,14 @@
                 </MudNavLink>
                 <MudNavLink Href="service-request-management" Icon="@Icons.Material.Filled.Build">Service Requests
                 </MudNavLink>
+                <MudNavLink Href="news" Icon="@Icons.Material.Filled.Newspaper">Maritime News</MudNavLink>
                 <AuthorizeView Policy="@Permissions.Users.View" Context="viewUsersContext">
                     <Authorized>
                         <MudNavLink Href="user-management" Match="NavLinkMatch.Prefix"
                             Icon="@Icons.Material.Filled.People">User Management</MudNavLink>
                     </Authorized>
                 </AuthorizeView>
-                <AuthorizeView Policy="@Permissions.Users.Manage" Context="manageCompanyContext">
+                <AuthorizeView Policy="@Permissions.Companies.Manage" Context="manageCompanyContext">
                     <Authorized>
                         <MudNavLink Href="company-management" Icon="@Icons.Material.Filled.Business">Company Management
                         </MudNavLink>

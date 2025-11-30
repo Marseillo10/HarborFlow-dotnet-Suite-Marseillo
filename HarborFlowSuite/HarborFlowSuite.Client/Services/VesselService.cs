@@ -46,11 +46,11 @@ namespace HarborFlowSuite.Client.Services
             return await _httpClient.GetFromJsonAsync<List<VesselPositionDto>>("api/vessel/positions");
         }
 
-        public async Task<VesselPositionDto?> GetVesselPosition(string mmsi)
+        public async Task<VesselPositionDto?> GetVesselPosition(string mmsi, bool allowGfwFallback = true)
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<VesselPositionDto>($"api/vessel/positions/{mmsi}");
+                return await _httpClient.GetFromJsonAsync<VesselPositionDto>($"api/vessel/positions/{mmsi}?allowGfwFallback={allowGfwFallback}");
             }
             catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {

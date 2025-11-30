@@ -19,6 +19,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Company> Companies { get; set; }
     public DbSet<ApprovalHistory> ApprovalHistories { get; set; }
     public DbSet<Port> Ports { get; set; }
+    public DbSet<CompanyHistory> CompanyHistories { get; set; }
     public virtual DbSet<GfwMetadataCache> GfwMetadataCache { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

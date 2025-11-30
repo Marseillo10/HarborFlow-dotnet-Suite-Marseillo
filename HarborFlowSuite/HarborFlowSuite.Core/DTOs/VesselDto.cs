@@ -16,6 +16,7 @@ namespace HarborFlowSuite.Core.DTOs
         public decimal Width { get; set; }
         public VesselPositionDto? CurrentPosition { get; set; }
         public CompanyDto Company { get; set; } = new();
+        public string? CompanyName { get; set; }
         public VesselMetadataDto Metadata { get; set; } = new();
     }
 }

@@ -23,9 +23,24 @@ namespace HarborFlowSuite.Infrastructure.Services
             _aisDataService = aisDataService;
         }
 
-        public IEnumerable<VesselPositionUpdateDto> GetActiveVessels()
+        public IEnumerable<VesselPositionUpdateDto> GetActiveVessels(string firebaseUid)
         {
-            return _aisDataService.GetActiveVessels();
+            var allVessels = _aisDataService.GetActiveVessels();
+            var user = _context.Users.Include(u => u.Role).FirstOrDefault(u => u.FirebaseUid == firebaseUid);
+
+            if (user != null && (user.Role?.Name == "Vessel Agent" || user.Role?.Name == "Guest"))
+            {
+                if (!user.CompanyId.HasValue) return Enumerable.Empty<VesselPositionUpdateDto>();
+
+                var companyMmsis = _context.Vessels
+                    .Where(v => v.CompanyId == user.CompanyId.Value)
+                    .Select(v => v.MMSI)
+                    .ToHashSet();
+
+                return allVessels.Where(v => companyMmsis.Contains(v.MMSI));
+            }
+
+            return allVessels;
         }
 
         public async Task<List<Vessel>> GetVessels(string firebaseUid)
@@ -33,7 +48,7 @@ namespace HarborFlowSuite.Infrastructure.Services
             var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
             if (user == null) return new List<Vessel>();
 
-            var query = _context.Vessels.AsQueryable();
+            var query = _context.Vessels.Include(v => v.Company).AsQueryable();
 
             if (user.Role?.Name == "Vessel Agent" || user.Role?.Name == "Guest")
             {
@@ -50,14 +65,40 @@ namespace HarborFlowSuite.Infrastructure.Services
             return await query.ToListAsync();
         }
 
-        public async Task<Vessel> GetVesselById(Guid id)
+        public async Task<Vessel> GetVesselById(Guid id, string firebaseUid)
         {
-            return await _context.Vessels.FindAsync(id);
+            var vessel = await _context.Vessels.FindAsync(id);
+            if (vessel == null) return null;
+
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
+            if (user != null && (user.Role?.Name == "Vessel Agent" || user.Role?.Name == "Guest"))
+            {
+                if (vessel.CompanyId != user.CompanyId) return null;
+            }
+
+            return vessel;
         }
 
-        public async Task<List<VesselPositionDto>> GetVesselPositions()
+        public async Task<List<VesselPositionDto>> GetVesselPositions(string firebaseUid)
         {
-            var positions = await _context.Vessels
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
+            if (user == null) return new List<VesselPositionDto>();
+
+            var query = _context.Vessels.AsQueryable();
+
+            if (user.Role?.Name == "Vessel Agent" || user.Role?.Name == "Guest")
+            {
+                if (user.CompanyId.HasValue)
+                {
+                    query = query.Where(v => v.CompanyId == user.CompanyId.Value);
+                }
+                else
+                {
+                    return new List<VesselPositionDto>();
+                }
+            }
+
+            var positions = await query
                 .Select(v => v.VesselPositions.OrderByDescending(vp => vp.RecordedAt).FirstOrDefault())
                 .Where(vp => vp != null)
                 .Select(vp => new VesselPositionDto
@@ -76,12 +117,28 @@ namespace HarborFlowSuite.Infrastructure.Services
             return positions;
         }
 
-        public async Task<VesselPositionDto?> GetVesselPosition(string mmsi)
+        public async Task<VesselPositionDto?> GetVesselPosition(string mmsi, string firebaseUid, bool allowGfwFallback = true)
         {
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
+
             // 1. Check DB for recent position (e.g. last 1 hour)
-            var vessel = await _context.Vessels
+            var vesselQuery = _context.Vessels
                 .Include(v => v.VesselPositions)
-                .FirstOrDefaultAsync(v => v.MMSI == mmsi);
+                .Where(v => v.MMSI == mmsi);
+
+            if (user != null && (user.Role?.Name == "Vessel Agent" || user.Role?.Name == "Guest"))
+            {
+                if (user.CompanyId.HasValue)
+                {
+                    vesselQuery = vesselQuery.Where(v => v.CompanyId == user.CompanyId.Value);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            var vessel = await vesselQuery.FirstOrDefaultAsync();
 
             if (vessel != null)
             {
@@ -108,6 +165,18 @@ namespace HarborFlowSuite.Infrastructure.Services
             }
 
             // 2. Fallback to GFW
+            if (!allowGfwFallback)
+            {
+                return null;
+            }
+
+            // Only allow GFW fallback if user is NOT restricted (or if we decide GFW data is public)
+            // For strict isolation, if it's not in their company DB, they shouldn't see it.
+            if (user != null && (user.Role?.Name == "Vessel Agent" || user.Role?.Name == "Guest"))
+            {
+                return null;
+            }
+
             var gfwPosition = await _gfwMetadataService.GetVesselPositionAsync(mmsi);
             if (gfwPosition != null)
             {
@@ -131,6 +200,25 @@ namespace HarborFlowSuite.Infrastructure.Services
 
         public async Task<Vessel> CreateVessel(Vessel vessel)
         {
+            // Check if a vessel with the same MMSI already exists
+            var existingVessel = await _context.Vessels.FirstOrDefaultAsync(v => v.MMSI == vessel.MMSI);
+
+            if (existingVessel != null)
+            {
+                // Update existing vessel details
+                existingVessel.Name = vessel.Name;
+                existingVessel.ImoNumber = vessel.ImoNumber;
+                existingVessel.VesselType = vessel.VesselType;
+                existingVessel.Length = vessel.Length;
+                existingVessel.Width = vessel.Width;
+                existingVessel.CompanyId = vessel.CompanyId;
+                existingVessel.IsActive = vessel.IsActive;
+                existingVessel.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+                return existingVessel;
+            }
+
             _context.Vessels.Add(vessel);
             await _context.SaveChangesAsync();
             return vessel;

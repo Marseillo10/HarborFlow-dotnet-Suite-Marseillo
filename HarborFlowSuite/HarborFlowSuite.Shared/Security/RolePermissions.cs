@@ -10,6 +10,7 @@ namespace HarborFlowSuite.Shared.Security
         {
             { UserRole.SystemAdmin, UserRole.PortAuthority },
             { UserRole.PortAuthority, UserRole.VesselAgent },
+            { UserRole.CompanyAdmin, UserRole.VesselAgent },
             { UserRole.VesselAgent, UserRole.Guest }
         };
 
@@ -38,6 +39,14 @@ namespace HarborFlowSuite.Shared.Security
                     Permissions.Vessels.Manage,
                     Permissions.ServiceRequests.View,
                     Permissions.ServiceRequests.Manage
+                }
+            },
+            {
+                UserRole.CompanyAdmin, new HashSet<string>
+                {
+                    Permissions.Users.View,
+                    Permissions.Users.Manage,
+                    Permissions.Companies.Manage
                 }
             },
             {

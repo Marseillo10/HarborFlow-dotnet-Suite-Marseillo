@@ -30,21 +30,24 @@ namespace HarborFlowSuite.Server.Controllers
         [HttpGet("positions")]
         public async Task<ActionResult<List<VesselPositionDto>>> GetVesselPositions()
         {
-            var positions = await _vesselService.GetVesselPositions();
+            var firebaseUid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var positions = await _vesselService.GetVesselPositions(firebaseUid);
             return Ok(positions);
         }
 
         [HttpGet("active")]
         public ActionResult<IEnumerable<VesselPositionUpdateDto>> GetActiveVessels()
         {
-            var vessels = _vesselService.GetActiveVessels();
+            var firebaseUid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var vessels = _vesselService.GetActiveVessels(firebaseUid);
             return Ok(vessels);
         }
 
         [HttpGet("positions/{mmsi}")]
-        public async Task<ActionResult<VesselPositionDto>> GetVesselPosition(string mmsi)
+        public async Task<ActionResult<VesselPositionDto>> GetVesselPosition(string mmsi, [FromQuery] bool allowGfwFallback = true)
         {
-            var position = await _vesselService.GetVesselPosition(mmsi);
+            var firebaseUid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var position = await _vesselService.GetVesselPosition(mmsi, firebaseUid, allowGfwFallback);
             if (position == null)
             {
                 return NotFound();
@@ -55,7 +58,8 @@ namespace HarborFlowSuite.Server.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Vessel>> GetVessel(Guid id)
         {
-            var vessel = await _vesselService.GetVesselById(id);
+            var firebaseUid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var vessel = await _vesselService.GetVesselById(id, firebaseUid);
             if (vessel == null)
             {
                 return NotFound();

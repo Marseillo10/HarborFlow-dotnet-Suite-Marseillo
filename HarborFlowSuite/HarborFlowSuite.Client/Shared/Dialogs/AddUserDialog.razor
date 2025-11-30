@@ -1,0 +1,113 @@
+@using System.ComponentModel.DataAnnotations
+@using HarborFlowSuite.Shared.Constants
+@using HarborFlowSuite.Shared.DTOs
+@using HarborFlowSuite.Core.Models
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@success">
+            <MudTextField T="string" Label="Full Name" Required="true" RequiredError="Full Name is required!"
+            @bind-Value="model.FullName" />
+            <MudTextField T="string" Label="Email" Required="true" RequiredError="Email is required!"
+            @bind-Value="model.Email" InputType="InputType.Email" />
+            <MudTextField T="string" Label="Password" Required="true" RequiredError="Password is required!"
+            @bind-Value="model.Password" InputType="InputType.Password" />
+
+            <MudSelect T="Guid" Label="Role" Required="true" @bind-Value="model.RoleId"
+                AnchorOrigin="Origin.BottomCenter">
+                @foreach (var role in roles)
+                {
+                    <MudSelectItem Value="@role.Id">@role.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudSelect T="Guid?" Label="Company" @bind-Value="model.CompanyId" Disabled="@IsCompanyLocked"
+                AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem Value="@((Guid?)null)">No Company</MudSelectItem>
+                @foreach (var company in companies)
+                {
+                    <MudSelectItem Value="@((Guid?)company.Id)">@company.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit" Disabled="@(!success)">Create User</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public bool IsCompanyLocked { get; set; }
+    [Parameter] public Guid? LockedCompanyId { get; set; }
+
+    private MudForm form;
+    private bool success;
+    private CreateUserDto model = new();
+    private List<RoleDto> roles = new();
+    private List<Company> companies = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            roles = await Http.GetFromJsonAsync<List<RoleDto>>("api/roles") ?? new List<RoleDto>();
+            companies = await Http.GetFromJsonAsync<List<Company>>("api/company") ?? new List<Company>();
+
+            // Filter roles if necessary (e.g., CompanyAdmin shouldn't create SystemAdmin)
+            // This logic might need to be passed in or inferred from current user claims if available here
+            // For now, let's assume the API returns filtered roles or we filter client side if we knew the current user role.
+            // But we don't have easy access to AuthenticationState here without injecting it.
+            // Let's rely on the backend to validate, but ideally we filter the UI.
+
+            if (IsCompanyLocked && LockedCompanyId.HasValue)
+            {
+                model.CompanyId = LockedCompanyId.Value;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task Submit()
+    {
+        await form.Validate();
+        if (form.IsValid)
+        {
+            try
+            {
+                var response = await Http.PostAsJsonAsync("api/users", model);
+                if (response.IsSuccessStatusCode)
+                {
+                    MudDialog.Close(DialogResult.Ok(true));
+                    Snackbar.Add("User created successfully", Severity.Success);
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    Snackbar.Add($"Failed to create user: {error}", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    public class CreateUserDto
+    {
+        public string FullName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public Guid RoleId { get; set; }
+        public Guid? CompanyId { get; set; }
+    }
+}

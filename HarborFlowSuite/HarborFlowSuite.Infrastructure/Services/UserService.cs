@@ -6,6 +6,7 @@ using HarborFlowSuite.Application.Services;
 using HarborFlowSuite.Core.Models;
 using HarborFlowSuite.Infrastructure.Persistence;
 using HarborFlowSuite.Shared.DTOs;
+using HarborFlowSuite.Shared.Constants;
 using Microsoft.EntityFrameworkCore;
 
 namespace HarborFlowSuite.Infrastructure.Services
@@ -19,22 +20,29 @@ namespace HarborFlowSuite.Infrastructure.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
+        public async Task<IEnumerable<UserDto>> GetAllUsersAsync(Guid? companyId = null)
         {
-            return await _context.Users
+            var query = _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.Company)
+                .AsQueryable();
+
+            if (companyId.HasValue)
+            {
+                query = query.Where(u => u.CompanyId == companyId.Value);
+            }
+
+            return await query
                 .Select(u => new UserDto
                 {
                     Id = u.Id,
                     FirebaseUid = u.FirebaseUid,
-                    FullName = u.FullName,
                     Email = u.Email,
-                    Role = u.Role != null ? u.Role.Name : "Unknown",
+                    FullName = u.FullName,
+                    Role = u.Role != null ? u.Role.Name : "No Role",
                     RoleId = u.RoleId,
-                    CompanyName = u.Company != null ? u.Company.Name : "N/A",
-                    CompanyId = u.CompanyId,
-                    IsActive = u.IsActive
+                    CompanyName = u.Company != null ? u.Company.Name : "No Company",
+                    CompanyId = u.CompanyId
                 })
                 .ToListAsync();
         }
@@ -51,12 +59,49 @@ namespace HarborFlowSuite.Infrastructure.Services
                 .ToListAsync();
         }
 
-        public async Task UpdateUserRoleAsync(Guid userId, Guid roleId)
+        public async Task UpdateUserRoleAsync(Guid userId, Guid roleId, string currentFirebaseUid, Guid? companyId = null)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
             {
                 throw new KeyNotFoundException($"User with ID {userId} not found.");
+            }
+
+            // Self-Protection: Prevent user from modifying their own role
+            if (user.FirebaseUid == currentFirebaseUid)
+            {
+                throw new InvalidOperationException("You cannot modify your own role.");
+            }
+
+            var currentUser = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.FirebaseUid == currentFirebaseUid);
+
+            if (currentUser == null)
+            {
+                throw new UnauthorizedAccessException("Current user not found.");
+            }
+
+            // Company Admin Restrictions
+            if (currentUser.Role.Name == UserRole.CompanyAdmin)
+            {
+                if (currentUser.CompanyId == null)
+                {
+                    throw new InvalidOperationException("You are a Company Admin but have no company assigned. Please contact System Administrator.");
+                }
+
+                // Ensure target user belongs to the same company (unless we are assigning them to it, but here we are updating)
+                // If target user has no company, maybe we are assigning them?
+                if (user.CompanyId != null && user.CompanyId != currentUser.CompanyId)
+                {
+                    throw new UnauthorizedAccessException("You can only manage users within your company.");
+                }
+
+                // If attempting to change company, ensure it matches currentUser's company
+                if (companyId.HasValue && companyId.Value != currentUser.CompanyId)
+                {
+                    throw new UnauthorizedAccessException("You cannot assign users to a different company.");
+                }
             }
 
             var role = await _context.Roles.FindAsync(roleId);
@@ -66,6 +111,15 @@ namespace HarborFlowSuite.Infrastructure.Services
             }
 
             user.RoleId = roleId;
+            
+            // Only update company if a value is provided. 
+            // Note: This prevents setting company to null (removing company). 
+            // If that is needed, we need a more explicit signal.
+            if (companyId.HasValue)
+            {
+                user.CompanyId = companyId.Value;
+            }
+
             user.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -77,6 +131,8 @@ namespace HarborFlowSuite.Infrastructure.Services
                 {
                     { "role", role.Name }
                 };
+                // If we updated the company, maybe we should add it to claims too?
+                // For now, just role.
                 await FirebaseAdmin.Auth.FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(user.FirebaseUid, claims);
             }
             catch (Exception ex)

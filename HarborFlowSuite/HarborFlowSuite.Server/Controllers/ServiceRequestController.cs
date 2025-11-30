@@ -38,7 +38,8 @@ namespace HarborFlowSuite.Server.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ServiceRequest>> GetServiceRequest(Guid id)
         {
-            var serviceRequest = await _serviceRequestService.GetServiceRequestById(id);
+            var firebaseUid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var serviceRequest = await _serviceRequestService.GetServiceRequestById(id, firebaseUid);
             if (serviceRequest == null)
             {
                 return NotFound();
@@ -125,7 +126,8 @@ namespace HarborFlowSuite.Server.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteServiceRequest(Guid id)
         {
-            var result = await _serviceRequestService.DeleteServiceRequest(id);
+            var firebaseUid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await _serviceRequestService.DeleteServiceRequest(id, firebaseUid);
             if (!result)
             {
                 return NotFound();

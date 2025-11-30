@@ -25,10 +25,12 @@ builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().Cre
 
 builder.Services.AddScoped<HarborFlowSuite.Client.Services.IAuthService, HarborFlowSuite.Client.Services.AuthService>();
 builder.Services.AddScoped<IVesselService, VesselService>();
+builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<HarborFlowSuite.Client.Services.IServiceRequestService, HarborFlowSuite.Client.Services.ServiceRequestService>();
 builder.Services.AddScoped<IVesselPositionSignalRService, VesselPositionSignalRService>();
 builder.Services.AddScoped<PortService>();
 builder.Services.AddScoped<IServiceRequestSignalRService, ServiceRequestSignalRService>();
+builder.Services.AddScoped<INewsService, NewsService>();
 
 builder.Services.AddAuthorizationCore(options =>
 {

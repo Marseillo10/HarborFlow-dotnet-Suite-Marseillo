@@ -14,7 +14,7 @@ namespace HarborFlowSuite.Client.Services
         Task UpdateVessel(Vessel vessel);
         Task DeleteVessel(Guid id);
         Task<List<VesselPositionDto>> GetVesselPositions();
-        Task<VesselPositionDto?> GetVesselPosition(string mmsi);
+        Task<VesselPositionDto?> GetVesselPosition(string mmsi, bool allowGfwFallback = true);
         Task<IEnumerable<HarborFlowSuite.Shared.DTOs.VesselPositionUpdateDto>> GetActiveVessels();
     }
 }

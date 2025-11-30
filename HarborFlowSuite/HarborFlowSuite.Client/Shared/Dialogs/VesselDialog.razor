@@ -60,6 +60,7 @@
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
 
     [Parameter] public Vessel? Vessel { get; set; }
+    [Parameter] public Vessel? InitialVessel { get; set; }
 
     private Vessel _vessel = new();
     private List<Company> _companies = new();
@@ -79,6 +80,19 @@
                     Width = Vessel.Width,
                     IsActive = Vessel.IsActive,
                     CompanyId = Vessel.CompanyId
+                };
+        }
+        else if (InitialVessel != null)
+        {
+            _vessel = new Vessel
+                {
+                    Name = InitialVessel.Name,
+                    MMSI = InitialVessel.MMSI,
+                    ImoNumber = InitialVessel.ImoNumber,
+                    VesselType = InitialVessel.VesselType,
+                    Length = InitialVessel.Length,
+                    Width = InitialVessel.Width,
+                    IsActive = true
                 };
         }
 
@@ -103,7 +117,7 @@
     {
         // Basic validation
         if (string.IsNullOrWhiteSpace(_vessel.Name) || string.IsNullOrWhiteSpace(_vessel.MMSI) ||
-        string.IsNullOrWhiteSpace(_vessel.ImoNumber) || string.IsNullOrWhiteSpace(_vessel.VesselType))
+        string.IsNullOrWhiteSpace(_vessel.VesselType))
         {
             Snackbar.Add("Please fill in all required fields.", Severity.Warning);
             return;

@@ -517,7 +517,7 @@ window.HarborFlowMap = {
         });
 
         let popupContent = `<b>Vessel:</b> ${name}<br>
-                              <b>Type:</b> ${type}<br>
+                              <b>Type:</b> ${type || 'Unspecified'}<br>
                               <b>Lat:</b> ${lat}<br>
                               <b>Lng:</b> ${lng}<br>
                               <b>Speed:</b> ${speed} knots<br>
@@ -532,16 +532,24 @@ window.HarborFlowMap = {
         if (this.vesselMarkers[mmsi]) {
             // Update existing marker
             const marker = this.vesselMarkers[mmsi];
+            const oldHeading = marker.vesselData.heading || 0;
+            const oldType = marker.vesselData.vesselType;
+
+            // Update position (always cheap)
             marker.setLatLng([lat, lng]);
-            marker.setIcon(vesselIcon);
+
+            // Smart Icon Update: Only recreate icon if type changes or heading changes significantly (> 5 degrees)
+            // This prevents expensive DOM operations for minor updates
+            if (type !== oldType || Math.abs(heading - oldHeading) > 5) {
+                marker.setIcon(vesselIcon);
+            }
+
             // marker.setPopupContent(popupContent); // Removed
             marker.vesselType = type;
-            // Update properties of existing vesselData instead of replacing it entirely if possible,
-            // but for now replacing is safer to ensure all fields are fresh.
-            // However, we must preserve metadata if the new update doesn't have it but we had it before.
+
+            // Update properties of existing vesselData
             if (marker.vesselData && marker.vesselData.metadata && !metadata) {
                 vesselData.metadata = marker.vesselData.metadata;
-                // If name was updated via metadata, keep it if new name is empty (unlikely for update)
             }
             marker.vesselData = vesselData;
         } else {
@@ -556,18 +564,16 @@ window.HarborFlowMap = {
 
             newMarker.on('mouseover', (e) => {
                 const point = this.map.latLngToContainerPoint([lat, lng]);
-                // Tooltips are now absolute relative to the map container, so use point coordinates directly
                 const screenX = point.x;
-                const screenY = point.y - 24; // Top of icon (48px height, anchored at center)
+                const screenY = point.y - 24;
 
-                // Use current data from marker.vesselData to ensure we show latest metadata
                 const data = newMarker.vesselData;
 
                 this.dotNetHelper.invokeMethodAsync('ShowVesselTooltip',
                     mmsi,
                     data.vesselName,
                     data.metadata ? data.metadata.imoNumber : (data.imo || 'N/A'),
-                    data.vesselStatus, // Status
+                    data.vesselStatus,
                     data.vesselType,
                     data.speed,
                     data.heading,
@@ -657,7 +663,7 @@ window.HarborFlowMap = {
         const vesselData = marker.vesselData;
         let popupContent = `<h5>${vesselData.vesselName || 'Unknown Vessel'}</h5>
                             <b>MMSI:</b> ${mmsi}<br>
-                            <b>Type:</b> ${vesselData.vesselType || 'Other'}<br>
+                            <b>Type:</b> ${vesselData.vesselType || 'Unspecified'}<br>
                             <b>Speed:</b> ${vesselData.speed ? vesselData.speed.toFixed(1) : 0} kn<br>
                             <b>Heading:</b> ${vesselData.heading ? vesselData.heading.toFixed(0) : 0}°`;
 
@@ -717,11 +723,22 @@ window.HarborFlowMap = {
             case 'fishing':
                 return '/images/vessels/fishing.png';
             case 'hsc':
+            case 'pilot':
+            case 'search and rescue':
+            case 'law enforcement':
+            case 'medical':
+            case 'military':
                 return '/images/vessels/hsc.png';
             case 'tug':
+            case 'towing':
+            case 'port tender':
+            case 'dredging':
+            case 'anti-pollution':
                 return '/images/vessels/tug.png';
             case 'sailing':
+            case 'pleasure craft':
                 return '/images/vessels/sailing.png';
+            case 'unspecified':
             default:
                 return '/images/vessels/other.png';
         }

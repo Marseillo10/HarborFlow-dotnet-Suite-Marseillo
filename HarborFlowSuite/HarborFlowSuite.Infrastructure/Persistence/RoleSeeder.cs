@@ -18,6 +18,7 @@ public class RoleSeeder
         var roles = new List<string>
         {
             UserRole.SystemAdmin,
+            UserRole.CompanyAdmin,
             UserRole.PortAuthority,
             UserRole.VesselAgent,
             UserRole.Guest
@@ -47,6 +48,7 @@ public class RoleSeeder
         return roleName switch
         {
             UserRole.SystemAdmin => "Full system access",
+            UserRole.CompanyAdmin => "Manage company users and settings",
             UserRole.PortAuthority => "Manage port operations and vessels",
             UserRole.VesselAgent => "Manage vessel arrivals and service requests",
             UserRole.Guest => "Read-only access",

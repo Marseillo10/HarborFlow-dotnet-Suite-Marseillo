@@ -19,7 +19,24 @@ public class UsersController : ControllerBase
     [Authorize(Policy = Permissions.Users.View)]
     public async Task<IActionResult> GetAllUsers()
     {
-        var users = await _userService.GetAllUsersAsync();
+        Guid? companyId = null;
+        if (User.IsInRole(UserRole.CompanyAdmin))
+        {
+            // We need to get the user's company ID. 
+            // Ideally this is in the claims. If not, we might need to fetch the user profile.
+            // For now, let's assume we can get it from the service using the Firebase UID if it's not in claims.
+            // Or better, let's add CompanyId to the JWT claims in the future.
+            // For this iteration, I'll fetch the current user from the service to get their CompanyId.
+            var firebaseUid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (firebaseUid != null)
+            {
+                var allUsers = await _userService.GetAllUsersAsync(); // This is inefficient but works for now without changing auth flow
+                var currentUser = allUsers.FirstOrDefault(u => u.FirebaseUid == firebaseUid);
+                companyId = currentUser?.CompanyId;
+            }
+        }
+
+        var users = await _userService.GetAllUsersAsync(companyId);
         return Ok(users);
     }
 
@@ -29,12 +46,17 @@ public class UsersController : ControllerBase
     {
         try
         {
-            await _userService.UpdateUserRoleAsync(id, updateRoleDto.RoleId);
+            var currentFirebaseUid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            await _userService.UpdateUserRoleAsync(id, updateRoleDto.RoleId, currentFirebaseUid, updateRoleDto.CompanyId);
             return Ok(new { Message = "User role updated successfully" });
         }
         catch (KeyNotFoundException ex)
         {
             return NotFound(new { Message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Message = ex.Message });
         }
         catch (Exception ex)
         {
