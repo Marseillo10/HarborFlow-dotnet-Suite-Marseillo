@@ -4,6 +4,7 @@ using HarborFlowSuite.Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using HarborFlowSuite.Shared.DTOs;
 
 namespace HarborFlowSuite.Server.Controllers
 {
@@ -21,7 +22,8 @@ namespace HarborFlowSuite.Server.Controllers
         [HttpGet]
         public async Task<ActionResult<List<Vessel>>> GetVessels()
         {
-            var vessels = await _vesselService.GetVessels();
+            var firebaseUid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var vessels = await _vesselService.GetVessels(firebaseUid);
             return Ok(vessels);
         }
 
@@ -30,6 +32,24 @@ namespace HarborFlowSuite.Server.Controllers
         {
             var positions = await _vesselService.GetVesselPositions();
             return Ok(positions);
+        }
+
+        [HttpGet("active")]
+        public ActionResult<IEnumerable<VesselPositionUpdateDto>> GetActiveVessels()
+        {
+            var vessels = _vesselService.GetActiveVessels();
+            return Ok(vessels);
+        }
+
+        [HttpGet("positions/{mmsi}")]
+        public async Task<ActionResult<VesselPositionDto>> GetVesselPosition(string mmsi)
+        {
+            var position = await _vesselService.GetVesselPosition(mmsi);
+            if (position == null)
+            {
+                return NotFound();
+            }
+            return Ok(position);
         }
 
         [HttpGet("{id}")]
@@ -79,7 +99,8 @@ namespace HarborFlowSuite.Server.Controllers
         [HttpGet("export")]
         public async Task<IActionResult> Export()
         {
-            var vessels = await _vesselService.GetVessels();
+            var firebaseUid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var vessels = await _vesselService.GetVessels(firebaseUid);
             var builder = new System.Text.StringBuilder();
             builder.AppendLine("Id,Name,MMSI,ImoNumber,VesselType,Length,Width,IsActive");
 

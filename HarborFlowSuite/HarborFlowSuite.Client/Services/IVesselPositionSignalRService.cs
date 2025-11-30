@@ -1,6 +1,8 @@
 using HarborFlowSuite.Shared.DTOs;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace HarborFlowSuite.Client.Services
 {
@@ -9,9 +11,10 @@ namespace HarborFlowSuite.Client.Services
         event Action<VesselPositionUpdateDto> OnPositionUpdateReceived;
         event Action<string, VesselMetadataDto> OnMetadataUpdateReceived;
         event Action<int> OnTotalVesselCountChanged;
-        event Action<Microsoft.AspNetCore.SignalR.Client.HubConnectionState> OnConnectionStateChanged;
+        event Action<HubConnectionState> OnConnectionStateChanged;
         int TotalVesselCount { get; }
-        Microsoft.AspNetCore.SignalR.Client.HubConnectionState ConnectionState { get; }
+        HubConnectionState ConnectionState { get; }
+        IReadOnlyDictionary<string, (VesselPositionUpdateDto Position, VesselMetadataDto Metadata)> Vessels { get; }
         Task StartConnection();
         Task StopConnection();
     }

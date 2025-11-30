@@ -8,5 +8,10 @@ namespace HarborFlowSuite.Shared.DTOs
         public string ShipName { get; set; } = string.Empty;
         public string Callsign { get; set; } = string.Empty;
         public string Geartype { get; set; } = string.Empty;
+        public string Destination { get; set; } = string.Empty;
+        public DateTime? Eta { get; set; }
+        public double? Draught { get; set; }
+        public double? Width { get; set; }
+        public string? VesselType { get; set; } // Added to support GFW type updates
     }
 }

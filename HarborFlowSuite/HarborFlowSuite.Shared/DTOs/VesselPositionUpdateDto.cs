@@ -13,5 +13,7 @@ namespace HarborFlowSuite.Shared.DTOs
         public string VesselType { get; set; } = string.Empty;
         public VesselMetadataDto? Metadata { get; set; }
         public Guid? VesselId { get; set; }
+        public string NavigationalStatus { get; set; } = string.Empty;
+        public DateTime RecordedAt { get; set; }
     }
 }

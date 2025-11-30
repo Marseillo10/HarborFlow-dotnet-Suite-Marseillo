@@ -1,3 +1,4 @@
+#nullable enable
 using HarborFlowSuite.Core.DTOs;
 using HarborFlowSuite.Core.Models;
 using System.Collections.Generic;
@@ -13,5 +14,7 @@ namespace HarborFlowSuite.Client.Services
         Task UpdateVessel(Vessel vessel);
         Task DeleteVessel(Guid id);
         Task<List<VesselPositionDto>> GetVesselPositions();
+        Task<VesselPositionDto?> GetVesselPosition(string mmsi);
+        Task<IEnumerable<HarborFlowSuite.Shared.DTOs.VesselPositionUpdateDto>> GetActiveVessels();
     }
 }

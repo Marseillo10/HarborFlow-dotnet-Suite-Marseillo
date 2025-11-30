@@ -46,6 +46,7 @@
                     <MudTh>Type</MudTh>
                     <MudTh>Length</MudTh>
                     <MudTh>Width</MudTh>
+                    <MudTh>Company</MudTh>
                     <MudTh>Status</MudTh>
                     <MudTh>Actions</MudTh>
                 </HeaderContent>
@@ -55,23 +56,19 @@
                     <MudTd DataLabel="Type">@context.VesselType</MudTd>
                     <MudTd DataLabel="Length">@context.Length m</MudTd>
                     <MudTd DataLabel="Width">@context.Width m</MudTd>
+                    <MudTd DataLabel="Company">@(context.Company?.Name ?? "-")</MudTd>
                     <MudTd DataLabel="Status">
-                        @if (context.IsActive)
-                        {
-                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Active
-                            </MudChip>
-                        }
-                        else
-                        {
-                            <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled">Inactive
-                            </MudChip>
-                        }
+                        <MudChip T="string" Color="@(context.IsActive ? Color.Success : Color.Error)" Size="Size.Small" Variant="Variant.Filled">
+                            @(context.IsActive ? "Active" : "Inactive")
+                        </MudChip>
                     </MudTd>
                     <MudTd DataLabel="Actions">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
-                            Href="@($"/edit-vessel/{context.Id}")" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
-                            OnClick="@(async () => await DeleteVessel(context))" />
+                        <div class="d-flex flex-row gap-2">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
+                                OnClick="@(() => OpenEditVesselDialog(context))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                                OnClick="@(async () => await DeleteVessel(context))" />
+                        </div>
                     </MudTd>
                 </RowTemplate>
                 <PagerContent>
@@ -159,6 +156,19 @@
     {
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
         var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.VesselDialog>("Add Vessel", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadVessels();
+        }
+    }
+
+    private async Task OpenEditVesselDialog(Vessel vessel)
+    {
+        var parameters = new DialogParameters { { "Vessel", vessel } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.VesselDialog>("Edit Vessel", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)

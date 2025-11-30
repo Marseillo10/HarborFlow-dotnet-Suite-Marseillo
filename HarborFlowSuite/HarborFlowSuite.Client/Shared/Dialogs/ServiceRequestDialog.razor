@@ -3,8 +3,10 @@
 @using HarborFlowSuite.Core.DTOs
 @using HarborFlowSuite.Core.Models
 @using MudBlazor
+@using HarborFlowSuite.Client.Services
 @inject IHttpClientFactory ClientFactory
 @inject ISnackbar Snackbar
+@inject IVesselService VesselService
 
 <MudDialog Class="mud-paper">
     <DialogContent>
@@ -14,12 +16,25 @@
                 For="@(() => _createServiceRequestDto.Title)" />
             <MudTextField Label="Description" @bind-Value="_createServiceRequestDto.Description"
                 For="@(() => _createServiceRequestDto.Description)" Lines="3" />
+            
+            <MudAutocomplete T="Vessel" Label="Vessel" @bind-Value="_selectedVessel" SearchFunc="@SearchVessels"
+                             ToStringFunc="@(v => v == null ? null : $"{v.Name} ({v.MMSI})")"
+                             ResetValueOnEmptyText="true"
+                             CoerceText="true" CoerceValue="true"
+                             AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Primary" />
+
             <MudSelect T="string" Label="Status" @bind-Value="_createServiceRequestDto.Status"
                 AnchorOrigin="Origin.BottomCenter">
                 @foreach (var status in Enum.GetNames(typeof(ServiceRequestStatus)))
                 {
                     <MudSelectItem Value="@status">@status</MudSelectItem>
                 }
+            </MudSelect>
+            <MudSelect T="int" Label="Priority" @bind-Value="_createServiceRequestDto.Priority"
+                AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem Value="1">High</MudSelectItem>
+                <MudSelectItem Value="2">Medium</MudSelectItem>
+                <MudSelectItem Value="3">Low</MudSelectItem>
             </MudSelect>
         </EditForm>
     </DialogContent>
@@ -33,23 +48,53 @@
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
 
     [Parameter] public Guid? VesselId { get; set; }
+    [Parameter] public ServiceRequest? ServiceRequest { get; set; }
 
-    private readonly CreateServiceRequestDto _createServiceRequestDto = new()
+    private List<Vessel> _vessels = new();
+    private Vessel? _selectedVessel;
+
+    private CreateServiceRequestDto _createServiceRequestDto = new()
         {
             Title = "",
             Description = "",
-            Status =
-        "Pending"
+            Status = "Pending",
+            Priority = 3
         };
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        if (VesselId.HasValue)
+        try
         {
-            // In a real scenario, we might want to pre-fill description or title with vessel info
-            // For now, we just acknowledge the vessel ID context
-            _createServiceRequestDto.Description = $"Request for Vessel ID: {VesselId}";
+            _vessels = await VesselService.GetVessels();
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading vessels: {ex.Message}");
+        }
+
+        if (ServiceRequest != null)
+        {
+            _createServiceRequestDto.Title = ServiceRequest.Title;
+            _createServiceRequestDto.Description = ServiceRequest.Description;
+            _createServiceRequestDto.Status = ServiceRequest.Status.ToString();
+            _createServiceRequestDto.Priority = ServiceRequest.Priority;
+            
+            if (ServiceRequest.VesselId.HasValue)
+            {
+                _selectedVessel = _vessels.FirstOrDefault(v => v.Id == ServiceRequest.VesselId);
+            }
+        }
+        else if (VesselId.HasValue)
+        {
+            _selectedVessel = _vessels.FirstOrDefault(v => v.Id == VesselId);
+        }
+    }
+
+    private async Task<IEnumerable<Vessel>> SearchVessels(string value, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(value))
+            return _vessels;
+        return _vessels.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase) || x.MMSI.Contains(value));
     }
 
     private async Task Submit()
@@ -62,20 +107,45 @@
             return;
         }
 
+        _createServiceRequestDto.VesselId = _selectedVessel?.Id;
+
         var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
         try
         {
-            var response = await client.PostAsJsonAsync("api/servicerequest", _createServiceRequestDto);
+            HttpResponseMessage response;
+            if (ServiceRequest != null)
+            {
+                // Update existing request
+                var updateRequest = new ServiceRequest
+                    {
+                        Id = ServiceRequest.Id,
+                        Title = _createServiceRequestDto.Title,
+                        Description = _createServiceRequestDto.Description,
+                        Status = Enum.Parse<ServiceRequestStatus>(_createServiceRequestDto.Status),
+                        Priority = _createServiceRequestDto.Priority,
+                        RequestedAt = ServiceRequest.RequestedAt, // Preserve original date
+                        RequesterId = ServiceRequest.RequesterId, // Preserve requester
+                        VesselId = _createServiceRequestDto.VesselId // Update vessel
+                    };
+                response = await client.PutAsJsonAsync($"api/servicerequest/{ServiceRequest.Id}", updateRequest);
+            }
+            else
+            {
+                // Create new request
+                response = await client.PostAsJsonAsync("api/servicerequest", _createServiceRequestDto);
+            }
 
             if (response.IsSuccessStatusCode)
             {
-                Snackbar.Add("Service request added successfully!", Severity.Success);
+                Snackbar.Add(ServiceRequest != null ? "Service request updated successfully!" : "Service request added successfully!",
+                Severity.Success);
                 MudDialog.Close(DialogResult.Ok(true));
             }
             else
             {
                 var errorMessage = await response.Content.ReadAsStringAsync();
-                Snackbar.Add($"Error adding service request: {errorMessage}", Severity.Error);
+                Snackbar.Add($"Error {(ServiceRequest != null ? "updating" : "adding")} service request: {errorMessage}",
+                Severity.Error);
             }
         }
         catch (Exception ex)

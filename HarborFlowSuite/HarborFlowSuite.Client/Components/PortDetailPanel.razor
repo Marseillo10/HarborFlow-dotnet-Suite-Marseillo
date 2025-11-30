@@ -1,0 +1,112 @@
+@using HarborFlowSuite.Core.Models
+@using HarborFlowSuite.Client.Services
+@inject PortService PortService
+@inject ISnackbar Snackbar
+
+<MudDrawer Open="@Open" OpenChanged="@OnDrawerOpenChanged" Anchor="Anchor.End" Elevation="1"
+    Variant="@DrawerVariant.Temporary" Width="400px">
+    <MudDrawerHeader Class="d-flex justify-space-between align-center">
+        <MudText Typo="Typo.h6">Port Details</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="CloseDrawer" Color="Color.Inherit" />
+    </MudDrawerHeader>
+    <MudDrawerContainer>
+        @if (Port != null)
+        {
+            <MudList T="string">
+                <MudListItem Icon="@Icons.Material.Filled.LocationCity">
+                    <MudText Typo="Typo.subtitle2">Name</MudText>
+                    <MudText Typo="Typo.body1">@Port.Name</MudText>
+                </MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.Public">
+                    <MudText Typo="Typo.subtitle2">Country</MudText>
+                    <MudText Typo="Typo.body1">@Port.Country</MudText>
+                </MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.LocationOn">
+                    <MudText Typo="Typo.subtitle2">Coordinates</MudText>
+                    <MudText Typo="Typo.body2">Lat: @Port.Latitude.ToString("F4")</MudText>
+                    <MudText Typo="Typo.body2">Lng: @Port.Longitude.ToString("F4")</MudText>
+                </MudListItem>
+
+                <MudDivider Class="my-2" />
+
+                <MudListItem Icon="@Icons.Material.Filled.Traffic">
+                    <MudText Typo="Typo.subtitle2">Congestion Status (AIS)</MudText>
+                    @if (VesselCount.HasValue)
+                    {
+                        <MudText Typo="Typo.h4" Color="@GetCongestionColor(VesselCount.Value)" Class="mt-1">
+                            <AnimatedCounter Value="@VesselCount.Value" /> Vessels
+                        </MudText>
+                        <MudText Typo="Typo.caption">Real-time density within 20km</MudText>
+                    }
+                    else
+                    {
+                        <div class="d-flex align-center mt-1">
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
+                            <MudText Typo="Typo.body2">Calculating density...</MudText>
+                        </div>
+                    }
+                </MudListItem>
+            </MudList>
+
+            <div class="pa-4 mt-auto">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" OnClick="CheckOfficialStatus"
+                    Disabled="@IsCheckingStatus">
+                    @if (IsCheckingStatus)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                        <MudText Class="ms-2">Checking...</MudText>
+                    }
+                    else
+                    {
+                        <MudText>Check Official Status</MudText>
+                    }
+                </MudButton>
+                <MudText Typo="Typo.caption" Align="Align.Center" Class="d-block mt-2 mud-text-secondary">
+                    * Official status verification requires Sinay API integration
+                </MudText>
+            </div>
+        }
+    </MudDrawerContainer>
+</MudDrawer>
+
+@code {
+    [Parameter] public bool Open { get; set; }
+    [Parameter] public EventCallback<bool> OpenChanged { get; set; }
+    [Parameter] public Port Port { get; set; }
+    [Parameter] public int? VesselCount { get; set; }
+
+    private bool IsCheckingStatus = false;
+
+    private async Task CloseDrawer()
+    {
+        Open = false;
+        await OpenChanged.InvokeAsync(false);
+    }
+
+    private async Task OnDrawerOpenChanged(bool isOpen)
+    {
+        Open = isOpen;
+        await OpenChanged.InvokeAsync(isOpen);
+    }
+
+    private Color GetCongestionColor(int count)
+    {
+        if (count < 5) return Color.Success;
+        if (count < 20) return Color.Warning;
+        return Color.Error;
+    }
+
+    private async Task CheckOfficialStatus()
+    {
+        IsCheckingStatus = true;
+        // Simulate API call
+        await Task.Delay(1500);
+        IsCheckingStatus = false;
+
+        Snackbar.Add("Official Port Status API (Sinay) is coming soon!", Severity.Info, config =>
+        {
+            config.Icon = Icons.Material.Filled.Construction;
+            config.ShowCloseIcon = true;
+        });
+    }
+}

@@ -17,8 +17,11 @@ builder.Services.AddControllers()
 
     .AddJsonOptions(options =>
     {
-        // options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -44,18 +47,11 @@ builder.Services.AddSwaggerGen(c =>
                     Id = "Bearer"
                 }
             },
-            new string[] {}
+            Array.Empty<string>()
         }
     });
 });
-builder.Services.AddSignalR();
-builder.Services.AddHostedService<AisDataService>();
 
-// Configure PostgreSQL and ApplicationDbContext
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddNpgsql<ApplicationDbContext>(connectionString);
-
-// Register services
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -66,8 +62,16 @@ builder.Services.AddScoped<IPortService, PortService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<HarborFlowSuite.Core.Services.IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IServiceRequestNotifier, ServiceRequestNotifier>();
 
 // Configure GFW API client
+builder.Services.AddHttpClient<IGfwApiService, GfwApiService>((serviceProvider, client) =>
+{
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    client.BaseAddress = new Uri(configuration["GfwApiBaseUrl"]);
+    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {configuration["GfwApiKey"]}");
+});
+
 builder.Services.AddHttpClient<IGfwMetadataService, GfwMetadataService>((serviceProvider, client) =>
 {
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
@@ -154,6 +158,12 @@ builder.Services.AddCors(options =>
         });
 });
 
+// Register AisDataService as a Singleton and Hosted Service
+builder.Services.AddSingleton<AisDataService>();
+builder.Services.AddSingleton<IAisDataService>(sp => sp.GetRequiredService<AisDataService>());
+builder.Services.AddHostedService<AisDataService>(sp => sp.GetRequiredService<AisDataService>());
+builder.Services.AddHostedService<PortAnalyticsService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -167,7 +177,8 @@ if (app.Environment.IsDevelopment())
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         dbContext.Database.Migrate();
 
-        var portSeeder = new PortSeeder(dbContext);
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var portSeeder = new PortSeeder(dbContext, configuration);
         await portSeeder.SeedAsync();
 
         var roleSeeder = new RoleSeeder(dbContext);
@@ -184,6 +195,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<AisHub>("/aisHub");
+app.MapHub<ServiceRequestHub>("/serviceRequestHub");
 
 app.Run();
 

@@ -4,6 +4,7 @@ window.HarborFlowMap = {
     portMarkers: [], // Array to store port markers
     dotNetHelper: null,
     currentTileLayer: null,
+    currentSearchQuery: '',
 
     tileLayers: {
         openstreetmap: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -28,12 +29,55 @@ window.HarborFlowMap = {
             this.map.remove();
             this.map = null;
         }
+        if (this.miniMap) {
+            this.miniMap.remove();
+            this.miniMap = null;
+        }
+    },
+
+    miniMap: null,
+    miniMapMarker: null,
+
+    initMiniMap: function (elementId, lat, lng) {
+        if (this.miniMap) {
+            this.miniMap.remove();
+        }
+
+        this.miniMap = L.map(elementId, {
+            center: [lat, lng],
+            zoom: 10,
+            zoomControl: false,
+            attributionControl: false
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(this.miniMap);
+
+        this.updateMiniMapMarker(lat, lng);
+    },
+
+    updateMiniMapMarker: function (lat, lng) {
+        if (!this.miniMap) return;
+
+        if (this.miniMapMarker) {
+            this.miniMapMarker.setLatLng([lat, lng]);
+        } else {
+            const icon = L.icon({
+                iconUrl: '/images/vessels/cargo.png', // Default icon
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            });
+            this.miniMapMarker = L.marker([lat, lng], { icon: icon }).addTo(this.miniMap);
+        }
+        this.miniMap.setView([lat, lng], 10);
     },
 
     initMap: function (elementId = 'map', dotNetHelper) {
         if (this.map) {
             this.map.remove();
         }
+        this.vesselMarkers = {}; // Clear stale markers from previous map instance
         this.dotNetHelper = dotNetHelper;
         try {
             this.map = L.map(elementId, {
@@ -218,6 +262,62 @@ window.HarborFlowMap = {
                     this.drawGrid();
                 }
             });
+            // Layer Control
+            const LayerControl = L.Control.extend({
+                onAdd: (map) => {
+                    const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom layer-control');
+                    container.title = "Change Map Layer";
+
+                    // Layers Icon
+                    container.innerHTML = `
+                        <div class="layer-toggle">
+                            <i class="fas fa-layer-group" style="font-size: 18px;"></i>
+                        </div>
+                        <div class="layer-dropdown">
+                            <div class="layer-option" data-layer="openstreetmap">Standard</div>
+                            <div class="layer-option" data-layer="nasa_gibs">Satellite (NASA)</div>
+                            <div class="layer-option" data-layer="esri_worldimagery">Satellite (Esri)</div>
+                        </div>
+                    `;
+
+                    // Toggle Dropdown
+                    container.onclick = (e) => {
+                        e.stopPropagation();
+                        container.classList.toggle('active');
+                    };
+
+                    // Handle Layer Selection
+                    const options = container.querySelectorAll('.layer-option');
+                    options.forEach(option => {
+                        option.onclick = (e) => {
+                            e.stopPropagation();
+                            const layerName = option.getAttribute('data-layer');
+                            this.switchLayer(layerName);
+
+                            // Update active state in UI
+                            options.forEach(opt => opt.classList.remove('selected'));
+                            option.classList.add('selected');
+
+                            container.classList.remove('active');
+                        };
+                    });
+
+                    // Close dropdown when clicking outside
+                    document.addEventListener('click', (e) => {
+                        if (!container.contains(e.target)) {
+                            container.classList.remove('active');
+                        }
+                    });
+
+                    // Set initial selection
+                    const initialOption = container.querySelector(`[data-layer="openstreetmap"]`);
+                    if (initialOption) initialOption.classList.add('selected');
+
+                    return container;
+                }
+            });
+            new LayerControl({ position: 'topright' }).addTo(this.map);
+
 
             // Grid Toggle Control
             const GridControl = L.Control.extend({
@@ -256,11 +356,14 @@ window.HarborFlowMap = {
                     container.innerHTML = expandIcon;
 
                     container.onclick = () => {
-                        const mapContainer = map.getContainer();
+                        // Request fullscreen on the container wrapper, not just the map div
+                        const mapContainer = map.getContainer().parentElement;
                         if (!document.fullscreenElement) {
-                            mapContainer.requestFullscreen().catch(err => {
-                                console.error(`Error attempting to enable fullscreen: ${err.message}`);
-                            });
+                            if (mapContainer) {
+                                mapContainer.requestFullscreen().catch(err => {
+                                    console.error(`Error attempting to enable fullscreen: ${err.message}`);
+                                });
+                            }
                         } else {
                             document.exitFullscreen();
                         }
@@ -315,9 +418,10 @@ window.HarborFlowMap = {
             this.portMarkers.forEach(marker => this.map.removeLayer(marker));
             this.portMarkers = [];
 
-            const portIcon = L.icon({
-                iconUrl: '/images/port-icon.png',
-                iconSize: [24, 24], // Slightly larger for better visibility
+            const portIcon = L.divIcon({
+                className: 'port-marker-wrapper',
+                html: '<img src="/images/port-icon.png" class="port-marker-content" style="width: 100%; height: 100%;" />',
+                iconSize: [24, 24],
                 iconAnchor: [12, 12],
                 popupAnchor: [0, -12]
             });
@@ -325,7 +429,10 @@ window.HarborFlowMap = {
             if (ports && ports.length > 0) {
                 ports.forEach(port => {
                     if (port.LATITUDE && port.LONGITUDE) {
-                        const marker = L.marker([port.LATITUDE, port.LONGITUDE], { icon: portIcon }).addTo(this.map);
+                        const marker = L.marker([port.LATITUDE, port.LONGITUDE], {
+                            icon: portIcon,
+                            zIndexOffset: 1000 // Ensure ports are above other elements
+                        }).addTo(this.map);
 
                         const popupContent = `
                             <div style="min-width: 200px;">
@@ -340,18 +447,22 @@ window.HarborFlowMap = {
                             </div>
                         `;
 
-                        marker.bindPopup(popupContent);
                         this.portMarkers.push(marker);
 
                         marker.on('mouseover', (e) => {
+                            const point = this.map.latLngToContainerPoint([port.LATITUDE, port.LONGITUDE]);
+                            // Tooltips are now absolute relative to the map container, so use point coordinates directly
+                            const screenX = point.x;
+                            const screenY = point.y - 12; // Top of icon (24px height, anchored at center)
+
                             this.dotNetHelper.invokeMethodAsync('ShowPortTooltip',
                                 port.CITY,
                                 port.STATE || '',
                                 port.COUNTRY,
                                 port.LATITUDE,
                                 port.LONGITUDE,
-                                e.originalEvent.clientX,
-                                e.originalEvent.clientY,
+                                screenX,
+                                screenY,
                                 window.innerWidth,
                                 window.innerHeight
                             );
@@ -361,8 +472,10 @@ window.HarborFlowMap = {
                             this.dotNetHelper.invokeMethodAsync('HidePortTooltip');
                         });
 
-                        marker.on('click', function () {
-                            // Future: Invoke DotNet method to show detailed modal
+                        marker.on('click', (e) => {
+                            console.log("Port clicked:", port.CITY);
+                            L.DomEvent.stopPropagation(e); // Prevent map click
+                            this.dotNetHelper.invokeMethodAsync('OnPortSelected', port.CITY);
                         });
                     } else {
                         console.warn("Skipping port with invalid coordinates:", port);
@@ -376,7 +489,7 @@ window.HarborFlowMap = {
 
     reportTimeout: null,
 
-    updateVesselMarker: function (mmsi, lat, lng, heading, speed, name, type = 'HSC', metadata, vesselId) {
+    updateVesselMarker: function (mmsi, lat, lng, heading, speed, name, type = 'HSC', metadata, vesselId, navigationalStatus) {
         if (!this.map) return;
 
         const vesselData = {
@@ -384,7 +497,7 @@ window.HarborFlowMap = {
             vesselName: name,
             vesselType: type,
             imo: metadata ? metadata.imoNumber : 'N/A',
-            vesselStatus: 'Active',
+            vesselStatus: navigationalStatus || 'Unknown',
             latitude: lat,
             longitude: lng,
             heading: heading,
@@ -421,13 +534,19 @@ window.HarborFlowMap = {
             const marker = this.vesselMarkers[mmsi];
             marker.setLatLng([lat, lng]);
             marker.setIcon(vesselIcon);
-            marker.setPopupContent(popupContent);
+            // marker.setPopupContent(popupContent); // Removed
             marker.vesselType = type;
+            // Update properties of existing vesselData instead of replacing it entirely if possible,
+            // but for now replacing is safer to ensure all fields are fresh.
+            // However, we must preserve metadata if the new update doesn't have it but we had it before.
+            if (marker.vesselData && marker.vesselData.metadata && !metadata) {
+                vesselData.metadata = marker.vesselData.metadata;
+                // If name was updated via metadata, keep it if new name is empty (unlikely for update)
+            }
             marker.vesselData = vesselData;
         } else {
             // Create new marker
             const newMarker = L.marker([lat, lng], { icon: vesselIcon }).addTo(this.map);
-            newMarker.bindPopup(popupContent);
             newMarker.vesselType = type;
             newMarker.vesselData = vesselData;
 
@@ -436,21 +555,29 @@ window.HarborFlowMap = {
             });
 
             newMarker.on('mouseover', (e) => {
+                const point = this.map.latLngToContainerPoint([lat, lng]);
+                // Tooltips are now absolute relative to the map container, so use point coordinates directly
+                const screenX = point.x;
+                const screenY = point.y - 24; // Top of icon (48px height, anchored at center)
+
+                // Use current data from marker.vesselData to ensure we show latest metadata
+                const data = newMarker.vesselData;
+
                 this.dotNetHelper.invokeMethodAsync('ShowVesselTooltip',
                     mmsi,
-                    name,
-                    metadata ? metadata.imoNumber : 'N/A',
-                    'Active', // Status
-                    type,
-                    speed,
-                    heading,
-                    lat,
-                    lng,
-                    e.originalEvent.clientX,
-                    e.originalEvent.clientY,
+                    data.vesselName,
+                    data.metadata ? data.metadata.imoNumber : (data.imo || 'N/A'),
+                    data.vesselStatus, // Status
+                    data.vesselType,
+                    data.speed,
+                    data.heading,
+                    data.latitude,
+                    data.longitude,
+                    screenX,
+                    screenY,
                     window.innerWidth,
                     window.innerHeight,
-                    vesselId
+                    data.vesselId
                 );
             });
 
@@ -461,6 +588,28 @@ window.HarborFlowMap = {
             this.vesselMarkers[mmsi] = newMarker;
         }
 
+        // Apply current search filter if active
+        if (this.currentSearchQuery) {
+            const lowerQuery = this.currentSearchQuery.toLowerCase().trim();
+            const data = vesselData; // Use the fresh data object
+            const vName = data.vesselName ? data.vesselName.toLowerCase() : '';
+            // const vImo = data.imo ? data.imo.toString().toLowerCase() : ''; // Removed IMO search
+            const vType = data.vesselType ? data.vesselType.toLowerCase() : '';
+            const vMmsi = mmsi.toString();
+
+            let markerToUpdate = this.vesselMarkers[mmsi];
+            if (markerToUpdate) {
+                // Check Name, MMSI, or Type
+                if (vName.includes(lowerQuery) || vMmsi.includes(lowerQuery) || vType.includes(lowerQuery)) {
+                    markerToUpdate.setOpacity(1.0);
+                    markerToUpdate.setZIndexOffset(1000);
+                } else {
+                    markerToUpdate.setOpacity(0.2);
+                    markerToUpdate.setZIndexOffset(0);
+                }
+            }
+        }
+
         // Throttle the reporting to avoid spamming .NET
         this.reportVesselData();
     },
@@ -469,17 +618,44 @@ window.HarborFlowMap = {
         if (!this.vesselMarkers[mmsi]) return;
 
         const marker = this.vesselMarkers[mmsi];
+        let typeChanged = false;
+
         if (marker.vesselData) {
             // Update internal data
             marker.vesselData.metadata = metadata;
             if (metadata.shipName) {
-                marker.vesselData.name = metadata.shipName;
+                marker.vesselData.vesselName = metadata.shipName;
             }
+            if (metadata.vesselType) {
+                if (marker.vesselData.vesselType !== metadata.vesselType) {
+                    marker.vesselData.vesselType = metadata.vesselType;
+                    marker.vesselType = metadata.vesselType; // Update marker property too
+                    typeChanged = true;
+                }
+            }
+            // Preserve other fields like vesselStatus
+        }
+
+        // Update Icon if type changed
+        if (typeChanged) {
+            const iconUrl = this.getIconUrl(marker.vesselData.vesselType);
+            const heading = marker.vesselData.heading || 0;
+            const vesselIcon = L.divIcon({
+                className: 'custom-vessel-icon',
+                html: `<img src="${iconUrl}" style="transform: rotate(${heading}deg); width: 48px; height: 48px;" />`,
+                iconSize: [48, 48],
+                iconAnchor: [24, 24],
+                popupAnchor: [0, -24]
+            });
+            marker.setIcon(vesselIcon);
+
+            // Trigger chart update
+            this.reportVesselData();
         }
 
         // Re-generate popup content
         const vesselData = marker.vesselData;
-        let popupContent = `<h5>${vesselData.name || 'Unknown Vessel'}</h5>
+        let popupContent = `<h5>${vesselData.vesselName || 'Unknown Vessel'}</h5>
                             <b>MMSI:</b> ${mmsi}<br>
                             <b>Type:</b> ${vesselData.vesselType || 'Other'}<br>
                             <b>Speed:</b> ${vesselData.speed ? vesselData.speed.toFixed(1) : 0} kn<br>
@@ -491,12 +667,12 @@ window.HarborFlowMap = {
                              <b>IMO:</b> ${metadata.imoNumber || 'N/A'}`;
         }
 
-        marker.setPopupContent(popupContent);
+        // marker.setPopupContent(popupContent); // Removed
 
         // If popup is open, update it immediately
-        if (marker.isPopupOpen()) {
-            marker.getPopup().setContent(popupContent);
-        }
+        // if (marker.isPopupOpen()) {
+        //     marker.getPopup().setContent(popupContent);
+        // }
     },
 
     reportVesselData: function () {
@@ -560,7 +736,9 @@ window.HarborFlowMap = {
     filterVessels: function (query) {
         if (!this.map) return;
 
-        const lowerQuery = query ? query.toLowerCase().trim() : '';
+        this.currentSearchQuery = query || '';
+        const lowerQuery = this.currentSearchQuery.toLowerCase().trim();
+        const matchingMarkers = [];
 
         for (const mmsi in this.vesselMarkers) {
             const marker = this.vesselMarkers[mmsi];
@@ -573,17 +751,43 @@ window.HarborFlowMap = {
             }
 
             const name = data.vesselName ? data.vesselName.toLowerCase() : '';
-            const imo = data.imo ? data.imo.toString().toLowerCase() : '';
+            // const imo = data.imo ? data.imo.toString().toLowerCase() : ''; // Removed IMO search
             const type = data.vesselType ? data.vesselType.toLowerCase() : '';
+            const vMmsi = mmsi.toString();
 
-            if (name.includes(lowerQuery) || imo.includes(lowerQuery) || type.includes(lowerQuery)) {
+            // Check Name, MMSI, or Type
+            if (name.includes(lowerQuery) || vMmsi.includes(lowerQuery) || type.includes(lowerQuery)) {
                 // Match found
                 marker.setOpacity(1.0);
                 marker.setZIndexOffset(1000); // Bring to front
+                matchingMarkers.push(marker);
             } else {
                 // No match - dim
                 marker.setOpacity(0.2);
                 marker.setZIndexOffset(0); // Reset z-index
+            }
+        }
+
+        // Smart Camera Tracking
+        if (matchingMarkers.length > 0) {
+            if (matchingMarkers.length === 1) {
+                // Single match: Fly to vessel
+                const marker = matchingMarkers[0];
+                const latLng = marker.getLatLng();
+                this.map.flyTo(latLng, 14, {
+                    animate: true,
+                    duration: 1.5
+                });
+                marker.openPopup();
+            } else {
+                // Multiple matches: Fit bounds
+                const group = L.featureGroup(matchingMarkers);
+                this.map.fitBounds(group.getBounds(), {
+                    padding: [50, 50],
+                    maxZoom: 14,
+                    animate: true,
+                    duration: 1.0
+                });
             }
         }
     },

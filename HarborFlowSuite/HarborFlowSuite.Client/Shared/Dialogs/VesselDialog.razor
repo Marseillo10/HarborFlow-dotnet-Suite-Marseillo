@@ -9,22 +9,95 @@
     <DialogContent>
         <EditForm Model="@_vessel" OnValidSubmit="Submit">
             <DataAnnotationsValidator />
-            <MudTextField Label="Name" @bind-Value="_vessel.Name" For="@(() => _vessel.Name)" />
-            <MudTextField Label="MMSI" @bind-Value="_vessel.MMSI" For="@(() => _vessel.MMSI)" />
-            <MudTextField Label="IMO Number" @bind-Value="_vessel.ImoNumber" For="@(() => _vessel.ImoNumber)" />
-            <MudTextField Label="Type" @bind-Value="_vessel.VesselType" For="@(() => _vessel.VesselType)" />
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Name" @bind-Value="_vessel.Name" For="@(() => _vessel.Name)"
+                        Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="MMSI" @bind-Value="_vessel.MMSI" For="@(() => _vessel.MMSI)"
+                        Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="IMO Number" @bind-Value="_vessel.ImoNumber" For="@(() => _vessel.ImoNumber)"
+                        Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Type" @bind-Value="_vessel.VesselType" For="@(() => _vessel.VesselType)"
+                        Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudNumericField Label="Length (m)" @bind-Value="_vessel.Length" For="@(() => _vessel.Length)"
+                        Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudNumericField Label="Width (m)" @bind-Value="_vessel.Width" For="@(() => _vessel.Width)"
+                        Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="Guid?" Label="Company" @bind-Value="_vessel.CompanyId"
+                        AnchorOrigin="Origin.BottomCenter" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        <MudSelectItem T="Guid?" Value="null">None</MudSelectItem>
+                        @foreach (var company in _companies)
+                        {
+                            <MudSelectItem T="Guid?" Value="@company.Id">@company.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6" Class="d-flex align-center">
+                    <MudSwitch @bind-Value="_vessel.IsActive" Label="Active" Color="Color.Success" />
+                </MudItem>
+            </MudGrid>
         </EditForm>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Submit">Submit</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Submit</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
 
+    [Parameter] public Vessel? Vessel { get; set; }
+
     private Vessel _vessel = new();
+    private List<Company> _companies = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Vessel != null)
+        {
+            _vessel = new Vessel
+                {
+                    Id = Vessel.Id,
+                    Name = Vessel.Name,
+                    MMSI = Vessel.MMSI,
+                    ImoNumber = Vessel.ImoNumber,
+                    VesselType = Vessel.VesselType,
+                    Length = Vessel.Length,
+                    Width = Vessel.Width,
+                    IsActive = Vessel.IsActive,
+                    CompanyId = Vessel.CompanyId
+                };
+        }
+
+        await LoadCompanies();
+    }
+
+    private async Task LoadCompanies()
+    {
+        try
+        {
+            var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
+            _companies = await client.GetFromJsonAsync<List<Company>>("api/company") ?? new List<Company>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading companies: {ex.Message}");
+            Snackbar.Add("Failed to load companies.", Severity.Error);
+        }
+    }
 
     private async Task Submit()
     {
@@ -39,17 +112,25 @@
         var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
         try
         {
-            var response = await client.PostAsJsonAsync("api/vessel", _vessel);
+            HttpResponseMessage response;
+            if (Vessel != null)
+            {
+                response = await client.PutAsJsonAsync($"api/vessel/{Vessel.Id}", _vessel);
+            }
+            else
+            {
+                response = await client.PostAsJsonAsync("api/vessel", _vessel);
+            }
 
             if (response.IsSuccessStatusCode)
             {
-                Snackbar.Add("Vessel added successfully!", Severity.Success);
+                Snackbar.Add(Vessel != null ? "Vessel updated successfully!" : "Vessel added successfully!", Severity.Success);
                 MudDialog.Close(DialogResult.Ok(true));
             }
             else
             {
                 var errorMessage = await response.Content.ReadAsStringAsync();
-                Snackbar.Add($"Error adding vessel: {errorMessage}", Severity.Error);
+                Snackbar.Add($"Error {(Vessel != null ? "updating" : "adding")} vessel: {errorMessage}", Severity.Error);
             }
         }
         catch (Exception ex)

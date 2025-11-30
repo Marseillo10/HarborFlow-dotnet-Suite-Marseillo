@@ -60,6 +60,29 @@
                     <MudText Typo="Typo.body2">Lat: @Vessel.Latitude.ToString("F4")</MudText>
                     <MudText Typo="Typo.body2">Lng: @Vessel.Longitude.ToString("F4")</MudText>
                 </MudListItem>
+                @if (!string.IsNullOrEmpty(Vessel.NavigationalStatus))
+                {
+                    <MudListItem Icon="@GetStatusIcon(Vessel.NavigationalStatus)">
+                        <div class="d-flex align-center">
+                            <MudText Typo="Typo.subtitle2" Class="mr-2">Status</MudText>
+                            <MudTooltip Text="@GetStatusDescription(Vessel.NavigationalStatus)">
+                                <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Color="Color.Info" />
+                            </MudTooltip>
+                        </div>
+                        <MudText Typo="Typo.body1">@Vessel.NavigationalStatus</MudText>
+                    </MudListItem>
+                }
+                @if (!string.IsNullOrEmpty(Vessel.Destination))
+                {
+                    <MudListItem Icon="@Icons.Material.Filled.Place">
+                        <MudText Typo="Typo.subtitle2">Destination</MudText>
+                        <MudText Typo="Typo.body1">@Vessel.Destination</MudText>
+                        @if (Vessel.Eta.HasValue)
+                        {
+                            <MudText Typo="Typo.caption">ETA: @Vessel.Eta.Value.ToString("g")</MudText>
+                        }
+                    </MudListItem>
+                }
             </MudList>
 
             @if (Metadata != null)
@@ -72,8 +95,13 @@
                         <MudText Typo="Typo.body1">@Metadata.Flag</MudText>
                     </MudListItem>
                     <MudListItem Icon="@Icons.Material.Filled.Straighten">
-                        <MudText Typo="Typo.subtitle2">Length</MudText>
-                        <MudText Typo="Typo.body1">@Metadata.Length m</MudText>
+                        <MudText Typo="Typo.subtitle2">Dimensions</MudText>
+                        <MudText Typo="Typo.body1">L: @(Metadata.Length?.ToString("F1") ?? "N/A") m | W:
+                            @(Metadata.Width?.ToString("F1") ?? "N/A") m</MudText>
+                        @if (Metadata.Draught.HasValue)
+                        {
+                            <MudText Typo="Typo.body2">Draught: @Metadata.Draught.Value.ToString("F1") m</MudText>
+                        }
                     </MudListItem>
 
                 </MudList>
@@ -128,6 +156,12 @@
         public double Heading { get; set; }
         public double Speed { get; set; }
         public string Type { get; set; }
+        public string NavigationalStatus { get; set; }
+        public string Destination { get; set; }
+        public DateTime? Eta { get; set; }
+        public double? Length { get; set; }
+        public double? Width { get; set; }
+        public double? Draught { get; set; }
     }
 
     private async Task CloseDrawer()
@@ -164,5 +198,30 @@
             await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
             Snackbar.Add($"{label} copied to clipboard", Severity.Success);
         }
+    }
+    private string GetStatusIcon(string status)
+    {
+        if (string.IsNullOrEmpty(status)) return Icons.Material.Filled.Navigation;
+        
+        if (status.Contains("sailing", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Sailing;
+        if (status.Contains("engine", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Engineering;
+        if (status.Contains("Moored", StringComparison.OrdinalIgnoreCase) || status.Contains("Anchor", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Anchor;
+        
+        return Icons.Material.Filled.Navigation;
+    }
+
+    private string GetStatusDescription(string status)
+    {
+        if (string.IsNullOrEmpty(status)) return "Status unknown";
+
+        if (status.Contains("using engine", StringComparison.OrdinalIgnoreCase)) return "Vessel is moving under engine power (Class A).";
+        if (status.Contains("sailing", StringComparison.OrdinalIgnoreCase)) return "Vessel is moving under sail power.";
+        if (status.Contains("Class B", StringComparison.OrdinalIgnoreCase)) return "Vessel is active (Class B transponder). Exact status not reported.";
+        if (status.Contains("Moored", StringComparison.OrdinalIgnoreCase)) return "Vessel is secured to a dock or berth.";
+        if (status.Contains("Anchor", StringComparison.OrdinalIgnoreCase)) return "Vessel is secured to the seabed.";
+        if (status.Contains("Fishing", StringComparison.OrdinalIgnoreCase)) return "Vessel is actively engaged in fishing.";
+        if (status.Contains("Command", StringComparison.OrdinalIgnoreCase)) return "Vessel is unable to maneuver as required.";
+
+        return "Current navigational status reported by AIS.";
     }
 }

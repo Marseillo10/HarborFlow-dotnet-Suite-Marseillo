@@ -42,10 +42,12 @@
                 <RowTemplate>
                     <MudTd DataLabel="Name">@context.Name</MudTd>
                     <MudTd DataLabel="Actions">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
-                            Href="@($"/edit-company/{context.Id}")" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
-                            OnClick="@(async () => await DeleteCompany(context))" />
+                        <div class="d-flex flex-row gap-2">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
+                                OnClick="@(() => OpenEditCompanyDialog(context))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                                OnClick="@(async () => await DeleteCompany(context))" />
+                        </div>
                     </MudTd>
                 </RowTemplate>
                 <PagerContent>
@@ -143,6 +145,19 @@
     {
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
         var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.CompanyDialog>("Add Company", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadCompanies();
+        }
+    }
+
+    private async Task OpenEditCompanyDialog(Company company)
+    {
+        var parameters = new DialogParameters { { "Company", company } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.CompanyDialog>("Edit Company", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)

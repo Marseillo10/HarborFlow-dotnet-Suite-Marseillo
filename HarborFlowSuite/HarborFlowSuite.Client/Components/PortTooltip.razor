@@ -11,6 +11,10 @@
                 <MudText Typo="Typo.caption" Class="d-block mt-1 mud-text-secondary">
                     Lat: @Port.Latitude.ToString("F4"), Lng: @Port.Longitude.ToString("F4")
                 </MudText>
+                <MudText Typo="Typo.caption" Class="d-block mt-1"
+                    Style="color: var(--mud-palette-primary); font-style: italic;">
+                    (Click for details)
+                </MudText>
             </MudCardContent>
         </MudCard>
 }
@@ -21,23 +25,30 @@
         z-index: 1000;
         pointer-events: none;
         white-space: nowrap;
-        background: rgba(255, 255, 255, 0.95);
-        color: #0f172a;
-        border: 1px solid #cbd5e1;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        background-color: var(--mud-palette-surface) !important;
+        color: var(--mud-palette-text-primary);
+        border: 1px solid var(--mud-palette-lines-default);
+        box-shadow: var(--mud-elevation-4);
         min-width: 200px;
         border-radius: 8px;
+        opacity: 1 !important;
     }
 
-    ::deep .theme-dark .port-tooltip {
-        background: rgba(11, 29, 46, 0.95);
-        color: white;
-        border: 1px solid #00f2ff;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    /* Force opaque backgrounds based on theme classes */
+    .theme-light .port-tooltip {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
     }
 
-    ::deep .theme-dark .port-tooltip .mud-typography-h6 {
-        border-bottom-color: #00f2ff !important;
+    .theme-dark .port-tooltip {
+        background-color: #0b1d2e !important;
+        color: #ffffff !important;
+        border: 1px solid #00f2ff !important;
+    }
+
+    .port-tooltip .mud-typography-h6 {
+        border-bottom-color: var(--mud-palette-primary) !important;
     }
 </style>
 
@@ -50,22 +61,6 @@
 
     private string GetTooltipStyle()
     {
-        // Default offset
-        int x = Position.X + 15;
-        int y = Position.Y + 15;
-
-        // Check right edge
-        if (ScreenWidth > 0 && x + 250 > ScreenWidth)
-        {
-            x = Position.X - 265; // Shift left
-        }
-
-        // Check bottom edge
-        if (ScreenHeight > 0 && y + 150 > ScreenHeight)
-        {
-            y = Position.Y - 150; // Shift up
-        }
-
-        return $"left: {x}px; top: {y}px;";
+        return $"left: {Position.X}px; top: {Position.Y}px; transform: translate(-50%, -100%); margin-top: -10px;";
     }
 }

@@ -45,5 +45,30 @@ namespace HarborFlowSuite.Client.Services
         {
             return await _httpClient.GetFromJsonAsync<List<VesselPositionDto>>("api/vessel/positions");
         }
+
+        public async Task<VesselPositionDto?> GetVesselPosition(string mmsi)
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<VesselPositionDto>($"api/vessel/positions/{mmsi}");
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<HarborFlowSuite.Shared.DTOs.VesselPositionUpdateDto>> GetActiveVessels()
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<IEnumerable<HarborFlowSuite.Shared.DTOs.VesselPositionUpdateDto>>("api/vessel/active")
+                       ?? Enumerable.Empty<HarborFlowSuite.Shared.DTOs.VesselPositionUpdateDto>();
+            }
+            catch
+            {
+                return Enumerable.Empty<HarborFlowSuite.Shared.DTOs.VesselPositionUpdateDto>();
+            }
+        }
     }
 }

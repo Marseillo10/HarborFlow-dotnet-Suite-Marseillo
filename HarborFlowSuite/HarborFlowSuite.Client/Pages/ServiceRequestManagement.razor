@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @using HarborFlowSuite.Core.Models
+@using HarborFlowSuite.Shared.Constants
 @using HarborFlowSuite.Client.Services
 @inject IServiceRequestService ServiceRequestService
 @inject NavigationManager NavigationManager
@@ -11,6 +12,8 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject IHttpClientFactory ClientFactory
+@inject IServiceRequestSignalRService ServiceRequestSignalRService
+@implements IAsyncDisposable
 
 @attribute [Authorize]
 
@@ -31,59 +34,44 @@
 
     <MudText Typo="Typo.body1" Class="mb-4">This page displays a list of service requests.</MudText>
 
-    <MudCard Elevation="4" Class="glass-card rounded-xl animate-fade-in-up">
-        <MudCardContent Class="pa-0">
-            <MudTable Items="@_serviceRequests" Dense="true" Hover="true" Filter="new Func<ServiceRequest,bool>(FilterFunc1)"
-                @bind-SelectedItem="_selectedRequest" Loading="@_loading" Class="glass-table" Elevation="0">
-                <ToolBarContent>
-                    <MudText Typo="Typo.h6" Class="ml-2">Requests</MudText>
-                    <MudSpacer />
-                    <MudTextField @bind-Value="_searchTerm" Placeholder="Search" Adornment="Adornment.Start"
-                        AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0 mr-2"></MudTextField>
-                </ToolBarContent>
-                <HeaderContent>
-                    <MudTh>Title</MudTh>
-                    <MudTh>Description</MudTh>
-                    <MudTh>Status</MudTh>
-                    <MudTh>Priority</MudTh>
-                    <MudTh>Requested At</MudTh>
-                    <MudTh>Actions</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd DataLabel="Title">@context.Title</MudTd>
-                    <MudTd DataLabel="Description">@context.Description</MudTd>
-                    <MudTd DataLabel="Status">
-                        <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small" Variant="Variant.Filled">@context.Status</MudChip>
-                    </MudTd>
-                    <MudTd DataLabel="Priority">
-                        <MudChip T="string" Color="@GetPriorityColor(context.Priority)" Size="Size.Small" Variant="Variant.Outlined">@context.Priority
-                        </MudChip>
-                    </MudTd>
-                    <MudTd DataLabel="Requested At">@context.RequestedAt.ToShortDateString()</MudTd>
-                    <MudTd DataLabel="Actions">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
-                            Href="@($"/edit-service-request/{context.Id}")" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
-                            OnClick="@(async () => await DeleteServiceRequest(context))" />
-                        @if (_isPortAuthorityOfficer && context.Status == ServiceRequestStatus.Pending)
+    <MudGrid>
+        <MudItem xs="12" md="4">
+            <MudCard Elevation="4" Class="glass-card rounded-xl animate-fade-in-up h-100">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Requests</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudTextField @bind-Value="_searchTerm" Placeholder="Search" Adornment="Adornment.Start"
+                            AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0 mr-2"></MudTextField>
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent Class="pa-0" Style="height: 600px; overflow-y: auto;">
+                    <MudList T="ServiceRequest" Clickable="true" @bind-SelectedValue="_selectedRequest" SelectionMode="SelectionMode.SingleSelection">
+                        @foreach (var request in _serviceRequests.Where(FilterFunc1))
                         {
-                            <MudTooltip Text="Approve">
-                                <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small"
-                                    OnClick="() => OpenApprovalDialog(context, true)" />
-                            </MudTooltip>
-                            <MudTooltip Text="Reject">
-                                <MudIconButton Icon="@Icons.Material.Filled.Cancel" Color="Color.Warning" Size="Size.Small"
-                                    OnClick="() => OpenApprovalDialog(context, false)" />
-                            </MudTooltip>
+                            <MudListItem Value="@request" OnClick="@(() => SelectRequest(request))">
+                                <div class="d-flex flex-column">
+                                    <div class="d-flex justify-space-between align-center">
+                                        <MudText Typo="Typo.subtitle2">@request.Title</MudText>
+                                        <MudChip T="string" Color="@GetStatusColor(request.Status)" Size="Size.Small" Variant="Variant.Filled" Class="ml-2">@request.Status</MudChip>
+                                    </div>
+                                    <div class="d-flex justify-space-between align-center mt-1">
+                                        <MudText Typo="Typo.caption">@(request.Vessel?.Name ?? "N/A")</MudText>
+                                        <MudText Typo="Typo.caption">@request.RequestedAt.ToLocalTime().ToString("g")</MudText>
+                                    </div>
+                                </div>
+                            </MudListItem>
+                            <MudDivider />
                         }
-                    </MudTd>
-                </RowTemplate>
-                <PagerContent>
-                    <MudTablePager />
-                </PagerContent>
-            </MudTable>
-        </MudCardContent>
-    </MudCard>
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+                <MudItem xs="12" md="8">
+            <ServiceRequestDetail ServiceRequest="@_selectedRequest" OnRequestProcessed="HandleRequestProcessed" />
+        </MudItem>
+    </MudGrid>
 </MudContainer>
 
 <style>
@@ -94,7 +82,6 @@
 
 @code {
     private List<ServiceRequest> _serviceRequests = new();
-    private bool _loading = true;
     private string _searchTerm = "";
     private bool _isPortAuthorityOfficer;
     private ServiceRequest _selectedRequest;
@@ -103,13 +90,83 @@
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
-        _isPortAuthorityOfficer = user.IsInRole("Port Authority Officer");
+        _isPortAuthorityOfficer = user.IsInRole(UserRole.PortAuthority);
+        
+        ServiceRequestSignalRService.OnRequestUpdated += HandleRequestUpdated;
+        await ServiceRequestSignalRService.StartConnection();
+
         await LoadServiceRequests();
+    }
+
+    private void SelectRequest(ServiceRequest request)
+    {
+        _selectedRequest = request;
+    }
+
+    private async Task HandleRequestProcessed()
+    {
+        // Get the current filtered list before reload to find index
+        var previousFilteredList = _serviceRequests.Where(FilterFunc1).ToList();
+        var currentIndex = previousFilteredList.FindIndex(r => r.Id == _selectedRequest?.Id);
+        
+        await LoadServiceRequests();
+        
+        // Re-calculate filtered list after reload
+        var currentFilteredList = _serviceRequests.Where(FilterFunc1).ToList();
+        
+        if (currentFilteredList.Any())
+        {
+            var stillInList = currentFilteredList.Any(r => r.Id == _selectedRequest?.Id);
+            
+            if (stillInList)
+            {
+                 // If still in list, move to next
+                 if (currentIndex >= 0 && currentIndex < currentFilteredList.Count - 1)
+                 {
+                     _selectedRequest = currentFilteredList[currentIndex + 1];
+                 }
+                 else
+                 {
+                     // Update reference to the new object
+                     _selectedRequest = currentFilteredList.FirstOrDefault(r => r.Id == _selectedRequest.Id);
+                 }
+            }
+            else
+            {
+                // If gone (e.g. filtered out), take the one at the same index
+                if (currentIndex < currentFilteredList.Count)
+                {
+                    _selectedRequest = currentFilteredList[currentIndex];
+                }
+                else
+                {
+                    _selectedRequest = currentFilteredList.LastOrDefault();
+                }
+            }
+        }
+        else
+        {
+            _selectedRequest = null;
+        }
+        
+        StateHasChanged();
+    }
+
+    private async void HandleRequestUpdated()
+    {
+        await LoadServiceRequests();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        ServiceRequestSignalRService.OnRequestUpdated -= HandleRequestUpdated;
+        await Task.CompletedTask;
     }
 
     private async Task LoadServiceRequests()
     {
-        _loading = true;
+        // _loading = true; // Removed as per instruction
         try
         {
             _serviceRequests = await ServiceRequestService.GetServiceRequests() ?? new List<ServiceRequest>();
@@ -121,7 +178,6 @@
         }
         finally
         {
-            _loading = false;
         }
     }
 
@@ -194,8 +250,8 @@
             ServiceRequestStatus.Approved => Color.Success,
             ServiceRequestStatus.Rejected => Color.Error,
             ServiceRequestStatus.InProgress => Color.Info,
-            ServiceRequestStatus.Completed => Color.Primary,
-            ServiceRequestStatus.Cancelled => Color.Secondary,
+            ServiceRequestStatus.Completed => Color.Tertiary,
+            ServiceRequestStatus.Cancelled => Color.Dark,
             _ => Color.Default
         };
     }
@@ -208,6 +264,17 @@
             2 => Color.Warning,
             3 => Color.Info,
             _ => Color.Default
+        };
+    }
+
+    private string GetPriorityLabel(int priority)
+    {
+        return priority switch
+        {
+            1 => "High",
+            2 => "Medium",
+            3 => "Low",
+            _ => "Unknown"
         };
     }
 
@@ -249,6 +316,26 @@
         {
             await LoadServiceRequests();
         }
+    }
+
+    private async Task OpenEditServiceRequestDialog(ServiceRequest request)
+    {
+        var parameters = new DialogParameters { { "ServiceRequest", request } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.ServiceRequestDialog>("Edit Service Request", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadServiceRequests();
+        }
+    }
+
+    private async Task OpenHistoryDialog(Guid requestId)
+    {
+        var parameters = new DialogParameters { { "ServiceRequestId", requestId } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.ServiceRequestHistoryDialog>("Request History", parameters, options);
     }
 
     private async Task ExportCsv()

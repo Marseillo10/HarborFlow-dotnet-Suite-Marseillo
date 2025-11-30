@@ -30,7 +30,8 @@ namespace HarborFlowSuite.Server.Controllers
         [HttpGet]
         public async Task<ActionResult<List<ServiceRequest>>> GetServiceRequests()
         {
-            var serviceRequests = await _serviceRequestService.GetServiceRequests();
+            var firebaseUid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var serviceRequests = await _serviceRequestService.GetServiceRequests(firebaseUid);
             return Ok(serviceRequests);
         }
 
@@ -59,7 +60,9 @@ namespace HarborFlowSuite.Server.Controllers
             {
                 Title = createServiceRequestDto.Title,
                 Description = createServiceRequestDto.Description,
-                Status = Enum.Parse<ServiceRequestStatus>(createServiceRequestDto.Status)
+                Status = Enum.Parse<ServiceRequestStatus>(createServiceRequestDto.Status),
+                Priority = createServiceRequestDto.Priority,
+                VesselId = createServiceRequestDto.VesselId
             };
 
             var createdServiceRequest = await _serviceRequestService.CreateServiceRequest(serviceRequest, firebaseUid);
@@ -108,7 +111,8 @@ namespace HarborFlowSuite.Server.Controllers
                 return BadRequest();
             }
 
-            var updatedRequest = await _serviceRequestService.UpdateServiceRequest(serviceRequest);
+            var firebaseUid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var updatedRequest = await _serviceRequestService.UpdateServiceRequest(serviceRequest, firebaseUid);
             if (updatedRequest == null)
             {
                 return NotFound();
@@ -132,7 +136,8 @@ namespace HarborFlowSuite.Server.Controllers
         [HttpGet("export")]
         public async Task<IActionResult> Export()
         {
-            var serviceRequests = await _serviceRequestService.GetServiceRequests();
+            var firebaseUid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var serviceRequests = await _serviceRequestService.GetServiceRequests(firebaseUid);
             var builder = new System.Text.StringBuilder();
             builder.AppendLine("Id,Title,Description,Status,Priority,RequestedAt");
 

@@ -21,7 +21,21 @@
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
 
+    [Parameter] public Company? Company { get; set; }
+
     private Company _company = new();
+
+    protected override void OnInitialized()
+    {
+        if (Company != null)
+        {
+            _company = new Company
+                {
+                    Id = Company.Id,
+                    Name = Company.Name
+                };
+        }
+    }
 
     private async Task Submit()
     {
@@ -34,17 +48,25 @@
         var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
         try
         {
-            var response = await client.PostAsJsonAsync("api/company", _company);
+            HttpResponseMessage response;
+            if (Company != null)
+            {
+                response = await client.PutAsJsonAsync($"api/company/{Company.Id}", _company);
+            }
+            else
+            {
+                response = await client.PostAsJsonAsync("api/company", _company);
+            }
 
             if (response.IsSuccessStatusCode)
             {
-                Snackbar.Add("Company added successfully!", Severity.Success);
+                Snackbar.Add(Company != null ? "Company updated successfully!" : "Company added successfully!", Severity.Success);
                 MudDialog.Close(DialogResult.Ok(true));
             }
             else
             {
                 var errorMessage = await response.Content.ReadAsStringAsync();
-                Snackbar.Add($"Error adding company: {errorMessage}", Severity.Error);
+                Snackbar.Add($"Error {(Company != null ? "updating" : "adding")} company: {errorMessage}", Severity.Error);
             }
         }
         catch (Exception ex)

@@ -10,4 +10,6 @@ public class CreateServiceRequestDto
     public required string Description { get; set; }
     [Required]
     public required string Status { get; set; }
+    public int Priority { get; set; }
+    public Guid? VesselId { get; set; }
 }

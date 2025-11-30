@@ -1,5 +1,6 @@
 using HarborFlowSuite.Client.Services;
 using HarborFlowSuite.Core.DTOs;
+using HarborFlowSuite.Shared.DTOs;
 using Microsoft.AspNetCore.SignalR.Client;
 using Moq;
 using System;
@@ -33,7 +34,7 @@ namespace HarborFlowSuite.Client.Tests
             _mockHubConnection.Verify(
                 hc => hc.On(
                     "ReceiveVesselPositionUpdate",
-                    It.IsAny<Action<string, double, double, double, double, string, string, VesselMetadataDto>>()),
+                    It.IsAny<Action<VesselPositionUpdateDto>>()),
                 Times.Once);
         }
 
@@ -64,11 +65,11 @@ namespace HarborFlowSuite.Client.Tests
             string vesselType = "Cargo";
             VesselMetadataDto metadata = new VesselMetadataDto { Flag = "USA", ImoNumber = "IMO123", Length = 100.0 };
 
-            Action<string, double, double, double, double, string, string, VesselMetadataDto> callback = null;
+            Action<VesselPositionUpdateDto> callback = null;
             _mockHubConnection.Setup(hc => hc.On(
                 "ReceiveVesselPositionUpdate",
-                It.IsAny<Action<string, double, double, double, double, string, string, VesselMetadataDto>>()))
-                .Callback<string, Action<string, double, double, double, double, string, string, VesselMetadataDto>>((eventName, action) =>
+                It.IsAny<Action<VesselPositionUpdateDto>>()))
+                .Callback<string, Action<VesselPositionUpdateDto>>((eventName, action) =>
                 {
                     callback = action;
                 });
@@ -76,21 +77,31 @@ namespace HarborFlowSuite.Client.Tests
             await _service.StartConnection();
 
             var eventFired = false;
-            _service.OnPositionUpdateReceived += (m, la, lo, h, s, n, vt, meta) =>
+            _service.OnPositionUpdateReceived += (dto) =>
             {
                 eventFired = true;
-                Assert.Equal(mmsi, m);
-                Assert.Equal(lat, la);
-                Assert.Equal(lon, lo);
-                Assert.Equal(heading, h);
-                Assert.Equal(speed, s);
-                Assert.Equal(name, n);
-                Assert.Equal(vesselType, vt);
-                Assert.Equal(metadata, meta);
+                Assert.Equal(mmsi, dto.MMSI);
+                Assert.Equal(lat, dto.Latitude);
+                Assert.Equal(lon, dto.Longitude);
+                Assert.Equal(heading, dto.Heading);
+                Assert.Equal(speed, dto.Speed);
+                Assert.Equal(name, dto.Name);
+                Assert.Equal(vesselType, dto.VesselType);
+                Assert.Equal(metadata, dto.Metadata);
             };
 
             // Act
-            callback?.Invoke(mmsi, lat, lon, heading, speed, name, vesselType, metadata);
+            callback?.Invoke(new VesselPositionUpdateDto
+            {
+                MMSI = mmsi,
+                Latitude = lat,
+                Longitude = lon,
+                Heading = heading,
+                Speed = speed,
+                Name = name,
+                VesselType = vesselType,
+                Metadata = metadata
+            });
 
             // Assert
             Assert.True(eventFired);

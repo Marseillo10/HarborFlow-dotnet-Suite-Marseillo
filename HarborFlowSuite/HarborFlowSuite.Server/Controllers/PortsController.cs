@@ -1,24 +1,45 @@
-using HarborFlowSuite.Application.Services;
-using HarborFlowSuite.Core.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using HarborFlowSuite.Infrastructure.Persistence;
+using HarborFlowSuite.Core.Models;
 
-namespace HarborFlowSuite.Server.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-public class PortsController : ControllerBase
+namespace HarborFlowSuite.Server.Controllers
 {
-    private readonly IPortService _portService;
-
-    public PortsController(IPortService portService)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class PortsController : ControllerBase
     {
-        _portService = portService;
-    }
+        private readonly ApplicationDbContext _context;
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Port>>> GetPorts()
-    {
-        var ports = await _portService.GetPorts();
-        return Ok(ports);
+        public PortsController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Port>>> GetPorts(
+            [FromQuery] double? minLat,
+            [FromQuery] double? maxLat,
+            [FromQuery] double? minLon,
+            [FromQuery] double? maxLon)
+        {
+            var query = _context.Ports.AsQueryable();
+
+            if (minLat.HasValue && maxLat.HasValue && minLon.HasValue && maxLon.HasValue)
+            {
+                query = query.Where(p =>
+                    p.Latitude >= minLat.Value &&
+                    p.Latitude <= maxLat.Value &&
+                    p.Longitude >= minLon.Value &&
+                    p.Longitude <= maxLon.Value);
+            }
+
+            // Limit results to prevent overloading the client if the viewport is too large
+            // or if no bounds are provided (though client should provide them).
+            // 500 ports is a reasonable limit for a single view.
+            var ports = await query.Take(500).ToListAsync();
+
+            return Ok(ports);
+        }
     }
 }

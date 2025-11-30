@@ -1,0 +1,93 @@
+@using HarborFlowSuite.Core.Models
+@using HarborFlowSuite.Client.Services
+@using HarborFlowSuite.Core.DTOs
+@inject IJSRuntime JSRuntime
+@inject IVesselService VesselService
+
+<div style="position: relative;">
+    <div id="@MapElementId" style="width: 100%; height: 300px; border-radius: 8px; overflow: hidden;"></div>
+    @if (!string.IsNullOrEmpty(_statusMessage))
+    {
+        <div style="position: absolute; top: 10px; left: 10px; right: 10px; z-index: 1000;">
+            <MudAlert Severity="Severity.Warning" Dense="true" Class="my-2">@_statusMessage</MudAlert>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Vessel? Vessel { get; set; }
+    [Parameter] public string MapElementId { get; set; } = "mini-map";
+
+    private bool _isMapInitialized;
+    private string? _currentMapElementId;
+    private bool _shouldReinitMap;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_currentMapElementId != MapElementId)
+        {
+            _shouldReinitMap = true;
+            _currentMapElementId = MapElementId;
+        }
+        else if (_isMapInitialized)
+        {
+            await UpdateMap();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender || _shouldReinitMap)
+        {
+            _shouldReinitMap = false;
+            try
+            {
+                // Initialize or re-initialize map
+                await JSRuntime.InvokeVoidAsync("HarborFlowMap.initMiniMap", MapElementId, 1.28, 103.85);
+                _isMapInitialized = true;
+                await UpdateMap();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error initializing mini map: {ex.Message}");
+            }
+        }
+    }
+
+    private string? _statusMessage;
+
+    private async Task UpdateMap()
+    {
+        if (Vessel == null) return;
+
+        try
+        {
+            _statusMessage = null;
+            // Fetch specific vessel position (checks DB then GFW)
+            var position = await VesselService.GetVesselPosition(Vessel.MMSI);
+
+            if (position != null)
+            {
+                if (position.Latitude == 0 && position.Longitude == 0)
+                {
+                    _statusMessage = $"Vessel found in GFW but no recent position available. Status: {position.VesselStatus}";
+                }
+                else
+                {
+                    await JSRuntime.InvokeVoidAsync("HarborFlowMap.updateMiniMapMarker", position.Latitude, position.Longitude);
+                }
+            }
+            else
+            {
+                _statusMessage = "Vessel not found in AIS or GFW database.";
+            }
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating mini map: {ex.Message}");
+            _statusMessage = "Error tracking vessel.";
+            StateHasChanged();
+        }
+    }
+}

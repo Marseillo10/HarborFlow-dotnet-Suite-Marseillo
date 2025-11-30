@@ -27,7 +27,8 @@ builder.Services.AddScoped<HarborFlowSuite.Client.Services.IAuthService, HarborF
 builder.Services.AddScoped<IVesselService, VesselService>();
 builder.Services.AddScoped<HarborFlowSuite.Client.Services.IServiceRequestService, HarborFlowSuite.Client.Services.ServiceRequestService>();
 builder.Services.AddScoped<IVesselPositionSignalRService, VesselPositionSignalRService>();
-builder.Services.AddScoped<IPortService, PortService>();
+builder.Services.AddScoped<PortService>();
+builder.Services.AddScoped<IServiceRequestSignalRService, ServiceRequestSignalRService>();
 
 builder.Services.AddAuthorizationCore(options =>
 {

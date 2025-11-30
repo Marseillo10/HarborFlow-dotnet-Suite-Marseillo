@@ -1,25 +1,30 @@
 using System.Text.Json;
 using HarborFlowSuite.Core.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace HarborFlowSuite.Infrastructure.Persistence;
 
 public class PortSeeder
 {
     private readonly ApplicationDbContext _context;
+    private readonly IConfiguration _configuration;
 
-    public PortSeeder(ApplicationDbContext context)
+    public PortSeeder(ApplicationDbContext context, IConfiguration configuration)
     {
         _context = context;
+        _configuration = configuration;
     }
 
     public async Task SeedAsync()
     {
         Console.WriteLine("PortSeeder: SeedAsync started.");
 
+        // ALWAYS clear the table first to ensure we remove old duplicates
         if (_context.Ports.Any())
         {
-            Console.WriteLine("PortSeeder: Database already contains ports. Skipping seed.");
-            return; // Already seeded
+            Console.WriteLine("PortSeeder: Clearing existing ports to ensure clean slate...");
+            _context.Ports.RemoveRange(_context.Ports);
+            await _context.SaveChangesAsync();
         }
 
         var portsJsonPath = Path.Combine(AppContext.BaseDirectory, "ports.json");
@@ -42,14 +47,48 @@ public class PortSeeder
             if (ports != null)
             {
                 Console.WriteLine($"PortSeeder: Deserialized {ports.Count} ports from JSON.");
-                var targetCountries = new[] { "Indonesia", "Malaysia", "Papua New Guinea", "Timor-Leste", "Brunei", "Singapore" };
-                var filteredPorts = ports
-                    .Where(p => targetCountries.Contains(p.Country, StringComparer.OrdinalIgnoreCase))
+
+                var targetCountries = _configuration.GetSection("PortSeeder:TargetCountries").Get<string[]>();
+
+                List<Port> filteredPorts;
+                if (targetCountries != null && targetCountries.Any())
+                {
+                    filteredPorts = ports
+                        .Where(p => targetCountries.Contains(p.Country, StringComparer.OrdinalIgnoreCase))
+                        .ToList();
+                    Console.WriteLine($"PortSeeder: Filtered down to {filteredPorts.Count} ports for target countries: {string.Join(", ", targetCountries)}");
+                }
+                else
+                {
+                    var defaultCountries = new[] { "Indonesia", "Malaysia", "Papua New Guinea", "Timor-Leste", "Brunei", "Singapore" };
+                    filteredPorts = ports
+                        .Where(p => defaultCountries.Contains(p.Country, StringComparer.OrdinalIgnoreCase))
+                        .ToList();
+                    Console.WriteLine($"PortSeeder: No configuration found. Using default filter. Filtered down to {filteredPorts.Count} ports.");
+                }
+
+                // DATA CORRECTION: Fix Jakarta's coordinates if they are incorrect (positive latitude)
+                // Jakarta should be approx -6.1, 106.8
+                var jakartaPorts = filteredPorts.Where(p => p.City.Equals("Jakarta", StringComparison.OrdinalIgnoreCase)).ToList();
+                foreach (var jakarta in jakartaPorts)
+                {
+                    if (jakarta.Latitude > 0) // If positive (North), it's wrong
+                    {
+                        Console.WriteLine($"PortSeeder: Fixing incorrect Jakarta coordinates: {jakarta.Latitude}, {jakarta.Longitude} -> -6.10, 106.80");
+                        jakarta.Latitude = -6.10;
+                        jakarta.Longitude = 106.80;
+                    }
+                }
+
+                // DEDUPLICATION LOGIC: Group by Country + City and take the first one
+                var uniquePorts = filteredPorts
+                    .GroupBy(p => new { p.Country, p.City })
+                    .Select(g => g.First())
                     .ToList();
 
-                Console.WriteLine($"PortSeeder: Filtered down to {filteredPorts.Count} ports for target countries.");
+                Console.WriteLine($"PortSeeder: Deduplicated ports. Reduced from {filteredPorts.Count} to {uniquePorts.Count} unique ports.");
 
-                foreach (var port in filteredPorts)
+                foreach (var port in uniquePorts)
                 {
                     port.Id = Guid.NewGuid();
                     _context.Ports.Add(port);

@@ -2,6 +2,7 @@ using Bunit;
 using HarborFlowSuite.Client.Components;
 using HarborFlowSuite.Client.Services;
 using HarborFlowSuite.Core.DTOs;
+using HarborFlowSuite.Shared.DTOs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Moq;
@@ -44,15 +45,26 @@ namespace HarborFlowSuite.Client.Tests
                           .Returns(new ValueTask<IJSVoidResult>(Mock.Of<IJSVoidResult>()));
 
             // Capture the event handler when the component subscribes
-            Action<string, double, double, double, double, string, string, VesselMetadataDto> onPositionUpdateReceived = null;
-            _vesselPositionSignalRServiceMock.SetupAdd(m => m.OnPositionUpdateReceived += It.IsAny<Action<string, double, double, double, double, string, string, VesselMetadataDto>>())
-                                             .Callback<Action<string, double, double, double, double, string, string, VesselMetadataDto>>(handler => onPositionUpdateReceived = handler);
+            // Capture the event handler when the component subscribes
+            Action<VesselPositionUpdateDto> onPositionUpdateReceived = null;
+            _vesselPositionSignalRServiceMock.SetupAdd(m => m.OnPositionUpdateReceived += It.IsAny<Action<VesselPositionUpdateDto>>())
+                                             .Callback<Action<VesselPositionUpdateDto>>(handler => onPositionUpdateReceived = handler);
 
             // Act
             var cut = Render<VesselMap>();
 
             // Simulate a position update
-            await cut.InvokeAsync(() => onPositionUpdateReceived?.Invoke(mmsi, lat, lng, heading, speed, name, vesselType, metadata));
+            await cut.InvokeAsync(() => onPositionUpdateReceived?.Invoke(new VesselPositionUpdateDto
+            {
+                MMSI = mmsi,
+                Latitude = lat,
+                Longitude = lng,
+                Heading = heading,
+                Speed = speed,
+                Name = name,
+                VesselType = vesselType,
+                Metadata = metadata
+            }));
 
             // Assert
             _vesselPositionSignalRServiceMock.Verify(s => s.StartConnection(), Times.Once);
@@ -81,7 +93,7 @@ namespace HarborFlowSuite.Client.Tests
 
             // Assert
             _vesselPositionSignalRServiceMock.Verify(s => s.StopConnection(), Times.Once);
-            _vesselPositionSignalRServiceMock.VerifyRemove(s => s.OnPositionUpdateReceived -= It.IsAny<Action<string, double, double, double, double, string, string, VesselMetadataDto>>(), Times.Once);
+            _vesselPositionSignalRServiceMock.VerifyRemove(s => s.OnPositionUpdateReceived -= It.IsAny<Action<VesselPositionUpdateDto>>(), Times.Once);
         }
     }
 }

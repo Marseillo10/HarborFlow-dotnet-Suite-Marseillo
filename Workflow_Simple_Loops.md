@@ -1,36 +1,49 @@
 * **Workflow Loops**
-Please adhere to the following instructions for the continued development of the web application: (make sur don't regressing the project)
 
-*   **Thorough Review:** Conduct a thorough and detailed review of both the project's source code and the web application itself (Use codebase investigator to only read as groups or parts of project if necessary (only do this to the part of codes not entire project)).
-*   **Continued Development:** Continue the development of the application, with a specific focus on implementing the functionality outlined in the documentations located at: `/Users/marseillosatrian/Downloads/HarborFflow_dotnet_Suite_Marseillo_v2/target_tech_spec_HarborFlow_dotnet_suite.md` and `/Users/marseillosatrian/Downloads/HarborFlow-dotnet-Suite-Marseillo 2/docs`
-*   **UI/UX Enhancement:** Focus on improving the applica
-*   tion's user interface (UI) and user experience (UX). This includes:
-    *   Enhancing or adding new icons and background images.
-    *   Improving or adding animations.
-*   **Information Accuracy:** Ensure that all information displayed to the user is accurate and clearly communicates the application's intent.
-*   **Bug Fixes:** Continuously identify and fix any problems or bugs within the application (If you Stuck in fixing bugs, please just note the bugs and continue work anything else, we will continue fixing its later!).
-*   **Task**
-*   **Always Use Browser and chrome developer tools:** Throughout the development and debugging process, consistently use `browser extension` and `chrome developer tools` to visit and review the web application running at `https://localhost:7163/ or http://localhost:5205`. This will prevent "blind" development, as `HarborFlow.Web` and `HarborFlow.Api` are always running by you.
 *   **Login Credentials:** Use the following credentials for registration and login purposes:
     *   **Nama:** Marseillo
     *   **Email:** `rafaelbintang207@gmail.com`
-    *   **Password:** `password123`
+    *   **Password:** `********`
 Always rerun the project after you done with the changes!
 * dotnet run --project HarborFlowSuite/HarborFlowSuite.Server --launch-profile https
+
+Using launch settings from HarborFlowSuite/HarborFlowSuite.Server/Properties/launchSettings.json...
+Building...
+PortSeeder: SeedAsync started.
+PortSeeder: Clearing existing ports to ensure clean slate...
+PortSeeder: Checking for ports.json at /Users/marseillosatrian/Downloads/HarborFlow-dotnet-Suite-Marseillo/HarborFlowSuite/HarborFlowSuite.Server/bin/Debug/net9.0/ports.json
+PortSeeder: ports.json found. Reading file...
+PortSeeder: Deserialized 3898 ports from JSON.
+PortSeeder: Filtered down to 262 ports for target countries: Indonesia, Timor-Leste, Singapore, Malaysia, Brunei
+PortSeeder: Fixing incorrect Jakarta coordinates: 5.19, 105.61 -> -6.10, 106.80
+PortSeeder: Deduplicated ports. Reduced from 262 to 196 unique ports.
+PortSeeder: Successfully saved ports to database.
+Connected to AIS Stream.
+Sending subscription (Length: 214)
+Subscribed to AIS Stream.
+
 * dotnet run --project HarborFlowSuite/HarborFlowSuite.Client --launch-profile https   
 
-* **"DefaultConnection": "Host=localhost;Port=5432;Database=harborflowdb;Username=marseillosatrian;Password=bizero11"**  
-* dotnet ef migrations add FixServiceRequestModel --project HarborFlowSuite.Infrastructure --startup-project HarborFlowSuite.Server 
+Using launch settings from HarborFlowSuite/HarborFlowSuite.Client/Properties/launchSettings.json...
+Building...
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: https://localhost:7163
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5205
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /Users/marseillosatrian/Downloads/HarborFlow-dotnet-Suite-Marseillo/HarborFlowSuite/HarborFlowSuite.Client
 
+* **"DefaultConnection": "Host=localhost;Port=5432;Database=harborflowdb;Username=marseillosatrian;Password=********"**  
 
-Do you have any plan to implementing GFW API to complement AISstream API in my application? Tell me first the plan! And also please read this documentations:  https://globalfishingwatch.org/our-apis/ ; https://globalfishingwatch.org/our-apis/documentation#introduction ; https://globalfishingwatch.github.io/gfw-api-python-client/ ; https://github.com/GlobalFishingWatch/gfwr ; https://github.com/GlobalFishingWatch/vessel-classification ; https://github.com/GlobalFishingWatch/ShipDataProcess ;
+These are documentations for GFW API:  https://globalfishingwatch.org/our-apis/ ; https://globalfishingwatch.org/our-apis/documentation#introduction ; https://globalfishingwatch.github.io/gfw-api-python-client/ ; https://github.com/GlobalFishingWatch/gfwr ; https://github.com/GlobalFishingWatch/vessel-classification ; https://github.com/GlobalFishingWatch/ShipDataProcess ;
 
-Can you make sure the implementation of AISstream.io API in the application escepsially in the map on dashboard is able to fetch all data, proper and optimal! Read this documentation too: https://aisstream.io/documentation and https://github.com/aisstream 
+These are documentation for AISstream API: https://aisstream.io/documentation and https://github.com/aisstream 
+
 ---
-
-I have completed my search and found several excellent free APIs that could significantly enhance the HarborFlow project. Here is a summary of the best options,
-  categorized by the features they could add.
-
   Recommended APIs to Enhance HarborFlow
 
   1. Weather & Sea Conditions

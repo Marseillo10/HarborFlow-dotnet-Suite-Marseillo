@@ -1,0 +1,254 @@
+@using HarborFlowSuite.Core.Models
+@using HarborFlowSuite.Client.Services
+@using HarborFlowSuite.Core.DTOs
+@using HarborFlowSuite.Shared.Constants
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IJSRuntime JSRuntime
+@inject IVesselService VesselService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IDialogService DialogService
+@inject IServiceRequestService ServiceRequestService
+@inject ISnackbar Snackbar
+
+<MudCard Elevation="4" Class="glass-card rounded-xl animate-fade-in-up h-100">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h5">@ServiceRequest?.Title</MudText>
+            <MudText Typo="Typo.caption">Requested by: @(ServiceRequest?.Requester?.FullName ?? "Unknown")</MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudChip T="string" Color="@GetStatusColor(ServiceRequest?.Status ?? ServiceRequestStatus.Pending)"
+                    Size="Size.Small" Variant="Variant.Filled">
+                    @ServiceRequest?.Status
+                </MudChip>
+            </CardHeaderActions>
+        </MudCardHeader>
+        <MudCardContent>
+            @if (ServiceRequest == null)
+        {
+            <div class="d-flex justify-center align-center" style="height: 200px;">
+                <MudText Typo="Typo.h6" Color="Color.Secondary">Select a request to view details</MudText>
+            </div>
+        }
+        else
+        {
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Primary">Description</MudText>
+                    <MudText Typo="Typo.body1" Class="mb-4">@ServiceRequest.Description</MudText>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Primary">Priority</MudText>
+                    <MudChip T="string" Color="@GetPriorityColor(ServiceRequest.Priority)" Size="Size.Small"
+                        Variant="Variant.Outlined">
+                        @GetPriorityLabel(ServiceRequest.Priority)
+                    </MudChip>
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Primary">Requested At</MudText>
+                    <MudText Typo="Typo.body2">@ServiceRequest.RequestedAt.ToLocalTime().ToString("g")</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Primary">Vessel</MudText>
+                    <MudText Typo="Typo.body2">@(ServiceRequest.Vessel?.Name ?? "N/A")</MudText>
+                    </MudItem>
+
+                    @if (ServiceRequest.Vessel != null)
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="mb-2">Vessel Location</MudText>
+                        <VesselMiniMap Vessel="@ServiceRequest.Vessel" MapElementId="@($"mini-map-{ServiceRequest.Id}")" />
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    </MudCardContent>
+    <MudCardActions>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.History"
+            OnClick="OpenHistoryDialog">History</MudButton>
+        <MudSpacer />
+        @if (ServiceRequest?.Status == ServiceRequestStatus.Pending || _isSystemAdmin || _isPortAuthorityOfficer)
+        {
+            <MudTooltip Text="Edit">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Warning" OnClick="EditRequest" />
+            </MudTooltip>
+            <MudTooltip Text="Delete">
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="DeleteRequest" />
+            </MudTooltip>
+        }
+        @if (_isPortAuthorityOfficer && ServiceRequest?.Status == ServiceRequestStatus.Pending)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle"
+                OnClick="ApproveRequest" Class="ml-2 mr-2">Approve (A)</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Cancel"
+                OnClick="RejectRequest">Reject (R)</MudButton>
+        }
+    </MudCardActions>
+</MudCard>
+
+@code {
+    [Parameter] public ServiceRequest? ServiceRequest { get; set; }
+    [Parameter] public EventCallback OnRequestProcessed { get; set; }
+
+    private bool _isPortAuthorityOfficer;
+    private bool _isSystemAdmin;
+    private DotNetObjectReference<ServiceRequestDetail>? _dotNetHelper;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        _isPortAuthorityOfficer = user.IsInRole(UserRole.PortAuthority);
+        _isSystemAdmin = user.IsInRole(UserRole.SystemAdmin);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetHelper = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("registerServiceRequestShortcuts", _dotNetHelper);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await JSRuntime.InvokeVoidAsync("unregisterServiceRequestShortcuts");
+        _dotNetHelper?.Dispose();
+    }
+
+    [JSInvokable]
+    public async Task TriggerApprove()
+    {
+        if (_isPortAuthorityOfficer && ServiceRequest?.Status == ServiceRequestStatus.Pending)
+        {
+            await ApproveRequest();
+        }
+    }
+
+    [JSInvokable]
+    public async Task TriggerReject()
+    {
+        if (_isPortAuthorityOfficer && ServiceRequest?.Status == ServiceRequestStatus.Pending)
+        {
+            await RejectRequest();
+        }
+    }
+
+    private async Task EditRequest()
+    {
+        if (ServiceRequest == null) return;
+
+        var parameters = new DialogParameters { ["ServiceRequest"] = ServiceRequest };
+        var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.ServiceRequestDialog>("Edit Service Request", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await OnRequestProcessed.InvokeAsync();
+        }
+    }
+
+    private async Task DeleteRequest()
+    {
+        if (ServiceRequest == null) return;
+
+        var confirmed = await DialogService.ShowMessageBox(
+            "Delete Request",
+            "Are you sure you want to delete this service request?",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (confirmed == true)
+        {
+            var success = await ServiceRequestService.DeleteServiceRequest(ServiceRequest.Id);
+            if (success)
+            {
+                Snackbar.Add("Service request deleted", Severity.Success);
+                await OnRequestProcessed.InvokeAsync();
+            }
+            else
+            {
+                Snackbar.Add("Failed to delete service request", Severity.Error);
+            }
+        }
+    }
+
+    private async Task ApproveRequest()
+    {
+        if (ServiceRequest == null) return;
+
+        var parameters = new DialogParameters { ["ServiceRequest"] = ServiceRequest, ["IsApproval"] = true };
+        var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Components.ApprovalDialog>("Approve Request",
+        parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            Snackbar.Add("Request approved", Severity.Success);
+            await OnRequestProcessed.InvokeAsync();
+        }
+    }
+
+    private async Task RejectRequest()
+    {
+        if (ServiceRequest == null) return;
+
+        var parameters = new DialogParameters { ["ServiceRequest"] = ServiceRequest, ["IsApproval"] = false };
+        var dialog = await DialogService.ShowAsync<HarborFlowSuite.Client.Components.ApprovalDialog>("Reject Request",
+        parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            Snackbar.Add("Request rejected", Severity.Success);
+            await OnRequestProcessed.InvokeAsync();
+        }
+    }
+
+    private async Task OpenHistoryDialog()
+    {
+        if (ServiceRequest == null) return;
+        var parameters = new DialogParameters { { "ServiceRequestId", ServiceRequest.Id } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        await DialogService.ShowAsync<HarborFlowSuite.Client.Shared.Dialogs.ServiceRequestHistoryDialog>("Request History",
+        parameters, options);
+    }
+
+    private Color GetStatusColor(ServiceRequestStatus status)
+    {
+        return status switch
+        {
+            ServiceRequestStatus.Pending => Color.Warning,
+            ServiceRequestStatus.Approved => Color.Success,
+            ServiceRequestStatus.Rejected => Color.Error,
+            ServiceRequestStatus.InProgress => Color.Info,
+            ServiceRequestStatus.Completed => Color.Tertiary,
+            ServiceRequestStatus.Cancelled => Color.Dark,
+            _ => Color.Default
+        };
+    }
+
+    private Color GetPriorityColor(int priority)
+    {
+        return priority switch
+        {
+            1 => Color.Error,
+            2 => Color.Warning,
+            3 => Color.Info,
+            _ => Color.Default
+        };
+    }
+
+    private string GetPriorityLabel(int priority)
+    {
+        return priority switch
+        {
+            1 => "High",
+            2 => "Medium",
+            3 => "Low",
+            _ => "Unknown"
+        };
+    }
+}

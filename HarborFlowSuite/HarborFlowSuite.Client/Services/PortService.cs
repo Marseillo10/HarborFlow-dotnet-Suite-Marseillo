@@ -1,45 +1,40 @@
-using HarborFlowSuite.Core.Models;
-using HarborFlowSuite.Core.Services;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text.Json;
-using System.Threading.Tasks;
+using HarborFlowSuite.Core.Models;
 
 namespace HarborFlowSuite.Client.Services
 {
-    public class PortService : IPortService
+    public class PortService
     {
         private readonly HttpClient _httpClient;
 
-        public PortService(IHttpClientFactory httpClientFactory)
+        public PortService(HttpClient httpClient)
         {
-            _httpClient = httpClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
+            _httpClient = httpClient;
         }
 
-        public async Task<IEnumerable<Port>> GetPortsAsync(IEnumerable<string> countries)
+        public async Task<List<Port>> GetPortsAsync(double? minLat = null, double? maxLat = null, double? minLon = null, double? maxLon = null)
         {
             try
             {
-                var ports = await _httpClient.GetFromJsonAsync<List<Port>>("api/ports");
+                var query = "api/Ports";
+                var queryParams = new List<string>();
 
-                if (ports == null)
+                if (minLat.HasValue) queryParams.Add($"minLat={minLat.Value}");
+                if (maxLat.HasValue) queryParams.Add($"maxLat={maxLat.Value}");
+                if (minLon.HasValue) queryParams.Add($"minLon={minLon.Value}");
+                if (maxLon.HasValue) queryParams.Add($"maxLon={maxLon.Value}");
+
+                if (queryParams.Any())
                 {
-                    return Enumerable.Empty<Port>();
+                    query += "?" + string.Join("&", queryParams);
                 }
 
-                if (countries != null && countries.Any())
-                {
-                    return ports.Where(p => countries.Contains(p.Country, StringComparer.OrdinalIgnoreCase));
-                }
-
-                return ports;
+                return await _httpClient.GetFromJsonAsync<List<Port>>(query) ?? new List<Port>();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error fetching ports: {ex.Message}");
-                return Enumerable.Empty<Port>();
+                return new List<Port>();
             }
         }
     }
