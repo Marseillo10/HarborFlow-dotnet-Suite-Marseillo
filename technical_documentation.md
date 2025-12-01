@@ -177,44 +177,61 @@ Database PostgreSQL dirancang dengan relasi yang kuat untuk menjaga integritas d
 -   **Companies:** Data perusahaan pelayaran/agen.
 -   **Ports:** Data referensi pelabuhan dunia.
 
-## 9. Manajemen Akses & Peran (RBAC)
+## 9. Manajemen Akses & Peran (RBAC) - Deep Dive
 
-Sistem menggunakan **Role-Based Access Control (RBAC)** untuk memastikan keamanan dan isolasi data.
+Sistem keamanan HarborFlow menggunakan pendekatan **Hierarchical Role-Based Access Control (RBAC)** yang dinamis. Berbeda dengan RBAC statis biasa, sistem ini mendukung pewarisan peran (Role Inheritance) untuk menyederhanakan manajemen izin.
+
+### A. Hierarki & Pewarisan Peran
+Sistem mendefinisikan rantai pewarisan di mana peran yang lebih tinggi secara otomatis mewarisi semua izin dari peran di bawahnya.
 
 ```mermaid
 graph TD
-    User[User / Pengguna] -->|Assigned| Role[Role / Peran]
-    Role -->|Has| Permission[Permission / Izin]
-
-    subgraph "Role Hierarchy"
-        Admin[System Admin]
-        Port[Port Authority]
-        Agent[Vessel Agent]
-        Guest[Guest]
+    Guest[Guest]
+    VesselAgent[Vessel Agent] -->|Inherits| Guest
+    PortAuthority[Port Authority] -->|Inherits| VesselAgent
+    SystemAdmin[System Admin] -->|Inherits| PortAuthority
+    CompanyAdmin[Company Admin] -->|Inherits| VesselAgent
+    
+    subgraph "Permission Scope"
+        Guest --> P_Guest[Public Read Only]
+        VesselAgent --> P_Agent[Vessel Ops]
+        PortAuthority --> P_Port[Port Control]
+        SystemAdmin --> P_Admin[Full System]
     end
-
-    subgraph "Access Scope"
-        Full[Full System Access]
-        PortOps[Port Operations]
-        VesselOps[Vessel Management]
-        ReadOnly[Read Only View]
-    end
-
-    Admin --> Full
-    Port --> PortOps
-    Agent --> VesselOps
-    Guest --> ReadOnly
-
-    note[Auto-Assign: @mail.ugm.ac.id -> System Admin] -.-> Admin
 ```
 
-### Definisi Peran (Roles)
+### B. Matriks Izin (Permission Matrix)
 
-1.  **System Admin:** Akses penuh ke seluruh sistem. Dapat mengelola user, role, dan konfigurasi global.
-    *   *Catatan:* Email dengan domain `@mail.ugm.ac.id` otomatis mendapatkan role ini.
-2.  **Port Authority:** Otoritas pelabuhan yang berwenang menyetujui/menolak permintaan layanan (Service Requests) dan memantau lalu lintas di wilayahnya.
-3.  **Vessel Agent:** Agen kapal yang dapat mengajukan permintaan layanan dan mendaftarkan kapal baru. Data dibatasi hanya untuk perusahaan mereka (Data Isolation).
-4.  **Guest:** Pengguna umum yang hanya dapat melihat peta publik dan berita, tanpa akses ke data operasional sensitif.
+Berikut adalah detail teknis izin yang dimiliki setiap peran (termasuk yang diwarisi):
+
+| Role | Inherits From | Unique Permissions | Deskripsi Akses |
+| :--- | :--- | :--- | :--- |
+| **SystemAdmin** | `PortAuthority` | `Users.Manage`, `Companies.View`, `Companies.Manage` | Akses penuh sistem, manajemen user global, dan konfigurasi tenant. |
+| **PortAuthority** | `VesselAgent` | `Users.View` | Memantau lalu lintas pelabuhan, menyetujui Service Requests. |
+| **CompanyAdmin** | `VesselAgent` | `Users.View`, `Users.Manage`, `Companies.Manage` | Mengelola user dan data dalam lingkup perusahaan mereka sendiri. |
+| **VesselAgent** | `Guest` | `Dashboard.View`, `Vessels.View`, `Vessels.Manage`, `ServiceRequests.View`, `ServiceRequests.Manage` | Mendaftarkan kapal, mengajukan layanan. Data terisolasi per perusahaan. |
+| **Guest** | - | *(None)* | Hanya akses publik (Peta dasar, Berita). |
+
+### C. Implementasi Teknis (Policy-Based Authorization)
+
+Di sisi backend (.NET 9), keamanan tidak di-hardcode menggunakan string role (misal `[Authorize(Roles="Admin")]`), melainkan menggunakan **Policy**.
+
+1.  **Dynamic Policy Registration:**
+    Saat startup, aplikasi secara otomatis memindai semua konstanta permission di `Permissions.cs` dan mendaftarkannya sebagai Policy ASP.NET Core.
+
+2.  **Custom Authorization Handler:**
+    Middleware otorisasi kustom (`Program.cs`) melakukan resolusi izin secara *runtime*:
+    *   Mengambil Role pengguna dari klaim JWT.
+    *   Menghitung seluruh izin efektif pengguna dengan menelusuri pohon pewarisan (`RolePermissions.GetPermissionsForRole`).
+    *   Memverifikasi apakah izin yang diminta ada dalam daftar izin efektif tersebut.
+
+3.  **Penggunaan di Controller:**
+    ```csharp
+    // Contoh penggunaan di Controller
+    [Authorize(Policy = Permissions.Vessels.Manage)]
+    public async Task<IActionResult> CreateVessel(...)
+    ```
+    Ini memungkinkan fleksibilitas tinggi; jika kita ingin mengubah siapa yang boleh mengelola kapal, kita cukup mengubah konfigurasi permission di `RolePermissions.cs` tanpa perlu menyentuh kode Controller.
 
 ## 10. Alur Kerja Pengguna (User Flow)
 
