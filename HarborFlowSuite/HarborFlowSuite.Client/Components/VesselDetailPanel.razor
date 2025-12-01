@@ -1,6 +1,8 @@
 @using HarborFlowSuite.Core.DTOs
 @using HarborFlowSuite.Shared.DTOs
 @using HarborFlowSuite.Core.Models
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 
 <MudDrawer Open="@Open" OpenChanged="@OnDrawerOpenChanged" Anchor="Anchor.End" Elevation="1"
     Variant="@DrawerVariant.Temporary" Width="400px">
@@ -115,11 +117,17 @@
                 }
                 else
                 {
-                    <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" Class="mb-2"
-                        OnClick="AddVessel">Add Vessel</MudButton>
+                    @if (!_isGuest)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" Class="mb-2"
+                            OnClick="AddVessel">Add Vessel</MudButton>
+                    }
                 }
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
-                    Href="@($"/vessel-details/{Vessel.MMSI}")">View Full Details</MudButton>
+                @if (!_isGuest)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                        Href="@($"/vessel-details/{Vessel.MMSI}")">View Full Details</MudButton>
+                }
             </div>
         }
         else
@@ -143,6 +151,21 @@
 
     [Parameter]
     public VesselMetadataDto Metadata { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+
+    private bool _isGuest;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (AuthenticationStateTask != null)
+        {
+            var authState = await AuthenticationStateTask;
+            var user = authState.User;
+            _isGuest = user.IsInRole(HarborFlowSuite.Shared.Constants.UserRole.Guest);
+        }
+    }
 
     public class VesselPositionDto
     {
