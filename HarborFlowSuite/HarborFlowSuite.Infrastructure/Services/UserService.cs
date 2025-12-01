@@ -49,7 +49,7 @@ namespace HarborFlowSuite.Infrastructure.Services
 
         public async Task<IEnumerable<RoleDto>> GetAllRolesAsync()
         {
-            return await _context.Roles
+            var roles = await _context.Roles
                 .Select(r => new RoleDto
                 {
                     Id = r.Id,
@@ -57,6 +57,9 @@ namespace HarborFlowSuite.Infrastructure.Services
                     Description = r.Description
                 })
                 .ToListAsync();
+
+            // Filter out duplicates by Name to ensure UI doesn't show multiple entries for the same role
+            return roles.DistinctBy(r => r.Name).ToList();
         }
 
         public async Task UpdateUserRoleAsync(Guid userId, Guid roleId, string currentFirebaseUid, Guid? companyId = null)
@@ -111,7 +114,7 @@ namespace HarborFlowSuite.Infrastructure.Services
             }
 
             user.RoleId = roleId;
-            
+
             // Only update company if a value is provided. 
             // Note: This prevents setting company to null (removing company). 
             // If that is needed, we need a more explicit signal.

@@ -12,10 +12,20 @@
             <Authorized>
                 <MudNavLink Href="dashboard" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
                 <MudNavLink Href="nautical-chart" Icon="@Icons.Material.Filled.Map">Nautical Chart</MudNavLink>
-                <MudNavLink Href="vessel-management" Icon="@Icons.Material.Filled.DirectionsBoat">Vessel Management
-                </MudNavLink>
-                <MudNavLink Href="service-request-management" Icon="@Icons.Material.Filled.Build">Service Requests
-                </MudNavLink>
+                <AuthorizeView Policy="@Permissions.Vessels.View" Context="viewVesselsContext">
+                    <Authorized>
+                        <MudNavLink Href="vessel-management" Icon="@Icons.Material.Filled.DirectionsBoat">Vessel
+                            Management
+                        </MudNavLink>
+                    </Authorized>
+                </AuthorizeView>
+                <AuthorizeView Policy="@Permissions.ServiceRequests.View" Context="viewServiceRequestsContext">
+                    <Authorized>
+                        <MudNavLink Href="service-request-management" Icon="@Icons.Material.Filled.Build">Service
+                            Requests
+                        </MudNavLink>
+                    </Authorized>
+                </AuthorizeView>
                 <MudNavLink Href="news" Icon="@Icons.Material.Filled.Newspaper">Maritime News</MudNavLink>
                 <AuthorizeView Policy="@Permissions.Users.View" Context="viewUsersContext">
                     <Authorized>

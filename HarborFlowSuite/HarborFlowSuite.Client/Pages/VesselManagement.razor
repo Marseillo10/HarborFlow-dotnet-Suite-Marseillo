@@ -1,6 +1,7 @@
 @page "/vessel-management"
 @using Microsoft.AspNetCore.Authorization
 @using HarborFlowSuite.Core.Models
+@using HarborFlowSuite.Shared.Constants
 @using HarborFlowSuite.Client.Services
 @inject IVesselService VesselService
 @inject NavigationManager NavigationManager
@@ -10,7 +11,7 @@
 @inject ISnackbar Snackbar
 @inject IHttpClientFactory ClientFactory
 
-@attribute [Authorize]
+@attribute [Authorize(Policy = Permissions.Vessels.View)]
 
 <PageTitle>Vessel Management</PageTitle>
 

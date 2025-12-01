@@ -164,6 +164,12 @@
 
             if (user.Identity != null && user.Identity.IsAuthenticated)
             {
+                // Check if user is a Guest. If so, skip fetching company branding to avoid 403.
+                if (user.IsInRole(HarborFlowSuite.Shared.Constants.UserRole.Guest))
+                {
+                    return;
+                }
+
                 var firebaseUid = user.FindFirst(c => c.Type == "user_id")?.Value 
                                   ?? user.FindFirst(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 

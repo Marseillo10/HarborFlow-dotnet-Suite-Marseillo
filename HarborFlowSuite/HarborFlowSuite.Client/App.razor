@@ -2,6 +2,7 @@
 @using Blazored.Toast.Configuration
 @using Microsoft.JSInterop
 @using HarborFlowSuite.Client.Providers
+@using MudBlazor
 
 @inject IJSRuntime JSRuntime
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -9,7 +10,16 @@
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
-            <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    <MudContainer MaxWidth="MaxWidth.Small" Class="mt-16">
+                        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
+                            Access Denied: You do not have permission to view this page.
+                        </MudAlert>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/">Go Home</MudButton>
+                    </MudContainer>
+                </NotAuthorized>
+            </AuthorizeRouteView>
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
         <NotFound>

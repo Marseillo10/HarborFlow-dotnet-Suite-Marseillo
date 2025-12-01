@@ -1,5 +1,6 @@
 @page "/dashboard"
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @using HarborFlowSuite.Core.Models
 @using HarborFlowSuite.Shared.DTOs
 @using HarborFlowSuite.Core.DTOs
@@ -17,6 +18,7 @@
 @implements IAsyncDisposable
 @inject HarborFlowSuite.Client.Services.PortService PortService
 @inject ILogger<Dashboard> Logger
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @attribute [Authorize]
 
 <PageTitle>Dashboard</PageTitle>
@@ -28,8 +30,7 @@
     {
         <div class="d-flex justify-content-between align-items-center mb-4">
             <MudText Typo="Typo.h4">Dashboard Overview</MudText>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">Quick Action
-            </MudButton>
+
         </div>
     }
 
@@ -298,25 +299,67 @@
             var client = ClientFactory.CreateClient("HarborFlowSuite.ServerAPI");
 
             var portsTask = PortService.GetPortsAsync(null);
+            
+            // Check if user is Guest
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var isGuest = user.IsInRole(HarborFlowSuite.Shared.Constants.UserRole.Guest);
 
-            Logger.LogInformation("Fetching service request, and company data...");
-            var serviceRequestTask = client.GetFromJsonAsync<ServiceRequest[]>("api/servicerequest");
-            var companyTask = client.GetFromJsonAsync<Company[]>("api/company");
+            Task<ServiceRequest[]>? serviceRequestTask = null;
+            Task<Company[]>? companyTask = null;
+            Task<List<ServiceRequestStatusSummaryDto>>? serviceRequestStatusTask = null;
+            Task<List<VesselTypeSummaryDto>>? vesselTypeTask = null;
 
-            Logger.LogInformation("Fetching dashboard summary data...");
-            var serviceRequestStatusTask =
-            client.GetFromJsonAsync<List<ServiceRequestStatusSummaryDto>>("api/dashboard/servicerequeststatus");
-            var vesselTypeTask = client.GetFromJsonAsync<List<VesselTypeSummaryDto>>("api/dashboard/vesseltypes");
+            if (!isGuest)
+            {
+                Logger.LogInformation("Fetching service request, and company data...");
+                serviceRequestTask = client.GetFromJsonAsync<ServiceRequest[]>("api/servicerequest");
+                companyTask = client.GetFromJsonAsync<Company[]>("api/company");
 
-            await Task.WhenAll(serviceRequestTask, companyTask, serviceRequestStatusTask, vesselTypeTask, portsTask);
+                Logger.LogInformation("Fetching dashboard summary data...");
+                serviceRequestStatusTask =
+                client.GetFromJsonAsync<List<ServiceRequestStatusSummaryDto>>("api/dashboard/servicerequeststatus");
+            }
+            
+            // Vessel types might be public or restricted? Assuming public for map, but dashboard chart?
+            // Let's restrict vessel types summary too if it's sensitive, but map shows vessels.
+            // The user asked to "make the data analytics of the guest is zero".
+            // So we should restrict vessel types summary too? 
+            // The map still works. Let's keep vessel types for now as it relates to map, 
+            // BUT the user said "data analytics of the guest is zero for the bottom section".
+            // The "Vessel Types" chart is in the left column.
+            // Let's restrict it too to be safe/compliant with "analytics is zero".
+            if (!isGuest)
+            {
+                 vesselTypeTask = client.GetFromJsonAsync<List<VesselTypeSummaryDto>>("api/dashboard/vesseltypes");
+            }
+
+            var tasks = new List<Task> { portsTask };
+            if (serviceRequestTask != null) tasks.Add(serviceRequestTask);
+            if (companyTask != null) tasks.Add(companyTask);
+            if (serviceRequestStatusTask != null) tasks.Add(serviceRequestStatusTask);
+            if (vesselTypeTask != null) tasks.Add(vesselTypeTask);
+
+            await Task.WhenAll(tasks);
             Logger.LogInformation("All data fetched.");
 
             _ports = portsTask.Result;
             Logger.LogInformation($"Dashboard: Fetched {_ports?.Count() ?? 0} ports.");
-            _pendingServiceRequestCount = serviceRequestTask.Result?.Count(r => r.Status == ServiceRequestStatus.Pending) ?? 0;
-            _companyCount = companyTask.Result?.Length ?? 0;
-            _serviceRequestStatusSummary = serviceRequestStatusTask.Result;
-            _vesselTypeSummary = vesselTypeTask.Result;
+            
+            if (!isGuest)
+            {
+                _pendingServiceRequestCount = serviceRequestTask?.Result?.Count(r => r.Status == ServiceRequestStatus.Pending) ?? 0;
+                _companyCount = companyTask?.Result?.Length ?? 0;
+                _serviceRequestStatusSummary = serviceRequestStatusTask?.Result;
+                _vesselTypeSummary = vesselTypeTask?.Result;
+            }
+            else
+            {
+                _pendingServiceRequestCount = 0;
+                _companyCount = 0;
+                _serviceRequestStatusSummary = new List<ServiceRequestStatusSummaryDto>();
+                _vesselTypeSummary = new List<VesselTypeSummaryDto>();
+            }
 
             // Prepare Chart Data
             if (_serviceRequestStatusSummary != null)

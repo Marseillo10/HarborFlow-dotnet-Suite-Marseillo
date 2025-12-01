@@ -15,7 +15,7 @@
 @inject IServiceRequestSignalRService ServiceRequestSignalRService
 @implements IAsyncDisposable
 
-@attribute [Authorize]
+@attribute [Authorize(Policy = Permissions.ServiceRequests.View)]
 
 <PageTitle>Service Request Management</PageTitle>
 

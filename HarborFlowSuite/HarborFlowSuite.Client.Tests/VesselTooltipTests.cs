@@ -10,6 +10,7 @@ using Microsoft.JSInterop;
 using System.Threading.Tasks;
 using Microsoft.JSInterop.Infrastructure;
 using System;
+using MudBlazor;
 
 namespace HarborFlowSuite.Client.Tests
 {
@@ -25,6 +26,7 @@ namespace HarborFlowSuite.Client.Tests
 
             Services.AddSingleton(_jsRuntimeMock.Object);
             Services.AddSingleton(_vesselPositionSignalRServiceMock.Object);
+            Services.AddSingleton(new Mock<IDialogService>().Object);
 
             // Setup JSInterop mock for initMap, as VesselMap will call it
             _jsRuntimeMock.Setup(js => js.InvokeAsync<IJSVoidResult>("HarborFlowMap.initMap", It.IsAny<object[]>()))
