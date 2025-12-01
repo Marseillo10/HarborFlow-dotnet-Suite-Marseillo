@@ -1,5 +1,8 @@
 # HarborFlow Suite
 
+## Documentation
+For a deep dive into the system architecture, features, and future roadmap (including the Desktop Suite vision), please read the **[Technical Documentation](technical_documentation.md)**.
+
 ## Getting Started
 
 ### Prerequisites
@@ -17,13 +20,13 @@
     ```bash
     dotnet run --project HarborFlowSuite/HarborFlowSuite.Server --launch-profile https
     ```
-    *   **Swagger API Docs**: [https://localhost:7274/swagger]()
+    *   **Swagger API Docs**: [https://localhost:7274/swagger](https://localhost:7274/swagger)
 
 3.  **Run the Client:**
     ```bash
     dotnet run --project HarborFlowSuite/HarborFlowSuite.Client
     ```
-    *   **Web Application**: [https://localhost:7163](http://localhost:5205)
+    *   **Web Application**: [https://localhost:7163](https://localhost:7163)[https://localhost:5205](https://localhost:5205)
 
 ### Automatic System Admin Assignment
 *   **UGM Accounts**: Any user registering with an email ending in `@mail.ugm.ac.id` will be automatically assigned the **SystemAdmin** role.

@@ -5,11 +5,11 @@
 **So that** I can stay informed about relevant developments.
 
 ## Acceptance Criteria
-- [ ] **News Feed Display:** A "Maritime News" section is displayed on the Dashboard (or a dedicated page).
-- [ ] **RSS Integration:** The system fetches news from a public maritime RSS feed (e.g., Maritime Executive, gCaptain, or similar).
-- [ ] **Caching:** News feed data is cached for a reasonable duration (e.g., 1 hour) to prevent excessive external requests.
-- [ ] **UI/UX:** News items are displayed with a title, summary, publication date, and a link to the full article.
-- [ ] **Responsiveness:** The news feed adapts to different screen sizes.
+- [x] **News Feed Display:** A "Maritime News" section is displayed on the Dashboard (or a dedicated page).
+- [x] **RSS Integration:** The system fetches news from a public maritime RSS feed (e.g., Maritime Executive, gCaptain, or similar).
+- [x] **Caching:** News feed data is cached for a reasonable duration (e.g., 1 hour) to prevent excessive external requests.
+- [x] **UI/UX:** News items are displayed with a title, summary, publication date, and a link to the full article.
+- [x] **Responsiveness:** The news feed adapts to different screen sizes.
 
 ## Implementation Details
 -   **Backend:**
