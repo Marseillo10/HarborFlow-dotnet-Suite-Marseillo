@@ -37,7 +37,7 @@ info: Microsoft.Hosting.Lifetime[0]
 info: Microsoft.Hosting.Lifetime[0]
       Content root path: /Users/marseillosatrian/Downloads/HarborFlow-dotnet-Suite-Marseillo/HarborFlowSuite/HarborFlowSuite.Client
 
-* **"DefaultConnection": "Host=localhost;Port=5432;Database=harborflowdb;Username=marseillosatrian;Password=********"**  
+* **"DefaultConnection": "Host=localhost;Port=5432;Database=harborflowdb;Username=marseillosatrian;Password=********".  
 
 These are documentations for GFW API:  https://globalfishingwatch.org/our-apis/ ; https://globalfishingwatch.org/our-apis/documentation#introduction ; https://globalfishingwatch.github.io/gfw-api-python-client/ ; https://github.com/GlobalFishingWatch/gfwr ; https://github.com/GlobalFishingWatch/vessel-classification ; https://github.com/GlobalFishingWatch/ShipDataProcess ;
 
